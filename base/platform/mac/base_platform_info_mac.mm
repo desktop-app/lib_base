@@ -7,10 +7,12 @@
 #include "base/platform/mac/base_platform_info_mac.h"
 
 #include "base/platform/base_platform_info.h"
-#include "base/platform/mac/base_platform_mac_utilities.h"
+#include "base/platform/mac/base_platform_utilities_mac.h"
 
 #include <sys/sysctl.h>
 #include <Cocoa/Cocoa.h>
+
+#include <QtCore/QDate>
 
 namespace Platform {
 namespace {

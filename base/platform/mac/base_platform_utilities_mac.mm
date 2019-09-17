@@ -4,4 +4,4 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/mac/base_platform_mac_utilities.h"
+#include "base/platform/mac/base_platform_utilities_mac.h"
