@@ -1,0 +1,110 @@
+# This file is part of Desktop App Toolkit,
+# a set of libraries for developing nice desktop applications.
+#
+# For license and copyright information please follow this link:
+# https://github.com/desktop-app/legal/blob/master/LEGAL
+
+{
+  'includes': [
+    '../gyp_helpers/common/common.gypi',
+  ],
+  'targets': [{
+    'target_name': 'lib_base',
+    'includes': [
+      '../gyp_helpers/common/library.gypi',
+      '../gyp_helpers/modules/openssl.gypi',
+      '../gyp_helpers/modules/qt.gypi',
+      '../gyp_helpers/modules/pch.gypi',
+    ],
+    'variables': {
+      'src_loc': '.',
+      'base_src_loc': '<(src_loc)/base',
+      'pch_source': '<(base_src_loc)/base_pch.cpp',
+      'pch_header': '<(base_src_loc)/base_pch.h',
+    },
+    'defines': [
+    ],
+    'dependencies': [
+      '../lib_crl/lib_crl.gyp:lib_crl',
+    ],
+    'export_dependent_settings': [
+      '../lib_crl/lib_crl.gyp:lib_crl',
+    ],
+    'include_dirs': [
+      '<(src_loc)',
+      '<(libs_loc)/range-v3/include',
+      '<(submodules_loc)/lib_rpl',
+      '<(submodules_loc)/GSL/include',
+      '<(submodules_loc)/variant/include',
+    ],
+    'direct_dependent_settings': {
+      'include_dirs': [
+        '<(src_loc)',
+        '<(libs_loc)/range-v3/include',
+        '<(submodules_loc)/lib_rpl',
+        '<(submodules_loc)/GSL/include',
+        '<(submodules_loc)/variant/include',
+      ],
+    },
+    'sources': [
+      '<(base_src_loc)/algorithm.h',
+      '<(base_src_loc)/assertion.h',
+      '<(base_src_loc)/base_integration.h',
+      '<(base_src_loc)/basic_types.h',
+      '<(base_src_loc)/binary_guard.h',
+      '<(base_src_loc)/build_config.h',
+      '<(base_src_loc)/bytes.h',
+      '<(base_src_loc)/crc32hash.cpp',
+      '<(base_src_loc)/crc32hash.h',
+      '<(base_src_loc)/concurrent_timer.cpp',
+      '<(base_src_loc)/concurrent_timer.h',
+      '<(base_src_loc)/flags.h',
+      '<(base_src_loc)/enum_mask.h',
+      '<(base_src_loc)/flat_map.h',
+      '<(base_src_loc)/flat_set.h',
+      '<(base_src_loc)/functors.h',
+      '<(base_src_loc)/index_based_iterator.h',
+      '<(base_src_loc)/invoke_queued.h',
+      '<(base_src_loc)/last_used_cache.h',
+      '<(base_src_loc)/match_method.h',
+      '<(base_src_loc)/object_ptr.h',
+      '<(base_src_loc)/observer.cpp',
+      '<(base_src_loc)/observer.h',
+      '<(base_src_loc)/ordered_set.h',
+      '<(base_src_loc)/openssl_help.h',
+      '<(base_src_loc)/optional.h',
+      '<(base_src_loc)/overload.h',
+      '<(base_src_loc)/parse_helper.cpp',
+      '<(base_src_loc)/parse_helper.h',
+      '<(base_src_loc)/qthelp_regex.h',
+      '<(base_src_loc)/qthelp_url.cpp',
+      '<(base_src_loc)/qthelp_url.h',
+      '<(base_src_loc)/qt_connection.h',
+      '<(base_src_loc)/qt_signal_producer.h',
+      '<(base_src_loc)/runtime_composer.cpp',
+      '<(base_src_loc)/runtime_composer.h',
+      '<(base_src_loc)/thread_safe_wrap.h',
+      '<(base_src_loc)/timer.cpp',
+      '<(base_src_loc)/timer.h',
+      '<(base_src_loc)/type_traits.h',
+      '<(base_src_loc)/unique_any.h',
+      '<(base_src_loc)/unique_function.h',
+      '<(base_src_loc)/unique_qptr.h',
+      '<(base_src_loc)/unixtime.cpp',
+      '<(base_src_loc)/unixtime.h',
+      '<(base_src_loc)/value_ordering.h',
+      '<(base_src_loc)/variant.h',
+      '<(base_src_loc)/virtual_method.h',
+      '<(base_src_loc)/weak_ptr.h',
+      '<(base_src_loc)/zlib_help.h',
+    ],
+    'conditions': [[ 'build_macold', {
+      'xcode_settings': {
+        'OTHER_CPLUSPLUSFLAGS': [ '-nostdinc++' ],
+      },
+      'include_dirs': [
+        '/usr/local/macold/include/c++/v1',
+      ],
+    }]],
+  }],
+}
