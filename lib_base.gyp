@@ -6,15 +6,15 @@
 
 {
   'includes': [
-    '../gyp_helpers/common/common.gypi',
+    '../gyp/helpers/common/common.gypi',
   ],
   'targets': [{
     'target_name': 'lib_base',
     'includes': [
-      '../gyp_helpers/common/library.gypi',
-      '../gyp_helpers/modules/openssl.gypi',
-      '../gyp_helpers/modules/qt.gypi',
-      '../gyp_helpers/modules/pch.gypi',
+      '../gyp/helpers/common/library.gypi',
+      '../gyp/helpers/modules/openssl.gypi',
+      '../gyp/helpers/modules/qt.gypi',
+      '../gyp/helpers/modules/pch.gypi',
     ],
     'variables': {
       'src_loc': '.',
@@ -25,25 +25,25 @@
     'defines': [
     ],
     'dependencies': [
-      '../lib_crl/lib_crl.gyp:lib_crl',
+      '<(submodules_loc)/lib_crl/lib_crl.gyp:lib_crl',
     ],
     'export_dependent_settings': [
-      '../lib_crl/lib_crl.gyp:lib_crl',
+      '<(submodules_loc)/lib_crl/lib_crl.gyp:lib_crl',
     ],
     'include_dirs': [
       '<(src_loc)',
       '<(libs_loc)/range-v3/include',
       '<(submodules_loc)/lib_rpl',
-      '<(submodules_loc)/GSL/include',
-      '<(submodules_loc)/variant/include',
+      '<(third_party_loc)/GSL/include',
+      '<(third_party_loc)/variant/include',
     ],
     'direct_dependent_settings': {
       'include_dirs': [
         '<(src_loc)',
         '<(libs_loc)/range-v3/include',
         '<(submodules_loc)/lib_rpl',
-        '<(submodules_loc)/GSL/include',
-        '<(submodules_loc)/variant/include',
+        '<(third_party_loc)/GSL/include',
+        '<(third_party_loc)/variant/include',
       ],
     },
     'sources': [
