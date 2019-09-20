@@ -8,16 +8,22 @@
 
 #include "base/platform/mac/base_platform_utilities_mac.h"
 
+#include <QtCore/QFileInfo>
+
 namespace base::Platform {
+
+using namespace ::Platform;
 
 bool ShowInFolder(const QString &filepath) {
 	const auto folder = QFileInfo(filepath).absolutePath();
+	BOOL result = NO;
 
 	@autoreleasepool {
 
-	BOOL result = [[NSWorkspace sharedWorkspace] selectFile:Q2NSString(filepath) inFileViewerRootedAtPath:Q2NSString(folder)];
+	result = [[NSWorkspace sharedWorkspace] selectFile:Q2NSString(filepath) inFileViewerRootedAtPath:Q2NSString(folder)];
 
 	}
+
 	return (result != NO);
 }
 
