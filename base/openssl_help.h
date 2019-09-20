@@ -523,7 +523,9 @@ inline void AddRandomSeed(bytes::const_span data) {
 	RAND_seed(data.data(), data.size());
 }
 
-template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+template <
+	typename T,
+	typename = std::enable_if_t<std::is_trivially_copyable_v<T>>>
 [[nodiscard]] inline T RandomValue() {
 	unsigned char buffer[sizeof(T)];
 	if (!RAND_bytes(buffer, sizeof(T))) {
