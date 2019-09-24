@@ -11,6 +11,7 @@
 
 #include <QtCore/QProcess>
 #include <QtCore/QFileInfo>
+#include <QtCore/QDir>
 
 namespace base::Platform {
 

@@ -6,7 +6,8 @@
 //
 #include "base/platform/linux/base_platform_info_linux.h"
 
-#include <QLocale>
+#include <QtCore/QLocale>
+#include <QtCore/QDate>
 
 namespace Platform {
 
