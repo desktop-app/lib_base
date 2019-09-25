@@ -4,10 +4,10 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/win/base_platform_info_win.h"
+#include "base/platform/win/base_info_win.h"
 
 #include "base/platform/base_platform_info.h"
-#include "base/platform/win/base_platform_windows_h.h"
+#include "base/platform/win/base_windows_h.h"
 
 #include <QtCore/QDate>
 

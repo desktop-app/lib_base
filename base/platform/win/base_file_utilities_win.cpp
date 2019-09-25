@@ -4,7 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/win/base_platform_file_utilities_win.h"
+#include "base/platform/win/base_file_utilities_win.h"
 
 #include "base/algorithm.h"
 

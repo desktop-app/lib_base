@@ -4,10 +4,10 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/mac/base_platform_info_mac.h"
+#include "base/platform/mac/base_info_mac.h"
 
 #include "base/platform/base_platform_info.h"
-#include "base/platform/mac/base_platform_utilities_mac.h"
+#include "base/platform/mac/base_utilities_mac.h"
 
 #include <sys/sysctl.h>
 #include <Cocoa/Cocoa.h>

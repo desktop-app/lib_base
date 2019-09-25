@@ -4,7 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/linux/base_platform_file_utilities_linux.h"
+#include "base/platform/linux/base_file_utilities_linux.h"
 
 #include "base/platform/base_platform_file_utilities.h"
 #include "base/algorithm.h"

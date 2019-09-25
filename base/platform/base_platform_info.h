@@ -45,9 +45,9 @@ namespace Platform {
 } // namespace Platform
 
 #ifdef Q_OS_MAC
-#include "base/platform/mac/base_platform_info_mac.h"
+#include "base/platform/mac/base_info_mac.h"
 #elif defined Q_OS_LINUX // Q_OS_MAC
-#include "base/platform/linux/base_platform_info_linux.h"
+#include "base/platform/linux/base_info_linux.h"
 #elif defined Q_OS_WIN // Q_OS_MAC || Q_OS_LINUX
-#include "base/platform/win/base_platform_info_win.h"
+#include "base/platform/win/base_info_win.h"
 #endif // Q_OS_MAC || Q_OS_LINUX || Q_OS_WIN

@@ -4,7 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/linux/base_platform_info_linux.h"
+#include "base/platform/linux/base_info_linux.h"
 
 #include <QtCore/QLocale>
 #include <QtCore/QDate>
