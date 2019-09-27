@@ -9,6 +9,7 @@
 #include "base/platform/base_platform_info.h"
 #include "base/platform/win/base_windows_h.h"
 
+#include <QtCore/QJsonObject>
 #include <QtCore/QDate>
 
 #include <VersionHelpers.h>
@@ -260,6 +261,13 @@ bool IsWindows8Point1OrGreater() {
 bool IsWindows10OrGreater() {
 	static const auto result = ::IsWindows10OrGreater();
 	return result;
+}
+
+void Start(QJsonObject settings) {
+	SetDllDirectory(L"");
+}
+
+void Finish() {
 }
 
 } // namespace Platform

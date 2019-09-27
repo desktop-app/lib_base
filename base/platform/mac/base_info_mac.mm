@@ -6,6 +6,7 @@
 //
 #include "base/platform/mac/base_info_mac.h"
 
+#include "base/timer.h"
 #include "base/platform/base_platform_info.h"
 #include "base/platform/mac/base_utilities_mac.h"
 
@@ -13,9 +14,28 @@
 #include <Cocoa/Cocoa.h>
 
 #include <QtCore/QDate>
+#include <QtCore/QJsonObject>
+
+@interface WakeUpObserver : NSObject {
+}
+
+- (void) receiveWakeNote:(NSNotification*)note;
+
+@end // @interface WakeUpObserver
+
+@implementation WakeUpObserver {
+}
+
+- (void) receiveWakeNote:(NSNotification*)aNotification {
+	base::CheckLocalTime();
+}
+
+@end // @implementation WakeUpObserver
 
 namespace Platform {
 namespace {
+
+WakeUpObserver *GlobalWakeUpObserver = nil;
 
 QString FromIdentifier(const QString &model) {
 	if (model.isEmpty() || model.toLower().indexOf("mac") < 0) {
@@ -174,6 +194,29 @@ bool IsMac10_13OrGreater() {
 
 bool IsMac10_14OrGreater() {
 	return IsMacThatOrGreater<14>();
+}
+
+void Start(QJsonObject settings) {
+	Expects(GlobalWakeUpObserver == nil);
+
+	GlobalWakeUpObserver = [[WakeUpObserver alloc] init];
+
+	NSNotificationCenter *center = [[NSWorkspace sharedWorkspace] notificationCenter];
+	Assert(center != nil);
+
+	[center addObserver: GlobalWakeUpObserver
+	        selector: @selector(receiveWakeNote:)
+	        name: NSWorkspaceDidWakeNotification
+	        object: nil];
+
+	Ensures(GlobalWakeUpObserver != nil);
+}
+
+void Finish() {
+	Expects(GlobalWakeUpObserver != nil);
+
+	[GlobalWakeUpObserver release];
+	GlobalWakeUpObserver = nil;
 }
 
 } // namespace Platform

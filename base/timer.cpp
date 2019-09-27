@@ -6,6 +6,9 @@
 //
 #include "base/timer.h"
 
+#include "base/concurrent_timer.h"
+#include "base/unixtime.h"
+
 #include <QtCore/QTimerEvent>
 
 namespace base {
@@ -17,6 +20,14 @@ QObject *TimersAdjuster() {
 }
 
 } // namespace
+
+void CheckLocalTime() {
+	if (crl::adjust_time()) {
+		base::Timer::Adjust();
+		base::ConcurrentTimerEnvironment::Adjust();
+		base::unixtime::http_invalidate();
+	}
+}
 
 Timer::Timer(
 	not_null<QThread*> thread,

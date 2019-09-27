@@ -6,6 +6,8 @@
 //
 #pragma once
 
+class QJsonObject;
+
 namespace Platform {
 
 [[nodiscard]] QString DeviceModelPretty();
@@ -41,6 +43,9 @@ namespace Platform {
 [[nodiscard]] constexpr bool IsLinux();
 [[nodiscard]] constexpr bool IsLinux32Bit();
 [[nodiscard]] constexpr bool IsLinux64Bit();
+
+void Start(QJsonObject settings);
+void Finish();
 
 } // namespace Platform
 

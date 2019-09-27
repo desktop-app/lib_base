@@ -14,6 +14,8 @@
 
 namespace base {
 
+void CheckLocalTime();
+
 class Timer final : private QObject {
 public:
 	explicit Timer(
