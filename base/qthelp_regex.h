@@ -55,10 +55,6 @@ enum class RegExOption {
 	InvertedGreediness = QRegularExpression::InvertedGreedinessOption,
 	DontCapture = QRegularExpression::DontCaptureOption,
 	UseUnicodeProperties = QRegularExpression::UseUnicodePropertiesOption,
-#ifndef OS_MAC_OLD
-	OptimizeOnFirstUsage = QRegularExpression::OptimizeOnFirstUsageOption,
-	DontAutomaticallyOptimize = QRegularExpression::DontAutomaticallyOptimizeOption,
-#endif // OS_MAC_OLD
 };
 using RegExOptions = base::flags<RegExOption>;
 inline constexpr auto is_flag_type(RegExOption) { return true; };
