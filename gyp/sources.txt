@@ -65,6 +65,7 @@
 <(src_loc)/base/thread_safe_wrap.h
 <(src_loc)/base/timer.cpp
 <(src_loc)/base/timer.h
+<(src_loc)/base/timer_rpl.h
 <(src_loc)/base/type_traits.h
 <(src_loc)/base/unique_any.h
 <(src_loc)/base/unique_function.h
