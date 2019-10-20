@@ -6,11 +6,8 @@
 //
 #pragma once
 
-class QString;
+namespace base {
 
-namespace base::Platform {
-
-bool ShowInFolder(const QString &filepath);
 [[nodiscard]] QString FileNameFromUserString(QString name);
 
-} // namespace base::Platform
+} // namespace base

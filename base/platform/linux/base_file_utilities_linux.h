@@ -7,4 +7,9 @@
 #pragma once
 
 namespace base::Platform {
+
+inline QString FileNameFromUserString(QString name) {
+	return name;
+}
+
 } // namespace base::Platform

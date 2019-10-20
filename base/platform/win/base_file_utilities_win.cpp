@@ -37,4 +37,48 @@ bool ShowInFolder(const QString &filepath) {
 	return (result > 32);
 }
 
+QString FileNameFromUserString(QString name) {
+	const auto kBadExtensions = { qstr(".lnk"), qstr(".scf") };
+	const auto kMaskExtension = qstr(".download");
+	for (const auto extension : kBadExtensions) {
+		if (name.endsWith(extension, Qt::CaseInsensitive)) {
+			name += kMaskExtension;
+		}
+	}
+
+	static const auto BadNames = {
+		qstr("CON"),
+		qstr("PRN"),
+		qstr("AUX"),
+		qstr("NUL"),
+		qstr("COM1"),
+		qstr("COM2"),
+		qstr("COM3"),
+		qstr("COM4"),
+		qstr("COM5"),
+		qstr("COM6"),
+		qstr("COM7"),
+		qstr("COM8"),
+		qstr("COM9"),
+		qstr("LPT1"),
+		qstr("LPT2"),
+		qstr("LPT3"),
+		qstr("LPT4"),
+		qstr("LPT5"),
+		qstr("LPT6"),
+		qstr("LPT7"),
+		qstr("LPT8"),
+		qstr("LPT9")
+	};
+	for (const auto bad : BadNames) {
+		if (name.startsWith(bad, Qt::CaseInsensitive)) {
+			if (name.size() == bad.size() || name[bad.size()] == '.') {
+				name = '_' + name;
+				break;
+			}
+		}
+	}
+	return name;
+}
+
 } // namespace base::Platform

@@ -37,8 +37,10 @@
 <(src_loc)/base/concurrent_timer.h
 <(src_loc)/base/flags.h
 <(src_loc)/base/enum_mask.h
-<(src_loc)/base/event_filter.h
 <(src_loc)/base/event_filter.cpp
+<(src_loc)/base/event_filter.h
+<(src_loc)/base/base_file_utilities.cpp
+<(src_loc)/base/base_file_utilities.h
 <(src_loc)/base/flat_map.h
 <(src_loc)/base/flat_set.h
 <(src_loc)/base/functors.h
