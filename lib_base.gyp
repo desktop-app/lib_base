@@ -49,11 +49,22 @@
     'sources': [
       'gyp/sources.txt',
       '<!@(<(list_sources_command) <(qt_moc_list_sources_arg))',
+      '<(src_loc)/base/file_lock.h',
+      '<(src_loc)/base/file_lock_win.cpp',
+      '<(src_loc)/base/file_lock_posix.cpp',
     ],
     'sources!': [
       '<!@(<(list_sources_command) <(qt_moc_list_sources_arg) --exclude_for <(build_os))',
     ],
-    'conditions': [[ 'build_macold', {
+    'conditions': [[ 'build_win', {
+      'sources!': [
+        '<(src_loc)/base/file_lock_posix.cpp',
+      ],
+    }, {
+      'sources!': [
+        '<(src_loc)/base/file_lock_win.cpp',
+      ],
+    }], [ 'build_macold', {
       'xcode_settings': {
         'OTHER_CPLUSPLUSFLAGS': [ '-nostdinc++' ],
       },
