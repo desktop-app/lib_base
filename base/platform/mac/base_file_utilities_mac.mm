@@ -27,4 +27,8 @@ bool ShowInFolder(const QString &filepath) {
 	return (result != NO);
 }
 
+QString CurrentExecutablePath(int argc, char *argv[]) {
+	return NS2QString([[NSBundle mainBundle] bundlePath]);
+}
+
 } // namespace base::Platform

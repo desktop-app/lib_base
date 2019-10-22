@@ -47,4 +47,22 @@ bool ShowInFolder(const QString &filepath) {
 	return process.startDetached(command, arguments);
 }
 
+QString CurrentExecutablePath(int argc, char *argv[]) {
+	constexpr auto kMaxPath = 1024;
+	char result[kMaxPath] = { 0 };
+	auto count = readlink("/proc/self/exe", result, kMaxPath);
+	if (count > 0) {
+		auto filename = QFile::decodeName(result);
+		auto deletedPostfix = qstr(" (deleted)");
+		if (filename.endsWith(deletedPostfix)
+			&& !QFileInfo(filename).exists()) {
+			filename.chop(deletedPostfix.size());
+		}
+		return filename;
+	}
+
+	// Fallback to the first command line argument.
+	return argc ? QFile::decodeName(argv[0]) : QString();
+}
+
 } // namespace base::Platform

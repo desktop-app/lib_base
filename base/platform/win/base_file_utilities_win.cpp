@@ -11,6 +11,7 @@
 #include <QtCore/QString>
 #include <QtCore/QDir>
 
+#include <array>
 #include <string>
 #include <Shlwapi.h>
 #include <shlobj.h>
@@ -79,6 +80,29 @@ QString FileNameFromUserString(QString name) {
 		}
 	}
 	return name;
+}
+
+QString CurrentExecutablePath(int argc, char *argv[]) {
+	auto result = std::array<WCHAR, MAX_PATH + 1>{ 0 };
+	const auto count = GetModuleFileName(
+		nullptr,
+		result.data(),
+		MAX_PATH + 1);
+	if (count < MAX_PATH + 1) {
+		const auto info = QFileInfo(QDir::fromNativeSeparators(
+			QString::fromWCharArray(result.data(), count)));
+		return info.absoluteFilePath();
+	}
+
+	// Fallback to the first command line argument.
+	auto argsCount = 0;
+	if (const auto args = CommandLineToArgvW(GetCommandLine(), &argsCount)) {
+		auto info = QFileInfo(QDir::fromNativeSeparators(
+			QString::fromWCharArray(args[0])));
+		LocalFree(args);
+		return info.absoluteFilePath();
+	}
+	return QString();
 }
 
 } // namespace base::Platform

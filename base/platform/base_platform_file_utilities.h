@@ -13,6 +13,8 @@ namespace base::Platform {
 bool ShowInFolder(const QString &filepath);
 [[nodiscard]] QString FileNameFromUserString(QString name);
 
+[[nodiscard]] QString CurrentExecutablePath(int argc, char *argv[]);
+
 } // namespace base::Platform
 
 #ifdef Q_OS_MAC
