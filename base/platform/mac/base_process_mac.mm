@@ -6,6 +6,8 @@
 //
 #include "base/platform/mac/base_process_mac.h"
 
+#include <Cocoa/Cocoa.h>
+
 namespace base::Platform {
 
 void ActivateProcessWindow(int64 pid, WId windowId) {

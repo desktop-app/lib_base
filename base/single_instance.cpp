@@ -9,6 +9,7 @@
 #include "base/crc32hash.h"
 #include "base/platform/base_platform_process.h"
 
+#include <QtCore/QStandardPaths>
 #include <QtWidgets/QWidget>
 #include <QtGui/QWindow>
 
