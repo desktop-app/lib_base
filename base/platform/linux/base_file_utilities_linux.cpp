@@ -13,6 +13,8 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 
+#include <unistd.h>
+
 namespace base::Platform {
 
 bool ShowInFolder(const QString &filepath) {
