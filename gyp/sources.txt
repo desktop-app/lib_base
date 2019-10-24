@@ -2,6 +2,8 @@
 <(src_loc)/base/platform/linux/base_file_utilities_linux.h
 <(src_loc)/base/platform/linux/base_info_linux.cpp
 <(src_loc)/base/platform/linux/base_info_linux.h
+<(src_loc)/base/platform/linux/base_last_input_linux.cpp
+<(src_loc)/base/platform/linux/base_last_input_linux.h
 <(src_loc)/base/platform/linux/base_layout_switch_linux.cpp
 <(src_loc)/base/platform/linux/base_layout_switch_linux.h
 <(src_loc)/base/platform/linux/base_process_linux.cpp
@@ -12,6 +14,8 @@
 <(src_loc)/base/platform/mac/base_file_utilities_mac.mm
 <(src_loc)/base/platform/mac/base_info_mac.h
 <(src_loc)/base/platform/mac/base_info_mac.mm
+<(src_loc)/base/platform/mac/base_last_input_mac.h
+<(src_loc)/base/platform/mac/base_last_input_mac.mm
 <(src_loc)/base/platform/mac/base_layout_switch_mac.h
 <(src_loc)/base/platform/mac/base_layout_switch_mac.mm
 <(src_loc)/base/platform/mac/base_process_mac.h
@@ -24,6 +28,8 @@
 <(src_loc)/base/platform/win/base_file_utilities_win.h
 <(src_loc)/base/platform/win/base_info_win.cpp
 <(src_loc)/base/platform/win/base_info_win.h
+<(src_loc)/base/platform/win/base_last_input_win.cpp
+<(src_loc)/base/platform/win/base_last_input_win.h
 <(src_loc)/base/platform/win/base_layout_switch_win.cpp
 <(src_loc)/base/platform/win/base_layout_switch_win.h
 <(src_loc)/base/platform/win/base_process_win.cpp
@@ -32,6 +38,7 @@
 <(src_loc)/base/platform/win/base_url_scheme_win.h
 <(src_loc)/base/platform/win/base_windows_h.h
 <(src_loc)/base/platform/base_platform_info.h
+<(src_loc)/base/platform/base_platform_last_input.h
 <(src_loc)/base/platform/base_platform_layout_switch.h
 <(src_loc)/base/platform/base_platform_file_utilities.h
 <(src_loc)/base/platform/base_platform_process.h
@@ -61,6 +68,8 @@
 <(src_loc)/base/index_based_iterator.h
 <(src_loc)/base/invoke_queued.h
 <(src_loc)/base/last_used_cache.h
+<(src_loc)/base/last_user_input.cpp
+<(src_loc)/base/last_user_input.h
 <(src_loc)/base/match_method.h
 <(src_loc)/base/object_ptr.h
 <(src_loc)/base/observer.cpp
