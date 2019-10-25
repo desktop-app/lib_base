@@ -7,6 +7,7 @@
 #include "base/platform/mac/base_last_input_mac.h"
 
 #include <IOKit/IOKitLib.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 namespace base::Platform {
 
