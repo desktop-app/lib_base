@@ -21,7 +21,7 @@ inline QString url_encode(const QString &part) {
 }
 
 inline QString url_decode(const QString &encoded) {
-	return QUrl::fromPercentEncoding(encoded.toUtf8());
+	return QUrl::fromPercentEncoding(encoded.toUtf8()).replace('+', ' ');
 }
 
 enum class UrlParamNameTransform {
