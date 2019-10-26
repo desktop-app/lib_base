@@ -33,6 +33,7 @@
     'include_dirs': [
       '<(src_loc)',
       '<(libs_loc)/range-v3/include',
+      '<(libs_loc)/breakpad/src',
       '<(submodules_loc)/lib_rpl',
       '<(third_party_loc)/GSL/include',
       '<(third_party_loc)/variant/include',

@@ -52,6 +52,10 @@
 <(src_loc)/base/bytes.h
 <(src_loc)/base/call_delayed.cpp
 <(src_loc)/base/call_delayed.h
+<(src_loc)/base/crash_report_header.cpp
+<(src_loc)/base/crash_report_header.h
+<(src_loc)/base/crash_report_writer.cpp
+<(src_loc)/base/crash_report_writer.h
 <(src_loc)/base/crc32hash.cpp
 <(src_loc)/base/crc32hash.h
 <(src_loc)/base/concurrent_timer.cpp
