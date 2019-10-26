@@ -44,8 +44,8 @@
 <(src_loc)/base/platform/base_platform_process.h
 <(src_loc)/base/platform/base_platform_url_scheme.h
 <(src_loc)/base/algorithm.h
+<(src_loc)/base/assertion.cpp
 <(src_loc)/base/assertion.h
-<(src_loc)/base/base_integration.h
 <(src_loc)/base/basic_types.h
 <(src_loc)/base/binary_guard.h
 <(src_loc)/base/build_config.h
@@ -70,6 +70,8 @@
 <(src_loc)/base/flat_set.h
 <(src_loc)/base/functors.h
 <(src_loc)/base/index_based_iterator.h
+<(src_loc)/base/integration.cpp
+<(src_loc)/base/integration.h
 <(src_loc)/base/invoke_queued.h
 <(src_loc)/base/last_used_cache.h
 <(src_loc)/base/last_user_input.cpp

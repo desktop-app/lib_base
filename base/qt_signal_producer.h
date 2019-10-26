@@ -6,7 +6,7 @@
 //
 #pragma once
 
-#include "base/base_integration.h"
+#include "base/integration.h"
 
 namespace base {
 
@@ -66,7 +66,7 @@ auto qt_signal_producer(Object *object, Signal signal) {
 			});
 		};
 		auto put = [=](const Produced &value) {
-			EnterFromEventLoop([&] {
+			Integration::Instance().enterFromEventLoop([&] {
 				consumer.put_next_copy(value);
 			});
 		};

@@ -11,10 +11,8 @@
 // Ensures/Expects.
 #include <gsl/gsl_assert>
 
-namespace base {
-namespace assertion {
+namespace base::assertion {
 
-// Client must define that method.
 void log(const char *message, const char *file, int line);
 
 // Release build assertions.
@@ -42,8 +40,7 @@ constexpr const char* extract_basename(const char* path, size_t size) {
 	return path + size;
 }
 
-} // namespace assertion
-} // namespace base
+} // namespace base::assertion
 
 #if defined(__clang__) || defined(__GNUC__)
 #define AssertUnlikelyHelper(x) __builtin_expect(!!(x), 0)

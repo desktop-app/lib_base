@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/crash_report_writer.h"
 
 #include "base/platform/base_platform_info.h"
+#include "base/integration.h"
 #include "base/crash_report_header.h"
 
 #include <QtCore/QDir>
@@ -36,14 +37,16 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <execinfo.h>
 #include <signal.h>
 #include <sys/syscall.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
-#ifdef MAC_USE_BREAKPAD
+#ifdef USE_BREAKPAD
 #include "client/mac/handler/exception_handler.h"
-#else // MAC_USE_BREAKPAD
+#else // USE_BREAKPAD
 #include "client/crashpad_client.h"
-#endif // else for MAC_USE_BREAKPAD
+#endif // USE_BREAKPAD
 
 #elif defined Q_OS_LINUX64 || defined Q_OS_LINUX32 // Q_OS_MAC
 
@@ -230,7 +233,7 @@ void SignalHandler(int signum) {
 	ReportingThreadId = nullptr;
 }
 
-bool SetSignalHandlers = Platform::IsLinux();
+bool SetSignalHandlers = Platform::IsLinux() || Platform::IsMac();
 bool CrashLogged = false;
 
 #ifdef USE_BREAKPAD
@@ -377,7 +380,7 @@ void CrashReportWriter::startCatching() {
 	);
 #elif defined Q_OS_MAC // Q_OS_WIN
 
-#ifdef MAC_USE_BREAKPAD
+#ifdef USE_BREAKPAD
 #ifndef _DEBUG
 	BreakpadExceptionHandler = new google_breakpad::ExceptionHandler(
 		QFile::encodeName(_path).toStdString(),
@@ -388,19 +391,19 @@ void CrashReportWriter::startCatching() {
 		0
 	);
 #endif // !_DEBUG
-#else // MAC_USE_BREAKPAD
+#else // USE_BREAKPAD
 	crashpad::CrashpadClient crashpad_client;
-	std::string handler = (cExeDir() + cExeName() + qsl("/Contents/Helpers/crashpad_handler")).toUtf8().constData();
-	std::string database = QFile::encodeName(_path).constData();
+	const auto handler = (Integration::Instance().executablePath() + "/Contents/Helpers/crashpad_handler").toStdString();
+	const auto database = QFile::encodeName(_path).constData();
 	if (crashpad_client.StartHandler(base::FilePath(handler),
 		                                base::FilePath(database),
 		                                std::string(),
-		                                ProcessAnnotations,
+		                                Annotations,
 		                                std::vector<std::string>(),
 		                                false)) {
 		crashpad_client.UseHandler();
 	}
-#endif // else for MAC_USE_BREAKPAD
+#endif // USE_BREAKPAD
 #elif defined Q_OS_LINUX64 || defined Q_OS_LINUX32
 	BreakpadExceptionHandler = new google_breakpad::ExceptionHandler(
 		google_breakpad::MinidumpDescriptor(QFile::encodeName(dumpspath).toStdString()),
