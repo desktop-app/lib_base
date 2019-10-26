@@ -13,6 +13,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtCore/QDir>
 #include <QtCore/QDateTime>
+#include <QtCore/QMutex>
+#include <QtCore/QMutexLocker>
 #include <signal.h>
 #include <new>
 #include <mutex>
@@ -218,6 +220,10 @@ void SignalHandler(int signum) {
 #else // Q_OS_WIN
 	if (BreakpadDumpId) {
 		FinalReportPath.append(BreakpadDumpId);
+		const auto good = int(FinalReportPath.size()) - 4;
+		if (good > 0 && !strcmp(FinalReportPath.c_str() + good, ".dmp")) {
+			FinalReportPath.erase(FinalReportPath.begin() + good, FinalReportPath.end());
+		}
 		FinalReportPath.append(".txt");
 		const auto handle = open(
 			FinalReportPath.c_str(),
@@ -259,6 +265,15 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor &md, void *context, 
 	BreakpadDumpId = _minidump_id;
 #else // Q_OS_MAC
 	BreakpadDumpId = md.path();
+	auto afterLastSlash = BreakpadDumpId;
+	for (auto ch = afterLastSlash; *ch != 0; ++ch) {
+		if (*ch == '/') {
+			afterLastSlash = (ch + 1);
+		}
+	}
+	if (*afterLastSlash) {
+		BreakpadDumpId = afterLastSlash;
+	}
 #endif // else for Q_OS_MAC
 	SignalHandler(-1, 0, 0);
 
@@ -406,7 +421,7 @@ void CrashReportWriter::startCatching() {
 #endif // USE_BREAKPAD
 #elif defined Q_OS_LINUX64 || defined Q_OS_LINUX32
 	BreakpadExceptionHandler = new google_breakpad::ExceptionHandler(
-		google_breakpad::MinidumpDescriptor(QFile::encodeName(dumpspath).toStdString()),
+		google_breakpad::MinidumpDescriptor(QFile::encodeName(_path).toStdString()),
 		/*FilterCallback*/ 0,
 		DumpCallback,
 		/*context*/ 0,
