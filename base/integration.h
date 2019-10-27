@@ -19,12 +19,14 @@ public:
 	Integration(int argc, char *argv[]);
 
 	virtual void enterFromEventLoop(FnMut<void()> &&method) = 0;
-	
+
 	virtual void logAssertionViolation(const QString &info);
 
 	[[nodiscard]] QString executableDir() const;
 	[[nodiscard]] QString executableName() const;
 	[[nodiscard]] QString executablePath() const;
+
+	virtual ~Integration() = default;
 
 private:
 	QString _executableDir;
