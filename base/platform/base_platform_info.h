@@ -7,6 +7,8 @@
 #pragma once
 
 class QJsonObject;
+class QString;
+class QDate;
 
 namespace Platform {
 

@@ -6,6 +6,8 @@
 //
 #pragma once
 
+#include "base/basic_types.h"
+
 #include <atomic>
 #include <memory>
 

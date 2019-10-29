@@ -9,6 +9,7 @@
 #include "base/platform/mac/base_utilities_mac.h"
 
 #include <QtCore/QFileInfo>
+#include <sys/xattr.h>
 
 namespace base::Platform {
 
@@ -21,6 +22,29 @@ bool ShowInFolder(const QString &filepath) {
 	@autoreleasepool {
 
 	result = [[NSWorkspace sharedWorkspace] selectFile:Q2NSString(filepath) inFileViewerRootedAtPath:Q2NSString(folder)];
+
+	}
+
+	return (result != NO);
+}
+
+void RemoveQuarantine(const QString &path) {
+	const auto kQuarantineAttribute = "com.apple.quarantine";
+
+	const auto local = QFile::encodeName(path);
+	removexattr(local.data(), kQuarantineAttribute, 0);
+}
+
+bool DeleteDirectory(QString path) {
+	if (path.endsWith('/')) {
+		path.chop(1);
+	}
+
+	BOOL result = NO;
+
+	@autoreleasepool {
+
+	result = [[NSFileManager defaultManager] removeItemAtPath:Q2NSString(path) error:nil];
 
 	}
 

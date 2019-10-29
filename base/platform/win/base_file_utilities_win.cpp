@@ -15,6 +15,7 @@
 #include <string>
 #include <Shlwapi.h>
 #include <shlobj.h>
+#include <RestartManager.h>
 
 namespace base::Platform {
 
@@ -82,6 +83,31 @@ QString FileNameFromUserString(QString name) {
 	return name;
 }
 
+bool DeleteDirectory(QString path) {
+	if (path.endsWith('/')) {
+		path.chop(1);
+	}
+	const auto wide = QDir::toNativeSeparators(path).toStdWString()
+		+ wchar_t(0)
+		+ wchar_t(0);
+	SHFILEOPSTRUCT file_op = {
+		NULL,
+		FO_DELETE,
+		wide.data(),
+		L"",
+		FOF_NOCONFIRMATION |
+		FOF_NOERRORUI |
+		FOF_SILENT,
+		false,
+		0,
+		L""
+	};
+	return (SHFileOperation(&file_op) == 0);
+}
+
+void RemoveQuarantine(const QString &path) {
+}
+
 QString CurrentExecutablePath(int argc, char *argv[]) {
 	auto result = std::array<WCHAR, MAX_PATH + 1>{ 0 };
 	const auto count = GetModuleFileName(
@@ -103,6 +129,52 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 		return info.absoluteFilePath();
 	}
 	return QString();
+}
+
+bool CloseProcesses(const QString &filename) {
+	auto result = BOOL(FALSE);
+	auto session = DWORD();
+	auto sessionKey = std::wstring(CCH_RM_SESSION_KEY + 1, wchar_t(0));
+	auto error = RmStartSession(&session, 0, sessionKey.data());
+	if (error != ERROR_SUCCESS) {
+		return false;
+	}
+	const auto guard = gsl::finally([&] { RmEndSession(session); });
+
+	const auto path = QDir::toNativeSeparators(filename).toStdWString();
+	auto nullterm = path.c_str();
+	error = RmRegisterResources(
+		session,
+		1,
+		&nullterm,
+		0,
+		nullptr,
+		0,
+		nullptr);
+	if (error != ERROR_SUCCESS) {
+		return false;
+	}
+
+	auto processInfoNeeded = UINT(0);
+	auto processInfoCount = UINT(0);
+	auto reason = DWORD();
+
+	error = RmGetList(
+		session,
+		&processInfoNeeded,
+		&processInfoCount,
+		nullptr,
+		&reason);
+	if (error != ERROR_SUCCESS && error != ERROR_MORE_DATA) {
+		return false;
+	} else if (processInfoNeeded <= 0) {
+		return true;
+	}
+	error = RmShutdown(session, RmForceShutdown, NULL);
+	if (error != ERROR_SUCCESS) {
+		return false;
+	}
+	return true;
 }
 
 } // namespace base::Platform

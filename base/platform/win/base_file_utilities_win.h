@@ -7,4 +7,7 @@
 #pragma once
 
 namespace base::Platform {
+
+bool CloseProcesses(const QString &filename);
+
 } // namespace base::Platform

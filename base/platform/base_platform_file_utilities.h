@@ -13,6 +13,9 @@ namespace base::Platform {
 bool ShowInFolder(const QString &filepath);
 [[nodiscard]] QString FileNameFromUserString(QString name);
 
+bool DeleteDirectory(QString path);
+void RemoveQuarantine(const QString &path);
+
 [[nodiscard]] QString CurrentExecutablePath(int argc, char *argv[]);
 
 } // namespace base::Platform

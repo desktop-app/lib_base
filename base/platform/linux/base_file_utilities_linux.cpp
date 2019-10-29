@@ -14,6 +14,8 @@
 #include <QtCore/QDir>
 
 #include <unistd.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 namespace base::Platform {
 
@@ -65,6 +67,48 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 
 	// Fallback to the first command line argument.
 	return argc ? QFile::decodeName(argv[0]) : QString();
+}
+
+void RemoveQuarantine(const QString &path) {
+}
+
+// From http://stackoverflow.com/questions/2256945/removing-a-non-empty-directory-programmatically-in-c-or-c
+bool DeleteDirectory(QString path) {
+	if (path.endsWith('/')) {
+		path.chop(1);
+	}
+	const auto pathRaw = QFile::encodeName(path);
+	const auto d = opendir(pathRaw.constData());
+	if (!d) {
+		return false;
+	}
+
+	while (struct dirent *p = readdir(d)) {
+		// Skip the names "." and ".." as we don't want to recurse on them.
+		if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
+			continue;
+		}
+
+		const auto fname = path + '/' + p->d_name;
+		const auto encoded = QFile::encodeName(fname);
+		struct stat statbuf;
+		if (!stat(encoded.constData(), &statbuf)) {
+			if (S_ISDIR(statbuf.st_mode)) {
+				if (!DeleteDirectory(fname)) {
+					closedir(d);
+					return false;
+				}
+			} else {
+				if (unlink(encoded.constData())) {
+					closedir(d);
+					return false;
+				}
+			}
+		}
+	}
+	closedir(d);
+
+	return !rmdir(pathRaw.constData());
 }
 
 } // namespace base::Platform

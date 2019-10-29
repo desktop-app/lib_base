@@ -7,62 +7,13 @@
 #include "base/file_lock.h"
 
 #include "base/platform/win/base_windows_h.h"
+#include "base/platform/win/base_file_utilities_win.h"
 
 #include <QtCore/QDir>
 #include <io.h>
 #include <fileapi.h>
-#include <RestartManager.h>
 
 namespace base {
-namespace {
-
-bool CloseProcesses(const QString &filename) {
-	auto result = BOOL(FALSE);
-	auto session = DWORD();
-	auto sessionKey = std::wstring(CCH_RM_SESSION_KEY + 1, wchar_t(0));
-	auto error = RmStartSession(&session, 0, sessionKey.data());
-	if (error != ERROR_SUCCESS) {
-		return false;
-	}
-	const auto guard = gsl::finally([&] { RmEndSession(session); });
-
-	const auto path = QDir::toNativeSeparators(filename).toStdWString();
-	auto nullterm = path.c_str();
-	error = RmRegisterResources(
-		session,
-		1,
-		&nullterm,
-		0,
-		nullptr,
-		0,
-		nullptr);
-	if (error != ERROR_SUCCESS) {
-		return false;
-	}
-
-	auto processInfoNeeded = UINT(0);
-	auto processInfoCount = UINT(0);
-	auto reason = DWORD();
-
-	error = RmGetList(
-		session,
-		&processInfoNeeded,
-		&processInfoCount,
-		nullptr,
-		&reason);
-	if (error != ERROR_SUCCESS && error != ERROR_MORE_DATA) {
-		return false;
-	} else if (processInfoNeeded <= 0) {
-		return true;
-	}
-	error = RmShutdown(session, RmForceShutdown, NULL);
-	if (error != ERROR_SUCCESS) {
-		return false;
-	}
-	return true;
-}
-
-} // namespace
 
 class FileLock::Lock {
 public:
@@ -119,7 +70,7 @@ bool FileLock::lock(QFile &file, QIODevice::OpenMode mode) {
 			return true;
 		}
 		file.close();
-	} while (CloseProcesses(file.fileName()));
+	} while (Platform::CloseProcesses(file.fileName()));
 
 	return false;
 }
