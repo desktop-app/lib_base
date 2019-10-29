@@ -13,8 +13,9 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 
-#include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <dirent.h>
 
 namespace base::Platform {
