@@ -26,5 +26,6 @@ struct UrlSchemeDescriptor {
 
 [[nodiscard]] bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor);
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor);
+void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor);
 
 } // namespace base::Platform

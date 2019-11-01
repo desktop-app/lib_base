@@ -182,4 +182,8 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	RegisterKdeHandler(descriptor);
 }
 
+void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
+	// TODO
+}
+
 } // namespace base::Platform

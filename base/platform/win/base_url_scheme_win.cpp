@@ -49,6 +49,11 @@ bool OpenRegKey(Mode mode, const QString &key, PHKEY rkey) {
 	return false;
 }
 
+bool RemoveRegKey(const QString &key) {
+	const auto wkey = key.toStdWString();
+	return (RegDeleteKey(HKEY_CURRENT_USER, wkey.c_str()) == ERROR_SUCCESS);
+}
+
 bool SetKeyValue(Mode mode, HKEY rkey, const QString &name, QString value) {
 	static_assert(sizeof(WCHAR) == 2);
 	static_assert(sizeof(wchar_t) == 2);
@@ -95,6 +100,11 @@ bool SetKeyValue(Mode mode, HKEY rkey, const QString &name, QString value) {
 	return false;
 }
 
+bool RemoveKeyValue(HKEY rkey, const QString &name) {
+	const auto wname = name.toStdWString();
+	return (RegDeleteValue(rkey, wname.c_str()) == ERROR_SUCCESS);
+}
+
 bool RegisterLegacy(Mode mode, const UrlSchemeDescriptor &d) {
 	auto rkey = HKEY();
 	const auto exe = QDir::toNativeSeparators(d.executable);
@@ -110,6 +120,15 @@ bool RegisterLegacy(Mode mode, const UrlSchemeDescriptor &d) {
 		&& OpenRegKey(mode, keyBase + "\\shell\\open", &rkey)
 		&& OpenRegKey(mode, keyBase + "\\shell\\open\\command", &rkey)
 		&& SetKeyValue(mode, rkey, nullptr, command);
+}
+
+void UnregisterLegacy(const UrlSchemeDescriptor &d) {
+	const auto keyBase = "Software\\Classes\\" + d.protocol;
+	RemoveRegKey(keyBase + "\\shell\\open\\command");
+	RemoveRegKey(keyBase + "\\shell\\open");
+	RemoveRegKey(keyBase + "\\shell");
+	RemoveRegKey(keyBase + "\\DefaultIcon");
+	RemoveRegKey(keyBase);
 }
 
 bool RegisterDefaultProgram(Mode mode, const UrlSchemeDescriptor &d) {
@@ -145,6 +164,24 @@ bool RegisterDefaultProgram(Mode mode, const UrlSchemeDescriptor &d) {
 		&& SetKeyValue(mode, rkey, d.displayAppName, registered);
 }
 
+void UnregisterDefaultProgram(const UrlSchemeDescriptor &d) {
+	auto rkey = HKEY();
+	const auto namedProtocol = d.shortAppName + '.' + d.protocol;
+	const auto namedBase = "Software\\Classes\\" + namedProtocol;
+	const auto longNamedBase = "Software\\" + d.longAppName;
+	if (OpenRegKey(Mode::Check, "Software\\RegisteredApplications", &rkey)) {
+		RemoveKeyValue(rkey, d.displayAppName);
+	}
+	RemoveRegKey(longNamedBase + "\\Capabilities\\UrlAssociations");
+	RemoveRegKey(longNamedBase + "\\Capabilities");
+	RemoveRegKey(longNamedBase);
+	RemoveRegKey(namedBase + "\\shell\\open\\command");
+	RemoveRegKey(namedBase + "\\shell\\open");
+	RemoveRegKey(namedBase + "\\shell");
+	RemoveRegKey(namedBase + "\\DefaultIcon");
+	RemoveRegKey(namedBase);
+}
+
 bool FullRegister(Mode mode, const UrlSchemeDescriptor &descriptor) {
 	return RegisterDefaultProgram(mode, descriptor)
 		&& RegisterLegacy(mode, descriptor);
@@ -158,6 +195,13 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	FullRegister(Mode::Write, descriptor);
+}
+
+void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
+	if (CheckUrlScheme(descriptor)) {
+		UnregisterDefaultProgram(descriptor);
+		UnregisterLegacy(descriptor);
+	}
 }
 
 } // namespace base::Platform

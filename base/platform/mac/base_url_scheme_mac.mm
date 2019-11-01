@@ -18,7 +18,7 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	const auto result = CFStringCompare(
 		current,
 		(CFStringRef)[[NSBundle mainBundle] bundleIdentifier],
-		0);
+		kCFCompareCaseInsensitive);
 	CFRelease(str);
 	return (result == kCFCompareEqualTo);
 }
@@ -30,6 +30,10 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		str,
 		(CFStringRef)[[NSBundle mainBundle] bundleIdentifier]);
 	CFRelease(str);
+}
+
+void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
+	// TODO
 }
 
 } // namespace base::Platform
