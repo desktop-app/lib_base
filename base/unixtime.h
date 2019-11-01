@@ -17,6 +17,7 @@ namespace unixtime {
 
 [[nodiscard]] TimeId now();
 void update(TimeId now, bool force = false);
+[[nodiscard]] rpl::producer<> updates(); // main thread
 
 [[nodiscard]] QDateTime parse(TimeId value);
 [[nodiscard]] TimeId serialize(const QDateTime &date);

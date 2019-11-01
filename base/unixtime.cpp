@@ -114,6 +114,11 @@ TimeId local() {
 	return (TimeId)time(nullptr);
 }
 
+rpl::event_stream<> &UpdatesStream() {
+	static auto result = rpl::event_stream<>();
+	return result;
+}
+
 } // namespace
 
 TimeId now() {
@@ -136,6 +141,14 @@ void update(TimeId now, bool force) {
 	HttpValueValid = false;
 
 	GlobalMsgIdManager.update();
+
+	crl::on_main([] {
+		UpdatesStream().fire({});
+	});
+}
+
+rpl::producer<> updates() {
+	return UpdatesStream().events();
 }
 
 QDateTime parse(TimeId value) {
