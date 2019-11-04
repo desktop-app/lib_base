@@ -20,6 +20,7 @@ public:
 
 	virtual void enterFromEventLoop(FnMut<void()> &&method) = 0;
 
+	virtual void logMessage(const QString &message) = 0;
 	virtual void logAssertionViolation(const QString &info);
 
 	[[nodiscard]] QString executableDir() const;

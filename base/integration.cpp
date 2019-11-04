@@ -51,6 +51,7 @@ Integration::Integration(int argc, char *argv[]) {
 }
 
 void Integration::logAssertionViolation(const QString &info) {
+	logMessage("Assertion Failed! " + info);
 }
 
 QString Integration::executableDir() const {
