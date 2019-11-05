@@ -97,8 +97,8 @@ const char *PlatformString() {
 		return "Windows";
 	} else if (Platform::IsMacStoreBuild()) {
 		return "MacAppStore";
-	} else if (Platform::IsMacOldBuild()) {
-		return "MacOSold";
+	} else if (Platform::IsOSXBuild()) {
+		return "OSX";
 	} else if (Platform::IsMac()) {
 		return "MacOS";
 	} else if (Platform::IsLinux32Bit()) {

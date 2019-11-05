@@ -66,11 +66,7 @@ inline RegularExpressionMatch regex_match(const QString &string, const QString &
 
 inline RegularExpressionMatch regex_match(const QString &string, const QStringRef &subjectRef, RegExOptions options = 0) {
 	auto qtOptions = QRegularExpression::PatternOptions(static_cast<int>(options));
-#ifndef OS_MAC_OLD
 	return RegularExpressionMatch(QRegularExpression(string, qtOptions).match(subjectRef));
-#else // OS_MAC_OLD
-	return RegularExpressionMatch(QRegularExpression(string, qtOptions).match(subjectRef.toString()));
-#endif // OS_MAC_OLD
 }
 
 } // namespace qthelp

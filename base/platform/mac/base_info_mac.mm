@@ -73,11 +73,7 @@ QString FromIdentifier(const QString &model) {
 int MinorVersion() {
 	static const int version = QSysInfo::macVersion();
 	constexpr int kShift = 2;
-	if (version == QSysInfo::MV_Unknown
-#ifndef OS_MAC_OLD
-		|| version == QSysInfo::MV_None
-#endif // OS_MAC_OLD
-		|| version < kShift + 6) {
+	if (version == QSysInfo::MV_Unknown || version < kShift + 6) {
 		return 0;
 	}
 	return version - kShift;
@@ -151,9 +147,7 @@ int AutoUpdateVersion() {
 }
 
 QString AutoUpdateKey() {
-	if (IsMacOldBuild()) {
-		return "mac32";
-	} else if (!IsMac10_12OrGreater()) {
+	if (!IsMac10_12OrGreater()) {
 		return "osx";
 	} else {
 		return "mac";

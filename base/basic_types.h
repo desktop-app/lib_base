@@ -46,21 +46,3 @@ using float32 = float;
 using float64 = double;
 
 using TimeId = int32;
-
-// Define specializations for QByteArray for Qt 5.3.2, because
-// QByteArray in Qt 5.3.2 doesn't declare "pointer" subtype.
-#if QT_VERSION < QT_VERSION_CHECK(5, 5, 0)
-namespace gsl {
-
-template <>
-inline span<char> make_span<QByteArray>(QByteArray &cont) {
-	return span<char>(cont.data(), cont.size());
-}
-
-template <>
-inline span<const char> make_span(const QByteArray &cont) {
-	return span<const char>(cont.constData(), cont.size());
-}
-
-} // namespace gsl
-#endif // OS_MAC_OLD

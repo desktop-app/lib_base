@@ -14,12 +14,12 @@ inline constexpr bool IsMac() {
 	return true;
 }
 
-inline constexpr bool IsMacOldBuild() {
-#ifdef OS_MAC_OLD
+inline constexpr bool IsOSXBuild() {
+#ifdef OS_OSX
 	return true;
-#else // OS_MAC_OLD
+#else // OS_OSX
 	return false;
-#endif // OS_MAC_OLD
+#endif // OS_OSX
 }
 
 inline constexpr bool IsMacStoreBuild() {
