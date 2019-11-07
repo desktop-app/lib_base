@@ -23,6 +23,7 @@
       'pch_header': '<(src_loc)/base/base_pch.h',
     },
     'defines': [
+      '<!@(python -c "for s in \'<(build_defines)\'.split(\',\'): print(s)")',
     ],
     'dependencies': [
       '<(submodules_loc)/lib_crl/lib_crl.gyp:lib_crl',
