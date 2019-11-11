@@ -840,7 +840,7 @@ public:
 		}
 		auto result = std::move(it->second);
 		this->erase(it);
-		return std::move(result);
+		return result;
 	}
 
 private:
