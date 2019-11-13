@@ -570,9 +570,11 @@ inline bytes::vector HmacSha256(
 namespace bytes {
 
 inline void set_random(span destination) {
-	RAND_bytes(
-		reinterpret_cast<unsigned char*>(destination.data()),
-		destination.size());
+	if (!destination.empty()) {
+		RAND_bytes(
+			reinterpret_cast<unsigned char*>(destination.data()),
+			destination.size());
+	}
 }
 
 } // namespace bytes

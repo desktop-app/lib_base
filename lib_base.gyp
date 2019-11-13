@@ -40,6 +40,7 @@
       '<(submodules_loc)/lib_rpl',
       '<(third_party_loc)/GSL/include',
       '<(third_party_loc)/variant/include',
+      '<(third_party_loc)/expected/include',
     ],
     'direct_dependent_settings': {
       'include_dirs': [
@@ -48,6 +49,7 @@
         '<(submodules_loc)/lib_rpl',
         '<(third_party_loc)/GSL/include',
         '<(third_party_loc)/variant/include',
+        '<(third_party_loc)/expected/include',
       ],
     },
     'sources': [
