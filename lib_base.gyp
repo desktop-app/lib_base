@@ -37,6 +37,8 @@
       '<(libs_loc)/breakpad/src',
       '<(libs_loc)/crashpad',
       '<(libs_loc)/crashpad/third_party/mini_chromium/mini_chromium',
+      '<(libs_loc)/zlib',
+      '<(third_party_loc)/minizip',
       '<(submodules_loc)/lib_rpl',
       '<(third_party_loc)/GSL/include',
       '<(third_party_loc)/variant/include',
@@ -46,6 +48,8 @@
       'include_dirs': [
         '<(src_loc)',
         '<(libs_loc)/range-v3/include',
+        '<(libs_loc)/zlib',
+        '<(third_party_loc)/minizip',
         '<(submodules_loc)/lib_rpl',
         '<(third_party_loc)/GSL/include',
         '<(third_party_loc)/variant/include',
