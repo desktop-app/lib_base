@@ -122,7 +122,7 @@ PRIVATE
     base/zlib_help.h
 )
 
-force_include(lib_base base/base_pch.h)
+target_precompile_headers(lib_base PRIVATE ${src_loc}/base/base_pch.h)
 nice_target_sources(lib_base ${src_loc} "${lib_base_sources}")
 
 target_include_directories(lib_base
