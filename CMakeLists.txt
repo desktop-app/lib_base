@@ -1,4 +1,11 @@
+# This file is part of Desktop App Toolkit,
+# a set of libraries for developing nice desktop applications.
+#
+# For license and copyright information please follow this link:
+# https://github.com/desktop-app/legal/blob/master/LEGAL
+
 add_library(lib_base OBJECT)
+add_library(desktop-app::lib_base ALIAS lib_base)
 init_target(lib_base)
 
 get_filename_component(src_loc . REALPATH)
@@ -132,12 +139,12 @@ PUBLIC
 
 target_link_libraries(lib_base
 PUBLIC
-    external_qt
-    external_openssl
-    external_crash_reports
-    external_variant
-    external_ranges
-    external_gsl
-    lib_rpl
-    lib_crl
+    desktop-app::lib_rpl
+    desktop-app::lib_crl
+    desktop-app::external_qt
+    desktop-app::external_openssl
+    desktop-app::external_crash_reports
+    desktop-app::external_variant
+    desktop-app::external_ranges
+    desktop-app::external_gsl
 )
