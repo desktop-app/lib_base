@@ -11,7 +11,8 @@
 // Ensures/Expects.
 #include <gsl/gsl_assert>
 
-namespace base::assertion {
+namespace base {
+namespace assertion {
 
 void log(const char *message, const char *file, int line);
 
@@ -40,7 +41,8 @@ constexpr const char* extract_basename(const char* path, size_t size) {
 	return path + size;
 }
 
-} // namespace base::assertion
+} // namespace assertion
+} // namespace base
 
 #if defined(__clang__) || defined(__GNUC__)
 #define AssertUnlikelyHelper(x) __builtin_expect(!!(x), 0)
