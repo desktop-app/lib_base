@@ -8,6 +8,10 @@ add_library(lib_base OBJECT)
 add_library(desktop-app::lib_base ALIAS lib_base)
 init_target(lib_base)
 
+add_library(lib_base_crash_report_writer OBJECT)
+add_library(desktop-app::lib_base_crash_report_writer ALIAS lib_base_crash_report_writer)
+init_target(lib_base_crash_report_writer)
+
 get_filename_component(src_loc . REALPATH)
 
 set(lib_base_sources
@@ -66,10 +70,6 @@ PRIVATE
     base/bytes.h
     base/call_delayed.cpp
     base/call_delayed.h
-    base/crash_report_header.cpp
-    base/crash_report_header.h
-    base/crash_report_writer.cpp
-    base/crash_report_writer.h
     base/crc32hash.cpp
     base/crc32hash.h
     base/concurrent_timer.cpp
@@ -147,4 +147,20 @@ PUBLIC
     desktop-app::external_variant
     desktop-app::external_ranges
     desktop-app::external_gsl
+)
+
+set(lib_base_crash_report_writer_sources
+PRIVATE
+    base/crash_report_header.cpp
+    base/crash_report_header.h
+    base/crash_report_writer.cpp
+    base/crash_report_writer.h
+)
+
+target_precompile_headers(lib_base_crash_report_writer PRIVATE ${src_loc}/base/base_pch.h)
+nice_target_sources(lib_base_crash_report_writer ${src_loc} "${lib_base_crash_report_writer_sources}")
+
+target_link_libraries(lib_base_crash_report_writer
+PUBLIC
+    desktop-app::lib_base
 )
