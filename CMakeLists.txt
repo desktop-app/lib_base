@@ -14,7 +14,8 @@ init_target(lib_base_crash_report_writer)
 
 get_filename_component(src_loc . REALPATH)
 
-set(lib_base_sources
+target_precompile_headers(lib_base PRIVATE ${src_loc}/base/base_pch.h)
+nice_target_sources(lib_base ${src_loc}
 PRIVATE
     base/platform/linux/base_file_utilities_linux.cpp
     base/platform/linux/base_file_utilities_linux.h
@@ -129,9 +130,6 @@ PRIVATE
     base/zlib_help.h
 )
 
-target_precompile_headers(lib_base PRIVATE ${src_loc}/base/base_pch.h)
-nice_target_sources(lib_base ${src_loc} "${lib_base_sources}")
-
 target_include_directories(lib_base
 PUBLIC
     ${src_loc}
@@ -147,18 +145,17 @@ PUBLIC
     desktop-app::external_variant
     desktop-app::external_ranges
     desktop-app::external_gsl
+    desktop-app::linux_glibc_wraps
 )
 
-set(lib_base_crash_report_writer_sources
+target_precompile_headers(lib_base_crash_report_writer PRIVATE ${src_loc}/base/base_pch.h)
+nice_target_sources(lib_base_crash_report_writer ${src_loc}
 PRIVATE
     base/crash_report_header.cpp
     base/crash_report_header.h
     base/crash_report_writer.cpp
     base/crash_report_writer.h
 )
-
-target_precompile_headers(lib_base_crash_report_writer PRIVATE ${src_loc}/base/base_pch.h)
-nice_target_sources(lib_base_crash_report_writer ${src_loc} "${lib_base_crash_report_writer_sources}")
 
 target_link_libraries(lib_base_crash_report_writer
 PUBLIC

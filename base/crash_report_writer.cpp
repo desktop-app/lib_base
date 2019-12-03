@@ -200,7 +200,7 @@ void SignalHandler(int signum) {
 	_write(ReportFileNo, ReportHeaderBytes(), ReportHeaderLength());
 	_close(ReportFileNo);
 #else // Q_OS_WIN
-	write(ReportFileNo, ReportHeaderBytes(), ReportHeaderLength());
+	[[maybe_unused]] auto result_ = write(ReportFileNo, ReportHeaderBytes(), ReportHeaderLength());
 	close(ReportFileNo);
 #endif // Q_OS_WIN
 	ReportFileNo = -1;
@@ -231,7 +231,7 @@ void SignalHandler(int signum) {
 			O_WRONLY | O_CREAT | O_TRUNC,
 			S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 		if (handle >= 0) {
-			write(handle, ReportHeaderBytes(), ReportHeaderLength());
+			[[maybe_unused]] auto result_ = write(handle, ReportHeaderBytes(), ReportHeaderLength());
 			close(handle);
 		}
 	}
