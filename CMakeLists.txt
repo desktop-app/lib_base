@@ -149,7 +149,7 @@ PUBLIC
     desktop-app::external_expected
 )
 
-if (LINUX)
+if (DESKTOP_APP_USE_GLIBC_WRAPS)
     target_link_libraries(lib_base PUBLIC desktop-app::linux_glibc_wraps)
 endif()
 
@@ -162,7 +162,4 @@ PRIVATE
     base/crash_report_writer.h
 )
 
-target_link_libraries(lib_base_crash_report_writer
-PUBLIC
-    desktop-app::lib_base
-)
+target_link_libraries(lib_base_crash_report_writer PUBLIC desktop-app::lib_base)
