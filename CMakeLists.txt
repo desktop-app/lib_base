@@ -145,8 +145,11 @@ PUBLIC
     desktop-app::external_variant
     desktop-app::external_ranges
     desktop-app::external_gsl
-    desktop-app::linux_glibc_wraps
 )
+
+if (LINUX)
+    target_link_libraries(lib_base PUBLIC desktop-app::linux_glibc_wraps)
+endif()
 
 target_precompile_headers(lib_base_crash_report_writer PRIVATE ${src_loc}/base/base_pch.h)
 nice_target_sources(lib_base_crash_report_writer ${src_loc}
