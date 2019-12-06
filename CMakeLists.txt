@@ -77,6 +77,7 @@ PRIVATE
     base/concurrent_timer.h
     base/flags.h
     base/enum_mask.h
+    base/expected.h
     base/event_filter.cpp
     base/event_filter.h
     base/base_file_utilities.cpp
@@ -145,6 +146,7 @@ PUBLIC
     desktop-app::external_variant
     desktop-app::external_ranges
     desktop-app::external_gsl
+    desktop-app::external_expected
 )
 
 if (LINUX)
