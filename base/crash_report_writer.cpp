@@ -209,11 +209,14 @@ void SignalHandler(int signum) {
 	if (BreakpadDumpId) {
 		FinalReportPath.append(BreakpadDumpId);
 		FinalReportPath.append(L".txt");
-		const auto handle = _wopen(
+		auto handle = int();
+		const auto errcode = _wsopen_s(
+			&handle,
 			FinalReportPath.c_str(),
 			_O_WRONLY | _O_CREAT | _O_TRUNC | _O_BINARY,
+			_SH_DENYWR,
 			_S_IWRITE);
-		if (handle >= 0) {
+		if (!errcode) {
 			_write(handle, ReportHeaderBytes(), ReportHeaderLength());
 			_close(handle);
 		}

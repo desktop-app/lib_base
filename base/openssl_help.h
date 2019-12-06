@@ -19,6 +19,9 @@ extern "C" {
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/err.h>
 } // extern "C"
 
 #ifdef small
@@ -412,13 +415,25 @@ inline void ShaUpdate(Context context, Method method, Arg &&arg, Args &&...args)
 }
 
 template <size_type Size, typename Method>
-inline bytes::vector Sha(Method method, bytes::const_span data) {
-	auto result = bytes::vector(Size);
+inline void Sha(
+		bytes::span dst,
+		Method method,
+		bytes::const_span data) {
+	Expects(dst.size() >= Size);
+
 	method(
 		reinterpret_cast<const unsigned char*>(data.data()),
 		data.size(),
-		reinterpret_cast<unsigned char*>(result.data()));
-	return result;
+		reinterpret_cast<unsigned char*>(dst.data()));
+}
+
+template <size_type Size, typename Method>
+[[nodiscard]] inline bytes::vector Sha(
+		Method method,
+		bytes::const_span data) {
+	auto bytes = bytes::vector(Size);
+	Sha<Size>(bytes, method, data);
+	return bytes;
 }
 
 template <
@@ -429,25 +444,25 @@ template <
 	typename Finalize,
 	typename ...Args,
 	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
-bytes::vector Sha(
+[[nodiscard]] bytes::vector Sha(
 		Context context,
 		Init init,
 		Update update,
 		Finalize finalize,
 		Args &&...args) {
-	auto result = bytes::vector(Size);
+	auto bytes = bytes::vector(Size);
 
 	init(&context);
 	ShaUpdate(&context, update, args...);
-	finalize(reinterpret_cast<unsigned char*>(result.data()), &context);
+	finalize(reinterpret_cast<unsigned char*>(bytes.data()), &context);
 
-	return result;
+	return bytes;
 }
 
 template <
 	size_type Size,
 	typename Evp>
-bytes::vector Pbkdf2(
+[[nodiscard]] bytes::vector Pbkdf2(
 		bytes::const_span password,
 		bytes::const_span salt,
 		int iterations,
@@ -471,14 +486,18 @@ constexpr auto kSha1Size = size_type(SHA_DIGEST_LENGTH);
 constexpr auto kSha256Size = size_type(SHA256_DIGEST_LENGTH);
 constexpr auto kSha512Size = size_type(SHA512_DIGEST_LENGTH);
 
-inline bytes::vector Sha1(bytes::const_span data) {
+[[nodiscard]] inline bytes::vector Sha1(bytes::const_span data) {
 	return details::Sha<kSha1Size>(SHA1, data);
+}
+
+inline void Sha1To(bytes::span dst, bytes::const_span data) {
+	details::Sha<kSha1Size>(dst, SHA1, data);
 }
 
 template <
 	typename ...Args,
 	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
-inline bytes::vector Sha1(Args &&...args) {
+[[nodiscard]] inline bytes::vector Sha1(Args &&...args) {
 	return details::Sha<kSha1Size>(
 		SHA_CTX(),
 		SHA1_Init,
@@ -487,14 +506,18 @@ inline bytes::vector Sha1(Args &&...args) {
 		args...);
 }
 
-inline bytes::vector Sha256(bytes::const_span data) {
+[[nodiscard]] inline bytes::vector Sha256(bytes::const_span data) {
 	return details::Sha<kSha256Size>(SHA256, data);
+}
+
+inline void Sha256To(bytes::span dst, bytes::const_span data) {
+	details::Sha<kSha256Size>(dst, SHA256, data);
 }
 
 template <
 	typename ...Args,
 	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
-inline bytes::vector Sha256(Args &&...args) {
+[[nodiscard]] inline bytes::vector Sha256(Args &&...args) {
 	return details::Sha<kSha256Size>(
 		SHA256_CTX(),
 		SHA256_Init,
@@ -503,14 +526,18 @@ inline bytes::vector Sha256(Args &&...args) {
 		args...);
 }
 
-inline bytes::vector Sha512(bytes::const_span data) {
+[[nodiscard]] inline bytes::vector Sha512(bytes::const_span data) {
 	return details::Sha<kSha512Size>(SHA512, data);
+}
+
+inline void Sha512To(bytes::span dst, bytes::const_span data) {
+	details::Sha<kSha512Size>(dst, SHA512, data);
 }
 
 template <
 	typename ...Args,
 	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
-inline bytes::vector Sha512(Args &&...args) {
+[[nodiscard]] inline bytes::vector Sha512(Args &&...args) {
 	return details::Sha<kSha512Size>(
 		SHA512_CTX(),
 		SHA512_Init,
@@ -570,9 +597,11 @@ inline bytes::vector HmacSha256(
 namespace bytes {
 
 inline void set_random(span destination) {
-	RAND_bytes(
-		reinterpret_cast<unsigned char*>(destination.data()),
-		destination.size());
+	if (!destination.empty()) {
+		RAND_bytes(
+			reinterpret_cast<unsigned char*>(destination.data()),
+			destination.size());
+	}
 }
 
 } // namespace bytes

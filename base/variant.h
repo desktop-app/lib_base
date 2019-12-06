@@ -35,8 +35,7 @@ inline bool operator!=(std::nullopt_t, std::nullopt_t) {
 // We use base::variant<> alias and base::get_if() helper while we don't have std::variant<>.
 namespace base {
 
-template <typename... Types>
-using variant = mapbox::util::variant<Types...>;
+using ::mapbox::util::variant;
 
 template <typename T, typename... Types>
 inline T *get_if(variant<Types...> *v) {
