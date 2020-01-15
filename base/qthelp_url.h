@@ -20,8 +20,8 @@ inline QString url_encode(const QString &part) {
 	return QString::fromLatin1(QUrl::toPercentEncoding(part));
 }
 
-inline QString url_decode(const QString &encoded) {
-	return QUrl::fromPercentEncoding(encoded.toUtf8()).replace('+', ' ');
+inline QString url_decode(QString encoded) {
+	return QUrl::fromPercentEncoding(encoded.replace('+', ' ').toUtf8());
 }
 
 enum class UrlParamNameTransform {
