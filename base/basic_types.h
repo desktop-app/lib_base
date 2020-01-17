@@ -46,3 +46,6 @@ using float32 = float;
 using float64 = double;
 
 using TimeId = int32;
+
+#define MACRO_TO_STRING_HELPER(V) #V
+#define MACRO_TO_STRING(V) MACRO_TO_STRING_HELPER(V)
