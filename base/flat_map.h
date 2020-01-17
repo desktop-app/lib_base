@@ -6,7 +6,7 @@
 //
 #pragma once
 
-#include <deque>
+#include <vector>
 #include <algorithm>
 #include "base/optional.h"
 
@@ -57,19 +57,19 @@ struct flat_multi_map_pair_type {
 	, second(pair.second) {
 	}
 
-	flat_multi_map_pair_type(flat_multi_map_pair_type &&pair)
+	flat_multi_map_pair_type(flat_multi_map_pair_type &&pair) noexcept
 	: first(std::move(const_cast<Key&>(pair.first)))
 	, second(std::move(pair.second)) {
 	}
 
 	flat_multi_map_pair_type &operator=(const flat_multi_map_pair_type&) = delete;
-	flat_multi_map_pair_type &operator=(flat_multi_map_pair_type &&other) {
+	flat_multi_map_pair_type &operator=(flat_multi_map_pair_type &&other) noexcept {
 		const_cast<Key&>(first) = std::move(const_cast<Key&>(other.first));
 		second = std::move(other.second);
 		return *this;
 	}
 
-	void swap(flat_multi_map_pair_type &other) {
+	void swap(flat_multi_map_pair_type &other) noexcept {
 		using std::swap;
 
 		if (this != &other) {
@@ -235,7 +235,7 @@ public:
 
 private:
 	using pair_type = flat_multi_map_pair_type<Key, Type>;
-	using impl_t = std::deque<pair_type>;
+	using impl_t = std::vector<pair_type>;
 
 	using iterator_base = flat_multi_map_iterator_base_impl<
 		iterator,
@@ -396,10 +396,7 @@ public:
 	}
 
 	iterator insert(const value_type &value) {
-		if (empty() || compare()(value.first, front().first)) {
-			impl().push_front(value);
-			return begin();
-		} else if (!compare()(value.first, back().first)) {
+		if (empty() || !compare()(value.first, back().first)) {
 			impl().push_back(value);
 			return (end() - 1);
 		}
@@ -407,10 +404,7 @@ public:
 		return impl().insert(where, value);
 	}
 	iterator insert(value_type &&value) {
-		if (empty() || compare()(value.first, front().first)) {
-			impl().push_front(std::move(value));
-			return begin();
-		} else if (!compare()(value.first, back().first)) {
+		if (empty() || !compare()(value.first, back().first)) {
 			impl().push_back(std::move(value));
 			return (end() - 1);
 		}
@@ -693,10 +687,7 @@ public:
 	using parent::contains;
 
 	std::pair<iterator, bool> insert(const value_type &value) {
-		if (this->empty() || this->compare()(value.first, this->front().first)) {
-			this->impl().push_front(value);
-			return { this->begin(), true };
-		} else if (this->compare()(this->back().first, value.first)) {
+		if (this->empty() || this->compare()(this->back().first, value.first)) {
 			this->impl().push_back(value);
 			return { this->end() - 1, true };
 		}
@@ -707,10 +698,7 @@ public:
 		return { where, false };
 	}
 	std::pair<iterator, bool> insert(value_type &&value) {
-		if (this->empty() || this->compare()(value.first, this->front().first)) {
-			this->impl().push_front(std::move(value));
-			return { this->begin(), true };
-		} else if (this->compare()(this->back().first, value.first)) {
+		if (this->empty() || this->compare()(this->back().first, value.first)) {
 			this->impl().push_back(std::move(value));
 			return { this->end() - 1, true };
 		}
@@ -723,10 +711,7 @@ public:
 	std::pair<iterator, bool> insert_or_assign(
 			const Key &key,
 			const Type &value) {
-		if (this->empty() || this->compare()(key, this->front().first)) {
-			this->impl().emplace_front(key, value);
-			return { this->begin(), true };
-		} else if (this->compare()(this->back().first, key)) {
+		if (this->empty() || this->compare()(this->back().first, key)) {
 			this->impl().emplace_back(key, value);
 			return { this->end() - 1, true };
 		}
@@ -740,10 +725,7 @@ public:
 	std::pair<iterator, bool> insert_or_assign(
 			const Key &key,
 			Type &&value) {
-		if (this->empty() || this->compare()(key, this->front().first)) {
-			this->impl().emplace_front(key, std::move(value));
-			return { this->begin(), true };
-		} else if (this->compare()(this->back().first, key)) {
+		if (this->empty() || this->compare()(this->back().first, key)) {
 			this->impl().emplace_back(key, std::move(value));
 			return { this->end() - 1, true };
 		}
@@ -774,12 +756,7 @@ public:
 	std::pair<iterator, bool> try_emplace(
 			const Key &key,
 			Args&&... args) {
-		if (this->empty() || this->compare()(key, this->front().first)) {
-			this->impl().push_front(value_type(
-				key,
-				Type(std::forward<Args>(args)...)));
-			return { this->begin(), true };
-		} else if (this->compare()(this->back().first, key)) {
+		if (this->empty() || this->compare()(this->back().first, key)) {
 			this->impl().push_back(value_type(
 				key,
 				Type(std::forward<Args>(args)...)));
@@ -819,10 +796,7 @@ public:
 	}
 
 	Type &operator[](const Key &key) {
-		if (this->empty() || this->compare()(key, this->front().first)) {
-			this->impl().push_front({ key, Type() });
-			return this->front().second;
-		} else if (this->compare()(this->back().first, key)) {
+		if (this->empty() || this->compare()(this->back().first, key)) {
 			this->impl().push_back({ key, Type() });
 			return this->back().second;
 		}

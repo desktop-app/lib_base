@@ -6,7 +6,7 @@
 //
 #pragma once
 
-#include <deque>
+#include <vector>
 #include <algorithm>
 
 namespace base {
@@ -138,7 +138,7 @@ public:
 	constexpr flat_multi_set_const_wrap(const Type &value)
 	: _value(value) {
 	}
-	constexpr flat_multi_set_const_wrap(Type &&value)
+	constexpr flat_multi_set_const_wrap(Type &&value) noexcept
 	: _value(std::move(value)) {
 	}
 	inline constexpr operator const Type&() const {
@@ -156,7 +156,7 @@ private:
 template <typename Type, typename Compare>
 class flat_multi_set {
 	using const_wrap = flat_multi_set_const_wrap<Type>;
-	using impl_t = std::deque<const_wrap>;
+	using impl_t = std::vector<const_wrap>;
 
 public:
 	using value_type = Type;
@@ -247,10 +247,7 @@ public:
 	}
 
 	iterator insert(const Type &value) {
-		if (empty() || compare()(value, front())) {
-			impl().push_front(value);
-			return begin();
-		} else if (!compare()(value, back())) {
+		if (empty() || !compare()(value, back())) {
 			impl().push_back(value);
 			return (end() - 1);
 		}
@@ -258,10 +255,7 @@ public:
 		return impl().insert(where, value);
 	}
 	iterator insert(Type &&value) {
-		if (empty() || compare()(value, front())) {
-			impl().push_front(std::move(value));
-			return begin();
-		} else if (!compare()(value, back())) {
+		if (empty() || !compare()(value, back())) {
 			impl().push_back(std::move(value));
 			return (end() - 1);
 		}
@@ -602,10 +596,7 @@ public:
 	using parent::erase;
 
 	std::pair<iterator, bool> insert(const Type &value) {
-		if (this->empty() || this->compare()(value, this->front())) {
-			this->impl().push_front(value);
-			return std::make_pair(this->begin(), true);
-		} else if (this->compare()(this->back(), value)) {
+		if (this->empty() || this->compare()(this->back(), value)) {
 			this->impl().push_back(value);
 			return std::make_pair(this->end() - 1, true);
 		}
@@ -616,10 +607,7 @@ public:
 		return std::make_pair(where, false);
 	}
 	std::pair<iterator, bool> insert(Type &&value) {
-		if (this->empty() || this->compare()(value, this->front())) {
-			this->impl().push_front(std::move(value));
-			return std::make_pair(this->begin(), true);
-		} else if (this->compare()(this->back(), value)) {
+		if (this->empty() || this->compare()(this->back(), value)) {
 			this->impl().push_back(std::move(value));
 			return std::make_pair(this->end() - 1, true);
 		}
