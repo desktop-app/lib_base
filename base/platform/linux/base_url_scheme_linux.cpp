@@ -112,7 +112,7 @@ bool RegisterDesktopFile(const UrlSchemeDescriptor &descriptor) {
 		return false;
 	}
 	RunShellCommand("update-desktop-database " + EscapeShell(QFile::encodeName(home + ".local/share/applications")));
-	RunShellCommand("xdg-mime default telegramdesktop.desktop x-scheme-handler/tg");
+	RunShellCommand("xdg-mime default " + EscapeShell(QFile::encodeName(descriptor.desktopFileName + ".desktop")) + " x-scheme-handler/" + EscapeShell(descriptor.protocol.toUtf8()));
 	return true;
 }
 
