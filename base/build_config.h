@@ -50,6 +50,10 @@
 #define ARCH_CPU_64_BITS 1
 #elif defined(_M_ARM) || defined(__arm__)
 #define ARCH_CPU_32_BITS 1
+#elif defined(__ppc64__) || defined(__PPC64__)
+#define ARCH_CPU_64_BITS 1
+#elif defined(__e2k__)
+#define ARCH_CPU_64_BITS 1
 #else
 #error Please add support for your architecture in base/build_config.h
 #endif
