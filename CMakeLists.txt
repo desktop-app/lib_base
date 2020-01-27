@@ -149,7 +149,7 @@ PUBLIC
     desktop-app::external_expected
 )
 
-target_precompile_headers(lib_base_crash_report_writer PRIVATE ${src_loc}/base/base_pch.h)
+target_precompile_headers(lib_base_crash_report_writer REUSE_FROM lib_base)
 nice_target_sources(lib_base_crash_report_writer ${src_loc}
 PRIVATE
     base/crash_report_header.cpp
