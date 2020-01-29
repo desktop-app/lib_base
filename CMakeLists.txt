@@ -75,6 +75,7 @@ PRIVATE
     base/crc32hash.h
     base/concurrent_timer.cpp
     base/concurrent_timer.h
+    base/const_string.h
     base/flags.h
     base/enum_mask.h
     base/expected.h
