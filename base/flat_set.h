@@ -148,6 +148,25 @@ public:
 		return _value;
 	}
 
+	friend inline bool operator<(const flat_multi_set_const_wrap &a, const flat_multi_set_const_wrap &b) {
+		return a._value < b._value;
+	}
+	friend inline bool operator>(const flat_multi_set_const_wrap &a, const flat_multi_set_const_wrap &b) {
+		return a._value > b._value;
+	}
+	friend inline bool operator<=(const flat_multi_set_const_wrap &a, const flat_multi_set_const_wrap &b) {
+		return a._value <= b._value;
+	}
+	friend inline bool operator>=(const flat_multi_set_const_wrap &a, const flat_multi_set_const_wrap &b) {
+		return a._value >= b._value;
+	}
+	friend inline bool operator==(const flat_multi_set_const_wrap &a, const flat_multi_set_const_wrap &b) {
+		return a._value == b._value;
+	}
+	friend inline bool operator!=(const flat_multi_set_const_wrap &a, const flat_multi_set_const_wrap &b) {
+		return a._value != b._value;
+	}
+
 private:
 	Type _value;
 
@@ -399,6 +418,25 @@ public:
 
 	void merge(std::initializer_list<Type> list) {
 		merge(list.begin(), list.end());
+	}
+
+	friend inline bool operator<(const flat_multi_set &a, const flat_multi_set &b) {
+		return a.impl() < b.impl();
+	}
+	friend inline bool operator>(const flat_multi_set &a, const flat_multi_set &b) {
+		return a.impl() > b.impl();
+	}
+	friend inline bool operator<=(const flat_multi_set &a, const flat_multi_set &b) {
+		return a.impl() <= b.impl();
+	}
+	friend inline bool operator>=(const flat_multi_set &a, const flat_multi_set &b) {
+		return a.impl() >= b.impl();
+	}
+	friend inline bool operator==(const flat_multi_set &a, const flat_multi_set &b) {
+		return a.impl() == b.impl();
+	}
+	friend inline bool operator!=(const flat_multi_set &a, const flat_multi_set &b) {
+		return a.impl() != b.impl();
 	}
 
 private:
@@ -687,6 +725,25 @@ public:
 
 	void merge(std::initializer_list<Type> list) {
 		merge(list.begin(), list.end());
+	}
+
+	friend inline bool operator<(const flat_set &a, const flat_set &b) {
+		return static_cast<const parent&>(a) < static_cast<const parent&>(b);
+	}
+	friend inline bool operator>(const flat_set &a, const flat_set &b) {
+		return static_cast<const parent&>(a) > static_cast<const parent&>(b);
+	}
+	friend inline bool operator<=(const flat_set &a, const flat_set &b) {
+		return static_cast<const parent&>(a) <= static_cast<const parent&>(b);
+	}
+	friend inline bool operator>=(const flat_set &a, const flat_set &b) {
+		return static_cast<const parent&>(a) >= static_cast<const parent&>(b);
+	}
+	friend inline bool operator==(const flat_set &a, const flat_set &b) {
+		return static_cast<const parent&>(a) == static_cast<const parent&>(b);
+	}
+	friend inline bool operator!=(const flat_set &a, const flat_set &b) {
+		return static_cast<const parent&>(a) != static_cast<const parent&>(b);
 	}
 
 private:
