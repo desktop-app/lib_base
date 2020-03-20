@@ -32,6 +32,23 @@ inline bool contains(const Container &container, const T &value) {
 	return std::find(std::begin(container), end, value) != end;
 }
 
+template <typename Container>
+inline void reorder(Container &container, int oldPosition, int newPosition) {
+	const auto b = begin(container);
+	if (oldPosition < newPosition) {
+		std::rotate(
+			b + oldPosition,
+			b + oldPosition + 1,
+			b + newPosition + 1);
+	} else if (newPosition < oldPosition) {
+		std::rotate(
+			b + newPosition,
+			b + oldPosition,
+			b + oldPosition + 1);
+	}
+
+}
+
 template <typename D, typename T>
 inline constexpr D up_cast(T object) {
 	using DV = std::decay_t<decltype(*D())>;
