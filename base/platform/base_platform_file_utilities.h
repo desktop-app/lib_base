@@ -18,6 +18,8 @@ void RemoveQuarantine(const QString &path);
 
 [[nodiscard]] QString CurrentExecutablePath(int argc, char *argv[]);
 
+bool RenameWithOverwrite(const QString &from, const QString &to);
+
 } // namespace base::Platform
 
 #ifdef Q_OS_MAC

@@ -10,6 +10,7 @@
 
 #include <QtCore/QFileInfo>
 #include <sys/xattr.h>
+#include <stdio.h>
 
 namespace base::Platform {
 
@@ -53,6 +54,12 @@ bool DeleteDirectory(QString path) {
 
 QString CurrentExecutablePath(int argc, char *argv[]) {
 	return NS2QString([[NSBundle mainBundle] bundlePath]);
+}
+
+bool RenameWithOverwrite(const QString &from, const QString &to) {
+	const auto fromPath = QFile::encodeName(from);
+	const auto toPath = QFile::encodeName(to);
+	return (rename(fromPath.constData(), toPath.constData()) == 0);
 }
 
 } // namespace base::Platform

@@ -177,4 +177,13 @@ bool CloseProcesses(const QString &filename) {
 	return true;
 }
 
+bool RenameWithOverwrite(const QString &from, const QString &to) {
+	const auto fromPath = QDir::toNativeSeparators(from).toStdWString();
+	const auto toPath = QDir::toNativeSeparators(to).toStdWString();
+	return MoveFileEx(
+		fromPath.c_str(),
+		toPath.c_str(),
+		MOVEFILE_REPLACE_EXISTING);
+}
+
 } // namespace base::Platform

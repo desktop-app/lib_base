@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <stdio.h>
 
 namespace base::Platform {
 
@@ -110,6 +111,12 @@ bool DeleteDirectory(QString path) {
 	closedir(d);
 
 	return !rmdir(pathRaw.constData());
+}
+
+bool RenameWithOverwrite(const QString &from, const QString &to) {
+	const auto fromPath = QFile::encodeName(from);
+	const auto toPath = QFile::encodeName(to);
+	return (rename(fromPath.constData(), toPath.constData()) == 0);
 }
 
 } // namespace base::Platform
