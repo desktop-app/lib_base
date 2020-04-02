@@ -11,6 +11,7 @@
 #include <QtCore/QFileInfo>
 #include <sys/xattr.h>
 #include <stdio.h>
+#include <unistd.h>
 
 namespace base::Platform {
 
@@ -60,6 +61,13 @@ bool RenameWithOverwrite(const QString &from, const QString &to) {
 	const auto fromPath = QFile::encodeName(from);
 	const auto toPath = QFile::encodeName(to);
 	return (rename(fromPath.constData(), toPath.constData()) == 0);
+}
+
+void FlushFileData(QFile &file) {
+	file.flush();
+	if (const auto descriptor = file.handle()) {
+		fsync(descriptor);
+	}
 }
 
 } // namespace base::Platform

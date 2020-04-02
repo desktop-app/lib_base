@@ -7,6 +7,7 @@
 #pragma once
 
 class QString;
+class QFile;
 
 namespace base::Platform {
 
@@ -19,6 +20,7 @@ void RemoveQuarantine(const QString &path);
 [[nodiscard]] QString CurrentExecutablePath(int argc, char *argv[]);
 
 bool RenameWithOverwrite(const QString &from, const QString &to);
+void FlushFileData(QFile &file);
 
 } // namespace base::Platform
 

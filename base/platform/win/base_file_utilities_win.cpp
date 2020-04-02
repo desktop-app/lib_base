@@ -16,6 +16,7 @@
 #include <Shlwapi.h>
 #include <shlobj.h>
 #include <RestartManager.h>
+#include <io.h>
 
 namespace base::Platform {
 
@@ -184,6 +185,15 @@ bool RenameWithOverwrite(const QString &from, const QString &to) {
 		fromPath.c_str(),
 		toPath.c_str(),
 		MOVEFILE_REPLACE_EXISTING);
+}
+
+void FlushFileData(QFile &file) {
+	file.flush();
+	if (const auto descriptor = file.handle()) {
+		if (const auto handle = HANDLE(_get_osfhandle(descriptor))) {
+			FlushFileBuffers(handle);
+		}
+	}
 }
 
 } // namespace base::Platform

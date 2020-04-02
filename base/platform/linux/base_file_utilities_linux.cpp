@@ -119,4 +119,11 @@ bool RenameWithOverwrite(const QString &from, const QString &to) {
 	return (rename(fromPath.constData(), toPath.constData()) == 0);
 }
 
+void FlushFileData(QFile &file) {
+	file.flush();
+	if (const auto descriptor = file.handle()) {
+		fsync(descriptor);
+	}
+}
+
 } // namespace base::Platform
