@@ -31,7 +31,7 @@ public:
 
 private:
 	T _value;
-	QMutex _mutex;
+	mutable QMutex _mutex;
 
 };
 
