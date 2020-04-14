@@ -16,8 +16,8 @@ namespace base {
 crl::time LastUserInputTime() {
 	Expects(QCoreApplication::instance() != nullptr);
 
-	if (base::Platform::LastUserInputTimeSupported()) {
-		return base::Platform::LastUserInputTime().value_or(0);
+	if (const auto specific = base::Platform::LastUserInputTime()) {
+		return *specific;
 	}
 	static auto result = crl::time(0);
 	static const auto isInputEvent = [](not_null<QEvent*> e) {
