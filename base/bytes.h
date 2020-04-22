@@ -23,7 +23,7 @@ template <gsl::index Size>
 using array = std::array<type, Size>;
 
 inline span make_detached_span(QByteArray &container) {
-	return gsl::as_writeable_bytes(gsl::make_span(container));
+	return gsl::as_writable_bytes(gsl::make_span(container));
 }
 
 template <
@@ -32,7 +32,7 @@ template <
 		!std::is_const_v<Container>
 		&& !std::is_same_v<Container, QByteArray>>>
 inline span make_span(Container &container) {
-	return gsl::as_writeable_bytes(gsl::make_span(container));
+	return gsl::as_writable_bytes(gsl::make_span(container));
 }
 
 template <typename Container>
@@ -42,7 +42,7 @@ inline const_span make_span(const Container &container) {
 
 template <typename Type, std::ptrdiff_t Extent>
 inline span make_span(gsl::span<Type, Extent> container) {
-	return gsl::as_writeable_bytes(container);
+	return gsl::as_writable_bytes(container);
 }
 
 template <typename Type, std::ptrdiff_t Extent>
@@ -52,7 +52,7 @@ inline const_span make_span(gsl::span<const Type, Extent> container) {
 
 template <typename Type>
 inline span make_span(Type *value, std::size_t count) {
-	return gsl::as_writeable_bytes(gsl::make_span(value, count));
+	return gsl::as_writable_bytes(gsl::make_span(value, count));
 }
 
 template <typename Type>
