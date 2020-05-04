@@ -14,6 +14,15 @@ init_target(lib_base_crash_report_writer)
 
 get_filename_component(src_loc . REALPATH)
 
+# Workaround for error: Objective-C 1 was disabled in PCH file but is currently enabled
+if (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    file(GLOB ObjcFiles base/platform/mac/*.mm)
+    set_source_files_properties(${ObjcFiles} PROPERTIES
+        SKIP_PRECOMPILE_HEADERS ON
+        COMPILE_FLAGS "--include base/base_pch.h"
+    )
+endif()
+
 target_precompile_headers(lib_base PRIVATE ${src_loc}/base/base_pch.h)
 nice_target_sources(lib_base ${src_loc}
 PRIVATE
