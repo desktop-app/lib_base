@@ -187,7 +187,10 @@ public:
 		destroy();
 	}
 
-	T *get() const noexcept {
+	[[nodiscard]] bool empty() const {
+		return !_alive || !_alive->value;
+	}
+	[[nodiscard]] T *get() const noexcept {
 		const auto strong = _alive ? _alive->value.load() : nullptr;
 		if constexpr (std::is_const_v<T>) {
 			return static_cast<T*>(strong);
@@ -195,13 +198,13 @@ public:
 			return const_cast<T*>(static_cast<const T*>(strong));
 		}
 	}
-	explicit operator bool() const noexcept {
-		return (_alive && _alive->value);
+	[[nodiscard]] explicit operator bool() const noexcept {
+		return !empty();
 	}
-	T &operator*() const noexcept {
+	[[nodiscard]] T &operator*() const noexcept {
 		return *get();
 	}
-	T *operator->() const noexcept {
+	[[nodiscard]] T *operator->() const noexcept {
 		return get();
 	}
 
