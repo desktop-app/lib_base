@@ -34,7 +34,7 @@ const auto QLocalSocket_error = ErrorSignal(&QLocalSocket::error);
 	const auto hash = [](const QString &text) {
 		return crc32(text.data(), text.size() * sizeof(QChar));
 	};
-	const auto ints = std::array{ hash(uniqueApplicationName), hash(path) };
+	const auto ints = std::array<std::int32_t,2>{{ hash(uniqueApplicationName), hash(path) }};
 	auto raw = QByteArray(ints.size() * sizeof(ints[0]), Qt::Uninitialized);
 	memcpy(raw.data(), ints.data(), raw.size());
 	return QString::fromLatin1(raw.toBase64(QByteArray::Base64UrlEncoding));
