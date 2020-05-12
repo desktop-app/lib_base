@@ -134,17 +134,19 @@ void update(TimeId now, bool force) {
 			return;
 		}
 	}
-	const auto shift = now + 1 - local();
-	ValueShift = shift;
+	const auto shift = now - local();
+	const auto old = ValueShift.exchange(shift);
 
 	HttpValueShift = 0;
 	HttpValueValid = false;
 
-	GlobalMsgIdManager.update();
+	if (old != shift) {
+		GlobalMsgIdManager.update();
 
-	crl::on_main([] {
-		UpdatesStream().fire({});
-	});
+		crl::on_main([] {
+			UpdatesStream().fire({});
+		});
+	}
 }
 
 rpl::producer<> updates() {
