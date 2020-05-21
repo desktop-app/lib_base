@@ -220,6 +220,9 @@ public:
 	void clear() {
 		impl().clear();
 	}
+	void reserve(size_type size) {
+		impl().reserve(size);
+	}
 
 	iterator begin() {
 		return impl().begin();
@@ -620,6 +623,7 @@ public:
 	using parent::size;
 	using parent::empty;
 	using parent::clear;
+	using parent::reserve;
 	using parent::begin;
 	using parent::end;
 	using parent::cbegin;
