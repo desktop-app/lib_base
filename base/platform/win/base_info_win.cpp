@@ -141,7 +141,11 @@ QString GetLangCodeById(unsigned int lngId) {
 } // namespace
 
 QString DeviceModelPretty() {
-	return "PC";
+	auto bIsWow64 = BOOL(FALSE);
+	if (IsWow64Process(GetCurrentProcess(), &bIsWow64)) {
+		return bIsWow64 ? "PC 64bit" : "PC 32bit";
+	}
+	return "PC unknown";
 }
 
 QString SystemVersionPretty() {
