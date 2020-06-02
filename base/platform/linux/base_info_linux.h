@@ -51,4 +51,6 @@ inline bool IsMac10_12OrGreater() { return false; }
 inline bool IsMac10_13OrGreater() { return false; }
 inline bool IsMac10_14OrGreater() { return false; }
 
+bool IsWayland();
+
 } // namespace Platform
