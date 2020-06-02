@@ -12,6 +12,7 @@
 #include <QtCore/QProcess>
 #include <QtCore/QVersionNumber>
 #include <QtCore/QDate>
+#include <QtGui/QGuiApplication>
 #include <gnu/libc-version.h>
 
 namespace Platform {
@@ -64,18 +65,27 @@ const std::optional<QVersionNumber> &GetLibCVersion() {
 } // namespace
 
 QString DeviceModelPretty() {
-#ifdef Q_OS_LINUX64
-	return "PC 64bit";
-#else // Q_OS_LINUX64
-	return "PC 32bit";
-#endif // Q_OS_LINUX64
+	const auto cpuArch = QSysInfo::buildCpuArchitecture();
+
+	if (cpuArch == qstr("x86_64")) {
+		return "PC 64bit";
+	} else if (cpuArch == qstr("i386")) {
+		return "PC 32bit";
+	}
+
+	return "PC " + cpuArch;
 }
 
 QString SystemVersionPretty() {
 	const auto result = getenv("XDG_CURRENT_DESKTOP");
 	const auto value = result ? QString::fromLatin1(result) : QString();
 	const auto list = value.split(':', QString::SkipEmptyParts);
-	return list.isEmpty() ? "Linux" : "Linux " + list[0];
+
+	return "Linux "
+		+ (list.isEmpty() ? QString() : list[0] + ' ')
+		+ (IsWayland() ? "Wayland " : "X11 ")
+		+ "glibc "
+		+ GetGlibCVersion();
 }
 
 QString SystemCountry() {
@@ -125,6 +135,10 @@ QString GetGlibCVersion() {
 		return QVersionNumber::fromString(version).isNull() ? QString() : version;
 	}();
 	return result;
+}
+
+bool IsWayland() {
+	return QGuiApplication::platformName().startsWith("wayland", Qt::CaseInsensitive);
 }
 
 void Start(QJsonObject options) {
