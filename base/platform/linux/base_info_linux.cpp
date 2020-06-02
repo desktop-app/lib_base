@@ -81,6 +81,9 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
+	if (IsLinux32Bit()) {
+		return QDate(2020, 9, 1);
+	}
 	return QDate();
 }
 
