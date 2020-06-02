@@ -10,6 +10,10 @@
 
 namespace Platform {
 
+inline OutdateReason WhySystemBecomesOutdated() {
+	return OutdateReason::IsOld;
+}
+
 inline constexpr bool IsWindows() {
 	return true;
 }
@@ -37,5 +41,6 @@ inline bool IsMac10_14OrGreater() { return false; }
 inline constexpr bool IsLinux() { return false; }
 inline constexpr bool IsLinux32Bit() { return false; }
 inline constexpr bool IsLinux64Bit() { return false; }
+inline QString GetGlibCVersion() { return QString(); }
 
 } // namespace Platform

@@ -12,11 +12,17 @@ class QDate;
 
 namespace Platform {
 
+enum class OutdateReason {
+    IsOld,
+    Is32Bit,
+};
+
 [[nodiscard]] QString DeviceModelPretty();
 [[nodiscard]] QString SystemVersionPretty();
 [[nodiscard]] QString SystemCountry();
 [[nodiscard]] QString SystemLanguage();
 [[nodiscard]] QDate WhenSystemBecomesOutdated();
+[[nodiscard]] OutdateReason WhySystemBecomesOutdated();
 [[nodiscard]] int AutoUpdateVersion();
 [[nodiscard]] QString AutoUpdateKey();
 
@@ -45,6 +51,7 @@ namespace Platform {
 [[nodiscard]] constexpr bool IsLinux();
 [[nodiscard]] constexpr bool IsLinux32Bit();
 [[nodiscard]] constexpr bool IsLinux64Bit();
+[[nodiscard]] QString GetGlibCVersion();
 
 void Start(QJsonObject settings);
 void Finish();
