@@ -53,15 +53,6 @@ void FallbackFontConfig(
 	}
 }
 
-const std::optional<QVersionNumber> &GetLibCVersion() {
-	static const auto result = [&] {
-		const auto version = gnu_get_libc_version(); // #TODO log
-		const auto parsed = QVersionNumber::fromString(version);
-		return parsed.isNull() ? std::nullopt : std::make_optional(parsed);
-	}();
-	return result;
-}
-
 } // namespace
 
 QString DeviceModelPretty() {
