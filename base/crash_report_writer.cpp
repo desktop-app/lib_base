@@ -51,7 +51,7 @@
 #include "client/crashpad_client.h"
 #endif // USE_BREAKPAD
 
-#elif defined Q_OS_LINUX64 || defined Q_OS_LINUX32 // Q_OS_MAC
+#elif defined Q_OS_UNIX // Q_OS_MAC
 
 #include <execinfo.h>
 #include <signal.h>
@@ -60,7 +60,7 @@
 
 #include "client/linux/handler/exception_handler.h"
 
-#endif // Q_OS_LINUX64 || Q_OS_LINUX32
+#endif // Q_OS_UNIX
 
 namespace base {
 namespace {
@@ -141,7 +141,7 @@ void InstallQtMessageHandler() {
 	});
 }
 
-#if defined Q_OS_MAC || defined Q_OS_LINUX32 || defined Q_OS_LINUX64
+#ifdef Q_OS_UNIX
 struct sigaction SIG_def[32];
 
 void SignalHandler(int signum, siginfo_t *info, void *ucontext) {
@@ -149,9 +149,9 @@ void SignalHandler(int signum, siginfo_t *info, void *ucontext) {
 		sigaction(signum, &SIG_def[signum], 0);
 	}
 
-#else // Q_OS_MAC || Q_OS_LINUX32 || Q_OS_LINUX64
+#else // Q_OS_UNIX
 void SignalHandler(int signum) {
-#endif // else for Q_OS_MAC || Q_OS_LINUX || Q_OS_LINUX64
+#endif // else for Q_OS_UNIX
 
 	const char* name = 0;
 	switch (signum) {
@@ -253,9 +253,9 @@ google_breakpad::ExceptionHandler* BreakpadExceptionHandler = 0;
 bool DumpCallback(const wchar_t* _dump_dir, const wchar_t* _minidump_id, void* context, EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion, bool success)
 #elif defined Q_OS_MAC // Q_OS_WIN
 bool DumpCallback(const char* _dump_dir, const char* _minidump_id, void *context, bool success)
-#elif defined Q_OS_LINUX64 || defined Q_OS_LINUX32 // Q_OS_MAC
+#elif defined Q_OS_UNIX // Q_OS_MAC
 bool DumpCallback(const google_breakpad::MinidumpDescriptor &md, void *context, bool success)
-#endif // Q_OS_LINUX64 || Q_OS_LINUX32
+#endif // Q_OS_UNIX
 {
 	if (CrashLogged) return success;
 	CrashLogged = true;
@@ -423,7 +423,7 @@ void CrashReportWriter::startCatching() {
 		crashpad_client.UseHandler();
 	}
 #endif // USE_BREAKPAD
-#elif defined Q_OS_LINUX64 || defined Q_OS_LINUX32
+#elif defined Q_OS_UNIX
 	BreakpadExceptionHandler = new google_breakpad::ExceptionHandler(
 		google_breakpad::MinidumpDescriptor(QFile::encodeName(_path).toStdString()),
 		/*FilterCallback*/ 0,
@@ -432,7 +432,7 @@ void CrashReportWriter::startCatching() {
 		true,
 		-1
 	);
-#endif // Q_OS_LINUX64 || Q_OS_LINUX32
+#endif // Q_OS_UNIX
 }
 
 void CrashReportWriter::finishCatching() {
