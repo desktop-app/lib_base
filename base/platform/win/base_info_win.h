@@ -41,6 +41,7 @@ inline bool IsMac10_14OrGreater() { return false; }
 inline constexpr bool IsLinux() { return false; }
 inline constexpr bool IsLinux32Bit() { return false; }
 inline constexpr bool IsLinux64Bit() { return false; }
+inline bool IsWayland() { return false; }
 inline QString GetGlibCVersion() { return QString(); }
 
 } // namespace Platform
