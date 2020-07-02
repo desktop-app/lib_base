@@ -56,6 +56,8 @@ PRIVATE
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
     base/platform/win/base_windows_h.h
+    base/platform/win/base_windows_safe_library.cpp
+    base/platform/win/base_windows_safe_library.h
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
     base/platform/base_platform_layout_switch.h
