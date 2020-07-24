@@ -14,10 +14,14 @@ namespace Platform {
 HINSTANCE SafeLoadLibrary(const QString &name);
 
 template <typename Function>
-bool LoadMethod(HINSTANCE library, LPCSTR name, Function &func) {
+bool LoadMethod(HINSTANCE library, LPCSTR name, Function &func, WORD id = 0) {
 	if (!library) return false;
 
-	func = reinterpret_cast<Function>(GetProcAddress(library, name));
+	auto result = GetProcAddress(library, name);
+	if (!result && id) {
+		result = GetProcAddress(library, MAKEINTRESOURCEA(id));
+	}
+	func = reinterpret_cast<Function>(result);
 	return (func != nullptr);
 }
 
