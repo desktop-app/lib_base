@@ -61,9 +61,9 @@ public:
 		Fn<void(FnMut<void()>)> runner,
 		Fn<void()> callback = nullptr);
 
-	template <typename Object>
+	template <typename Policy, typename Object>
 	explicit ConcurrentTimer(
-		crl::weak_on_queue<Object> weak,
+		crl::details::weak_async<Policy, Object> weak,
 		Fn<void()> callback = nullptr);
 
 	static Qt::TimerType DefaultType(crl::time timeout) {
@@ -135,9 +135,9 @@ private:
 
 };
 
-template <typename Object>
+template <typename Policy, typename Object>
 ConcurrentTimer::ConcurrentTimer(
-	crl::weak_on_queue<Object> weak,
+	crl::details::weak_async<Policy, Object> weak,
 	Fn<void()> callback)
 : ConcurrentTimer(weak.runner(), std::move(callback)) {
 }
