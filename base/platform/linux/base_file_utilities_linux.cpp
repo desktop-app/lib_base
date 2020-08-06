@@ -13,6 +13,12 @@
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#include <QtDBus/QDBusConnection>
+#include <QtDBus/QDBusMessage>
+#include <QtDBus/QDBusReply>
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -20,8 +26,33 @@
 #include <stdio.h>
 
 namespace base::Platform {
+namespace {
 
-bool ShowInFolder(const QString &filepath) {
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+bool DBusShowInFolder(const QString &filepath) {
+	auto message = QDBusMessage::createMethodCall(
+		"org.freedesktop.FileManager1",
+		"/org/freedesktop/FileManager1",
+		"org.freedesktop.FileManager1",
+		"ShowItems");
+
+	message.setArguments({
+		QStringList("file://" + filepath),
+		QString()
+	});
+
+	const QDBusReply<void> reply = QDBusConnection::sessionBus().call(
+		message);
+
+	if (reply.isValid()) {
+		return true;
+	}
+
+	return false;
+}
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+
+bool ProcessShowInFolder(const QString &filepath) {
 	const auto absolutePath = QFileInfo(filepath).absoluteFilePath();
 	QProcess process;
 	process.start(
@@ -51,6 +82,22 @@ bool ShowInFolder(const QString &filepath) {
 		arguments << QFileInfo(filepath).absoluteDir().absolutePath();
 	}
 	return process.startDetached(command, arguments);
+}
+
+} // namespace
+
+bool ShowInFolder(const QString &filepath) {
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+	if (DBusShowInFolder(filepath)) {
+		return true;
+	}
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+
+	if (ProcessShowInFolder(filepath)) {
+		return true;
+	}
+
+	return false;
 }
 
 QString CurrentExecutablePath(int argc, char *argv[]) {
