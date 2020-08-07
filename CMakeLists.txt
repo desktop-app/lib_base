@@ -4,7 +4,7 @@
 # For license and copyright information please follow this link:
 # https://github.com/desktop-app/legal/blob/master/LEGAL
 
-add_library(lib_base OBJECT)
+add_library(lib_base STATIC)
 add_library(desktop-app::lib_base ALIAS lib_base)
 init_target(lib_base)
 
