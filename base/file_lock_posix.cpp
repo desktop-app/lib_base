@@ -6,8 +6,7 @@
 //
 #include "base/file_lock.h"
 
-#include "base/variant.h"
-
+#include <variant>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -43,7 +42,7 @@ struct FileLock::LockingPid {
 
 class FileLock::Lock {
 public:
-	using Result = base::variant<Descriptor, LockingPid>;
+	using Result = std::variant<Descriptor, LockingPid>;
 	static Result Acquire(const QFile &file);
 
 	explicit Lock(int descriptor);
@@ -99,13 +98,13 @@ bool FileLock::lock(QFile &file, QIODevice::OpenMode mode) {
 	}
 	while (true) {
 		const auto result = Lock::Acquire(file);
-		if (const auto descriptor = base::get_if<Descriptor>(&result)) {
+		if (const auto descriptor = std::get_if<Descriptor>(&result)) {
 			if (descriptor->value > 0) {
 				_lock = std::make_unique<Lock>(descriptor->value);
 				return true;
 			}
 			break;
-		} else if (const auto pid = base::get_if<LockingPid>(&result)) {
+		} else if (const auto pid = std::get_if<LockingPid>(&result)) {
 			if (pid->value <= 0 || !KillProcess(pid->value)) {
 				break;
 			}

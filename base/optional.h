@@ -15,7 +15,7 @@ namespace base {
 template <typename... Types>
 class optional_variant {
 public:
-	optional_variant() : _impl(std::nullopt) {
+	optional_variant() : _impl(v::null) {
 	}
 	optional_variant(const optional_variant &other) : _impl(other._impl) {
 	}
@@ -39,7 +39,7 @@ public:
 	}
 
 	bool has_value() const {
-		return !is<std::nullopt_t>();
+		return !is<v::null_t>();
 	}
 	explicit operator bool() const {
 		return has_value();
@@ -69,33 +69,33 @@ public:
 		return get_unchecked<T>();
 	}
 	void clear() {
-		_impl.template set<std::nullopt_t>();
+		_impl.template set<v::null_t>();
 	}
 
 	template <typename T>
 	decltype(auto) is() const {
-		return _impl.template is<T>();
+		return v::is<T>(_impl);
 	}
 	template <typename T>
 	decltype(auto) get_unchecked() {
-		return _impl.template get_unchecked<T>();
+		return std::get<T>(_impl);
 	}
 	template <typename T>
 	decltype(auto) get_unchecked() const {
-		return _impl.template get_unchecked<T>();
+		return std::get<T>(_impl);
 	}
 
 	template <typename ...Methods>
 	decltype(auto) match(Methods &&...methods) {
-		return base::match(_impl, std::forward<Methods>(methods)...);
+		return v::match(_impl, std::forward<Methods>(methods)...);
 	}
 	template <typename ...Methods>
 	decltype(auto) match(Methods &&...methods) const {
-		return base::match(_impl, std::forward<Methods>(methods)...);
+		return v::match(_impl, std::forward<Methods>(methods)...);
 	}
 
 private:
-	variant<std::nullopt_t, Types...> _impl;
+	std::variant<v::null_t, Types...> _impl;
 
 };
 

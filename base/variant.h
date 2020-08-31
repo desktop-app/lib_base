@@ -7,45 +7,36 @@
 #pragma once
 
 #include <optional>
+#include <variant>
 
-inline bool operator<(std::nullopt_t, std::nullopt_t) {
-	return false;
-}
-inline bool operator>(std::nullopt_t, std::nullopt_t) {
-	return false;
-}
-inline bool operator<=(std::nullopt_t, std::nullopt_t) {
-	return true;
-}
-inline bool operator>=(std::nullopt_t, std::nullopt_t) {
-	return true;
-}
-inline bool operator==(std::nullopt_t, std::nullopt_t) {
-	return true;
-}
-inline bool operator!=(std::nullopt_t, std::nullopt_t) {
-	return false;
-}
-
-#include <mapbox/variant.hpp>
-#include <rpl/details/type_list.h>
 #include "base/match_method.h"
 #include "base/assertion.h"
 
-// We use base::variant<> alias and base::get_if() helper while we don't have std::variant<>.
-namespace base {
+#include <rpl/details/type_list.h>
 
-using ::mapbox::util::variant;
+namespace v {
+namespace details {
 
-template <typename T, typename... Types>
-inline T *get_if(variant<Types...> *v) {
-	return (v && v->template is<T>()) ? &v->template get_unchecked<T>() : nullptr;
-}
+template <typename Type, typename ...Types>
+struct contains;
 
-template <typename T, typename... Types>
-inline const T *get_if(const variant<Types...> *v) {
-	return (v && v->template is<T>()) ? &v->template get_unchecked<T>() : nullptr;
-}
+template <typename Type, typename ...Types>
+inline constexpr bool contains_v = contains<Type, Types...>::value;
+
+template <typename Type, typename Head, typename ...Tail>
+struct contains<Type, Head, Tail...>
+	: std::bool_constant<
+	std::is_same_v<Head, Type> || contains_v<Type, Tail...>> {
+};
+
+template <typename Type>
+struct contains<Type> : std::bool_constant<false> {
+};
+
+} // namespace details
+
+using null_t = std::monostate;
+inline constexpr null_t null{};
 
 namespace type_list = rpl::details::type_list;
 
@@ -56,7 +47,7 @@ struct normalized_variant {
 	using type = std::conditional_t<
 		type_list::size_v<distinct> == 1,
 		type_list::get_t<0, distinct>,
-		type_list::extract_to_t<distinct, base::variant>>;
+		type_list::extract_to_t<distinct, std::variant>>;
 };
 
 template <typename ...Types>
@@ -73,8 +64,8 @@ template <
 	typename ...Methods>
 struct match_helper<type_list::list<Type, Types...>, Variant, Methods...> {
 	static decltype(auto) call(Variant &value, Methods &&...methods) {
-		if (const auto v = get_if<Type>(&value)) {
-			return match_method(
+		if (const auto v = std::get_if<Type>(&value)) {
+			return base::match_method(
 				*v,
 				std::forward<Methods>(methods)...);
 		}
@@ -93,8 +84,8 @@ template <
 	typename ...Methods>
 struct match_helper<type_list::list<Type>, Variant, Methods...> {
 	static decltype(auto) call(Variant &value, Methods &&...methods) {
-		if (const auto v = get_if<Type>(&value)) {
-			return match_method(
+		if (const auto v = std::get_if<Type>(&value)) {
+			return base::match_method(
 				*v,
 				std::forward<Methods>(methods)...);
 		}
@@ -104,22 +95,64 @@ struct match_helper<type_list::list<Type>, Variant, Methods...> {
 
 template <typename ...Types, typename ...Methods>
 inline decltype(auto) match(
-		variant<Types...> &value,
+		std::variant<Types...> &value,
 		Methods &&...methods) {
 	return match_helper<
 		type_list::list<Types...>,
-		variant<Types...>,
+		std::variant<Types...>,
 		Methods...>::call(value, std::forward<Methods>(methods)...);
 }
 
 template <typename ...Types, typename ...Methods>
 inline decltype(auto) match(
-		const variant<Types...> &value,
+		const std::variant<Types...> &value,
 		Methods &&...methods) {
 	return match_helper<
 		type_list::list<Types...>,
-		const variant<Types...>,
+		const std::variant<Types...>,
 		Methods...>::call(value, std::forward<Methods>(methods)...);
 }
 
-} // namespace base
+template <typename Type, typename ...Types>
+[[nodiscard]] inline bool is(const std::variant<Types...> &value) {
+	return std::holds_alternative<Type>(value);
+}
+
+template <typename Type, typename ...Types>
+[[nodiscard]] inline bool is(const std::variant<Types...> *value) {
+	return value && std::holds_alternative<Type>(*value);
+}
+
+} // namespace v
+
+template <
+	typename ...Types,
+	typename Type,
+	typename = std::enable_if_t<v::details::contains_v<Type, Types...>>>
+inline bool operator==(const std::variant<Types...> &a, const Type &b) {
+	return (a == std::variant<Types...>(b));
+}
+
+template <
+	typename ...Types,
+	typename Type,
+	typename = std::enable_if_t<v::details::contains_v<Type, Types...>>>
+inline bool operator==(const Type &a, const std::variant<Types...> &b) {
+	return (std::variant<Types...>(a) == b);
+}
+
+template <
+	typename ...Types,
+	typename Type,
+	typename = std::enable_if_t<v::details::contains_v<Type, Types...>>>
+inline bool operator!=(const std::variant<Types...> &a, const Type &b) {
+	return (a != std::variant<Types...>(b));
+}
+
+template <
+	typename ...Types,
+	typename Type,
+	typename = std::enable_if_t<v::details::contains_v<Type, Types...>>>
+inline bool operator!=(const Type &a, const std::variant<Types...> &b) {
+	return (std::variant<Types...>(a) != b);
+}
