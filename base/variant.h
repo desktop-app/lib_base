@@ -6,13 +6,11 @@
 //
 #pragma once
 
-#include <optional>
-#include <variant>
-
 #include "base/match_method.h"
 #include "base/assertion.h"
 
 #include <rpl/details/type_list.h>
+#include <variant>
 
 namespace v {
 namespace details {
@@ -118,9 +116,10 @@ template <typename Type, typename ...Types>
 	return std::holds_alternative<Type>(value);
 }
 
-template <typename Type, typename ...Types>
-[[nodiscard]] inline bool is(const std::variant<Types...> *value) {
-	return value && std::holds_alternative<Type>(*value);
+template <typename ...Types>
+[[nodiscard]] inline bool is_null(
+		const std::variant<null_t, Types...> &value) {
+	return is<null_t>(value);
 }
 
 } // namespace v
