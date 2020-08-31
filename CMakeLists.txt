@@ -146,7 +146,6 @@ PUBLIC
     desktop-app::external_qt
     desktop-app::external_openssl
     desktop-app::external_crash_reports
-    desktop-app::external_variant
     desktop-app::external_ranges
     desktop-app::external_gsl
     desktop-app::external_expected
