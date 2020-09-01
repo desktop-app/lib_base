@@ -122,6 +122,25 @@ template <typename ...Types>
 	return is<null_t>(value);
 }
 
+// On macOS std::get is macOS 10.14+ because of the exception type.
+// So we use our own, implemented using std::get_if.
+
+template <typename Type, typename ...Types>
+[[nodiscard]] inline Type &get(std::variant<Types...> &value) {
+	const auto result = std::get_if<Type>(&value);
+
+	Ensures(result != nullptr);
+	return *result;
+}
+
+template <typename Type, typename ...Types>
+[[nodiscard]] inline const Type &get(const std::variant<Types...> &value) {
+	const auto result = std::get_if<Type>(&value);
+
+	Ensures(result != nullptr);
+	return *result;
+}
+
 } // namespace v
 
 template <
