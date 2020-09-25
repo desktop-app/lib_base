@@ -6,6 +6,7 @@
 //
 #include "base/platform/win/base_file_utilities_win.h"
 
+#include "base/platform/win/base_windows_safe_library.h"
 #include "base/algorithm.h"
 
 #include <QtCore/QString>
@@ -19,6 +20,42 @@
 #include <io.h>
 
 namespace base::Platform {
+namespace {
+
+// RSTRTMGR.DLL
+
+using f_RmStartSession = DWORD(FAR STDAPICALLTYPE*)(
+	_Out_ DWORD *pSessionHandle,
+	_Reserved_ DWORD dwSessionFlags,
+	_Out_writes_(CCH_RM_SESSION_KEY + 1) WCHAR strSessionKey[]);
+using f_RmRegisterResources = DWORD(FAR STDAPICALLTYPE*)(
+	_In_ DWORD dwSessionHandle,
+	_In_ UINT nFiles,
+	_In_reads_opt_(nFiles) LPCWSTR rgsFileNames[],
+	_In_ UINT nApplications,
+	_In_reads_opt_(nApplications) RM_UNIQUE_PROCESS rgApplications[],
+	_In_ UINT nServices,
+	_In_reads_opt_(nServices) LPCWSTR rgsServiceNames[]);
+using f_RmGetList = DWORD(FAR STDAPICALLTYPE*)(
+	_In_ DWORD dwSessionHandle,
+	_Out_ UINT *pnProcInfoNeeded,
+	_Inout_ UINT *pnProcInfo,
+	_Inout_updates_opt_(*pnProcInfo) RM_PROCESS_INFO rgAffectedApps[],
+	_Out_ LPDWORD lpdwRebootReasons);
+using f_RmShutdown = DWORD(FAR STDAPICALLTYPE*)(
+	_In_ DWORD dwSessionHandle,
+	_In_ ULONG lActionFlags,
+	_In_opt_ RM_WRITE_STATUS_CALLBACK fnStatus);
+using f_RmEndSession = DWORD(FAR STDAPICALLTYPE*)(
+	_In_ DWORD dwSessionHandle);
+
+f_RmStartSession RmStartSession;
+f_RmRegisterResources RmRegisterResources;
+f_RmGetList RmGetList;
+f_RmShutdown RmShutdown;
+f_RmEndSession RmEndSession;
+
+} // namespace
 
 bool ShowInFolder(const QString &filepath) {
 	auto nativePath = QDir::toNativeSeparators(filepath);
@@ -133,6 +170,23 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 }
 
 bool CloseProcesses(const QString &filename) {
+	static const auto loaded = [&] {
+		const auto LibRstrtMgr = SafeLoadLibrary(u"rstrtmgr.dll"_q);
+		LoadMethod(LibRstrtMgr, "RmStartSession", RmStartSession);
+		LoadMethod(LibRstrtMgr, "RmRegisterResources", RmRegisterResources);
+		LoadMethod(LibRstrtMgr, "RmGetList", RmGetList);
+		LoadMethod(LibRstrtMgr, "RmShutdown", RmShutdown);
+		LoadMethod(LibRstrtMgr, "RmEndSession", RmEndSession);
+		return RmStartSession
+			&& RmRegisterResources
+			&& RmGetList
+			&& RmShutdown
+			&& RmEndSession;
+	}();
+	if (!loaded) {
+		return false;
+	}
+
 	auto result = BOOL(FALSE);
 	auto session = DWORD();
 	auto sessionKey = std::wstring(CCH_RM_SESSION_KEY + 1, wchar_t(0));
