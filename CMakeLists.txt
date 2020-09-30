@@ -113,6 +113,7 @@ PRIVATE
     base/qthelp_url.h
     base/qt_connection.h
     base/qt_signal_producer.h
+    base/required.h
     base/runtime_composer.cpp
     base/runtime_composer.h
     base/single_instance.cpp

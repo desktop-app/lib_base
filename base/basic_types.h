@@ -10,6 +10,7 @@
 #include "base/ordered_set.h"
 #include "base/unique_function.h"
 #include "base/functors.h"
+#include "base/required.h"
 
 #include <QtGlobal>
 #include <QtCore/QByteArray>
@@ -27,6 +28,7 @@ namespace func = base::functors;
 using gsl::not_null;
 using index_type = gsl::index;
 using size_type = gsl::index;
+using base::required;
 
 template <typename Signature>
 using Fn = std::function<Signature>;

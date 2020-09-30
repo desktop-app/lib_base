@@ -10,17 +10,18 @@
 
 namespace base {
 
-[[nodiscard]] rpl::producer<> timer_once(crl::time delay) {
+[[nodiscard]] inline auto timer_once(crl::time delay) {
 	return rpl::make_producer<>([=](const auto &consumer) {
 		auto result = rpl::lifetime();
 		result.make_state<base::Timer>([=] {
 			consumer.put_next(rpl::empty_value());
+			consumer.put_done();
 		})->callOnce(delay);
 		return result;
 	});
 }
 
-[[nodiscard]] rpl::producer<> timer_each(crl::time delay) {
+[[nodiscard]] inline auto timer_each(crl::time delay) {
 	return rpl::make_producer<>([=](const auto &consumer) {
 		auto result = rpl::lifetime();
 		result.make_state<base::Timer>([=] {
