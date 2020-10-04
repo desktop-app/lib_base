@@ -154,6 +154,15 @@ PUBLIC
     desktop-app::external_expected
 )
 
+if (LINUX)
+    target_link_libraries(lib_base
+    PUBLIC
+        desktop-app::external_xcb_screensaver
+        desktop-app::external_xcb
+        desktop-app::external_glib
+    )
+endif()
+
 target_precompile_headers(lib_base_crash_report_writer REUSE_FROM lib_base)
 nice_target_sources(lib_base_crash_report_writer ${src_loc}
 PRIVATE
