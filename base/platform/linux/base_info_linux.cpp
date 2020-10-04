@@ -8,52 +8,12 @@
 
 #include <QtCore/QJsonObject>
 #include <QtCore/QLocale>
-#include <QtCore/QFile>
-#include <QtCore/QProcess>
 #include <QtCore/QVersionNumber>
 #include <QtCore/QDate>
 #include <QtGui/QGuiApplication>
 #include <gnu/libc-version.h>
 
 namespace Platform {
-namespace {
-
-void FallbackFontConfig(
-		const QString &from,
-		const QString &to,
-		bool overwrite) {
-	const auto finish = gsl::finally([&] {
-		if (QFile(to).exists()) {
-			qputenv("FONTCONFIG_FILE", QFile::encodeName(to));
-		}
-	});
-
-	QProcess process;
-	process.setProcessChannelMode(QProcess::MergedChannels);
-	process.start("fc-list", QStringList() << "--version");
-	process.waitForFinished();
-	if (process.exitCode() > 0) {
-		return;
-	}
-
-	const auto result = QString::fromUtf8(process.readAllStandardOutput());
-
-	const auto version = QVersionNumber::fromString(
-		result.split("version ").last());
-	if (version.isNull()) {
-		return;
-	}
-
-	if (version < QVersionNumber::fromString("2.13")) {
-		return;
-	}
-
-	if (!QFile(to).exists() || overwrite) {
-		QFile(from).copy(to);
-	}
-}
-
-} // namespace
 
 QString DeviceModelPretty() {
 	const auto cpuArch = QSysInfo::buildCpuArchitecture();
@@ -133,13 +93,6 @@ bool IsWayland() {
 }
 
 void Start(QJsonObject options) {
-	const auto from = options.value("custom_font_config_src").toString();
-	const auto to = options.value("custom_font_config_dst").toString();
-	if (!from.isEmpty() && !to.isEmpty()) {
-		const auto keep = options.value("custom_font_config_keep").toInt();
-		const auto overwrite = (keep != 1);
-		FallbackFontConfig(from, to, overwrite);
-	}
 }
 
 void Finish() {
