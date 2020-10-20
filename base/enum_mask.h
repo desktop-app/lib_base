@@ -19,6 +19,12 @@ public:
 	enum_mask(Enum value) : _value(ToBit(value)) {
 	}
 
+	static enum_mask All() {
+		auto result = enum_mask();
+		result._value = ~Type(0);
+		return result;
+	}
+
 	enum_mask added(enum_mask other) const {
 		auto result = *this;
 		result.set(other);
