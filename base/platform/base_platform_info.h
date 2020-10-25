@@ -52,7 +52,9 @@ enum class OutdateReason {
 [[nodiscard]] constexpr bool IsLinux32Bit();
 [[nodiscard]] constexpr bool IsLinux64Bit();
 [[nodiscard]] bool IsWayland();
-[[nodiscard]] QString GetGlibCVersion();
+
+[[nodiscard]] QString GetLibcName();
+[[nodiscard]] QString GetLibcVersion();
 
 void Start(QJsonObject settings);
 void Finish();
