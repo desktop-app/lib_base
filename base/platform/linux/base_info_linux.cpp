@@ -11,9 +11,23 @@
 #include <QtCore/QVersionNumber>
 #include <QtCore/QDate>
 #include <QtGui/QGuiApplication>
+
+// this file is used on both Linux & BSD
+#ifdef Q_OS_LINUX
 #include <gnu/libc-version.h>
+#endif // Q_OS_LINUX
 
 namespace Platform {
+namespace {
+
+QString GetDesktopEnvironment() {
+	const auto value = qgetenv("XDG_CURRENT_DESKTOP");
+	return value.contains(':')
+		? value.left(value.indexOf(':'))
+		: value;
+}
+
+} // namespace
 
 QString DeviceModelPretty() {
 	const auto cpuArch = QSysInfo::buildCpuArchitecture();
@@ -28,15 +42,41 @@ QString DeviceModelPretty() {
 }
 
 QString SystemVersionPretty() {
-	const auto result = getenv("XDG_CURRENT_DESKTOP");
-	const auto value = result ? QString::fromLatin1(result) : QString();
-	const auto list = value.split(':', QString::SkipEmptyParts);
+	static const auto result = [&] {
+		QStringList resultList{};
 
-	return "Linux "
-		+ (list.isEmpty() ? QString() : list[0] + ' ')
-		+ (IsWayland() ? "Wayland " : "X11 ")
-		+ "glibc "
-		+ GetGlibCVersion();
+#ifdef Q_OS_LINUX
+		resultList << "Linux";
+#else // Q_OS_LINUX
+		resultList << QSysInfo::kernelType();
+#endif // !Q_OS_LINUX
+
+		const auto desktopEnvironment = GetDesktopEnvironment();
+		if (!desktopEnvironment.isEmpty()) {
+			resultList << desktopEnvironment;
+		}
+
+		if (IsWayland()) {
+			resultList << "Wayland";
+		} else {
+			resultList << "X11";
+		}
+
+		const auto libcName = GetLibcName();
+		const auto libcVersion = GetLibcVersion();
+		if (!libcVersion.isEmpty()) {
+			if (!libcName.isEmpty()) {
+				resultList << libcName;
+			} else {
+				resultList << "libc";
+			}
+			resultList << libcVersion;
+		}
+
+		return resultList.join(' ');
+	}();
+
+	return result;
 }
 
 QString SystemCountry() {
@@ -52,13 +92,17 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
+	const auto libcName = GetLibcName();
+	const auto libcVersion = GetLibcVersion();
+
 	if (IsLinux32Bit()) {
 		return QDate(2020, 9, 1);
-	} else if (const auto version = GetGlibCVersion(); !version.isEmpty()) {
-		if (QVersionNumber::fromString(version) < QVersionNumber(2, 23)) {
+	} else if (libcName == qstr("glibc") && !libcVersion.isEmpty()) {
+		if (QVersionNumber::fromString(libcVersion) < QVersionNumber(2, 23)) {
 			return QDate(2020, 9, 1); // Older than Ubuntu 16.04.
 		}
 	}
+
 	return QDate();
 }
 
@@ -80,12 +124,24 @@ QString AutoUpdateKey() {
 	}
 }
 
-QString GetGlibCVersion() {
+QString GetLibcName() {
+#ifdef Q_OS_LINUX
+	return "glibc";
+#endif // Q_OS_LINUX
+
+	return QString();
+}
+
+QString GetLibcVersion() {
+#ifdef Q_OS_LINUX
 	static const auto result = [&] {
 		const auto version = QString::fromLatin1(gnu_get_libc_version());
 		return QVersionNumber::fromString(version).isNull() ? QString() : version;
 	}();
 	return result;
+#endif // Q_OS_LINUX
+
+	return QString();
 }
 
 bool IsWayland() {
