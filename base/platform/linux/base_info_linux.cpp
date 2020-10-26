@@ -30,15 +30,13 @@ QString GetDesktopEnvironment() {
 } // namespace
 
 QString DeviceModelPretty() {
-	const auto cpuArch = QSysInfo::buildCpuArchitecture();
-
-	if (cpuArch == qstr("x86_64")) {
-		return "PC 64bit";
-	} else if (cpuArch == qstr("i386")) {
-		return "PC 32bit";
-	}
-
-	return "PC " + cpuArch;
+#ifdef Q_PROCESSOR_X86_64
+	return "PC 64bit";
+#elif defined Q_PROCESSOR_X86_32 // Q_PROCESSOR_X86_64
+	return "PC 32bit";
+#else // Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
+	return "PC " + QSysInfo::buildCpuArchitecture();
+#endif // else for Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
 }
 
 QString SystemVersionPretty() {
