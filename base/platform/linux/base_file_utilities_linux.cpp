@@ -19,6 +19,12 @@
 #include <QtDBus/QDBusReply>
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
+extern "C" {
+#undef signals
+#include <gio/gio.h>
+#define signals public
+} // extern "C"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -53,47 +59,67 @@ bool DBusShowInFolder(const QString &filepath) {
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 bool ProcessShowInFolder(const QString &filepath) {
-	const auto absolutePath = QFileInfo(filepath).absoluteFilePath();
 	QProcess process;
-	process.start(
-		"xdg-mime",
-		QStringList() << "query" << "default" << "inode/directory");
+	process.start("xdg-mime", {
+		"query",
+		"default",
+		"inode/directory"
+	});
 	process.waitForFinished();
-	auto output = QString::fromLatin1(process.readLine().simplified());
-	auto command = QString("xdg-open");
-	auto arguments = QStringList();
+	const auto output = QString::fromLatin1(process.readLine().simplified());
 	if (output == qstr("dolphin.desktop")
 		|| output == qstr("org.kde.dolphin.desktop")) {
-		command = "dolphin";
-		arguments << "--select" << absolutePath;
+		return process.startDetached("dolphin", {
+			"--select",
+			filepath
+		});
 	} else if (output == qstr("nautilus.desktop")
 		|| output == qstr("org.gnome.Nautilus.desktop")
 		|| output == qstr("nautilus-folder-handler.desktop")) {
-		command = "nautilus";
-		arguments << absolutePath;
+		return process.startDetached("nautilus", {
+			filepath
+		});
 	} else if (output == qstr("nemo.desktop")) {
-		command = "nemo";
-		arguments << "--no-desktop" << absolutePath;
+		return process.startDetached("nemo", {
+			"--no-desktop",
+			filepath
+		});
 	} else if (output == qstr("konqueror.desktop")
 		|| output == qstr("kfmclient_dir.desktop")) {
-		command = "konqueror";
-		arguments << "--select" << absolutePath;
-	} else {
-		arguments << QFileInfo(filepath).absoluteDir().absolutePath();
+		return process.startDetached("konqueror", {
+			"--select",
+			filepath
+		});
 	}
-	return process.startDetached(command, arguments);
+	return false;
 }
 
 } // namespace
 
 bool ShowInFolder(const QString &filepath) {
+	const auto absolutePath = QFileInfo(filepath).absoluteFilePath();
+	const auto absoluteDirPath = QFileInfo(filepath)
+		.absoluteDir()
+		.absolutePath();
+
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-	if (DBusShowInFolder(filepath)) {
+	if (DBusShowInFolder(absolutePath)) {
 		return true;
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
-	if (ProcessShowInFolder(filepath)) {
+	if (ProcessShowInFolder(absolutePath)) {
+		return true;
+	}
+
+	if (g_app_info_launch_default_for_uri(
+		("file://" + absoluteDirPath).toUtf8(),
+		nullptr,
+		nullptr)) {
+		return true;
+	}
+
+	if (QDesktopServices::openUrl(QUrl::fromLocalFile(absoluteDirPath))) {
 		return true;
 	}
 
