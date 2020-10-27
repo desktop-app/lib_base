@@ -6,6 +6,7 @@
 //
 #pragma once
 
+#include <QtGui/QImage>
 #include <Cocoa/Cocoa.h>
 
 namespace Platform {
@@ -31,6 +32,23 @@ inline QString MakeFromLetters(const uint32 (&letters)[Size]) {
 		result.push_back(QChar((part2 << 8) | part1));
 	}
 	return result;
+}
+
+inline NSImage *Q2NSImage(const QImage &image) {
+	if (image.isNull()) {
+		return nil;
+	}
+	CGImageRef cgImage = image.toCGImage();
+	if (!cgImage) {
+		return nil;
+	}
+	auto nsImage = [[NSImage alloc] initWithSize:NSZeroSize];
+	auto *imageRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];
+	imageRep.size = (image.size() / image.devicePixelRatioF()).toCGSize();
+	[nsImage addRepresentation:[imageRep autorelease]];
+	CFRelease(cgImage);
+
+	return [nsImage autorelease];
 }
 
 } // namespace Platform
