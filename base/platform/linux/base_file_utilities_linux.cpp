@@ -12,6 +12,7 @@
 #include <QtCore/QProcess>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
+#include <QtGui/QDesktopServices>
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <QtDBus/QDBusConnection>
