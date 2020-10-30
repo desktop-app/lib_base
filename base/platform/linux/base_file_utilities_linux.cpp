@@ -60,38 +60,44 @@ bool DBusShowInFolder(const QString &filepath) {
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 bool ProcessShowInFolder(const QString &filepath) {
-	QProcess process;
-	process.start("xdg-mime", {
-		"query",
-		"default",
-		"inode/directory"
-	});
-	process.waitForFinished();
-	const auto output = QString::fromLatin1(process.readLine().simplified());
-	if (output == qstr("dolphin.desktop")
-		|| output == qstr("org.kde.dolphin.desktop")) {
-		return process.startDetached("dolphin", {
+	auto fileManagerAppInfo = g_app_info_get_default_for_type(
+		"inode/directory",
+		false);
+
+	if (!fileManagerAppInfo) {
+		return false;
+	}
+
+	const auto fileManagerAppInfoId = QString(
+		g_app_info_get_id(fileManagerAppInfo));
+
+	g_object_unref(fileManagerAppInfo);
+
+	if (fileManagerAppInfoId == qstr("dolphin.desktop")
+		|| fileManagerAppInfoId == qstr("org.kde.dolphin.desktop")) {
+		return QProcess::startDetached("dolphin", {
 			"--select",
 			filepath
 		});
-	} else if (output == qstr("nautilus.desktop")
-		|| output == qstr("org.gnome.Nautilus.desktop")
-		|| output == qstr("nautilus-folder-handler.desktop")) {
-		return process.startDetached("nautilus", {
+	} else if (fileManagerAppInfoId == qstr("nautilus.desktop")
+		|| fileManagerAppInfoId == qstr("org.gnome.Nautilus.desktop")
+		|| fileManagerAppInfoId == qstr("nautilus-folder-handler.desktop")) {
+		return QProcess::startDetached("nautilus", {
 			filepath
 		});
-	} else if (output == qstr("nemo.desktop")) {
-		return process.startDetached("nemo", {
+	} else if (fileManagerAppInfoId == qstr("nemo.desktop")) {
+		return QProcess::startDetached("nemo", {
 			"--no-desktop",
 			filepath
 		});
-	} else if (output == qstr("konqueror.desktop")
-		|| output == qstr("kfmclient_dir.desktop")) {
-		return process.startDetached("konqueror", {
+	} else if (fileManagerAppInfoId == qstr("konqueror.desktop")
+		|| fileManagerAppInfoId == qstr("kfmclient_dir.desktop")) {
+		return QProcess::startDetached("konqueror", {
 			"--select",
 			filepath
 		});
 	}
+
 	return false;
 }
 
