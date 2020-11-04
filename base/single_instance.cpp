@@ -7,6 +7,7 @@
 #include "base/single_instance.h"
 
 #include "base/crc32hash.h"
+#include "base/qt_adapters.h"
 #include "base/platform/base_platform_process.h"
 
 #include <QtCore/QStandardPaths>
@@ -15,9 +16,6 @@
 
 namespace base {
 namespace {
-
-using ErrorSignal = void(QLocalSocket::*)(QLocalSocket::LocalSocketError);
-const auto QLocalSocket_error = ErrorSignal(&QLocalSocket::error);
 
 [[nodiscard]] QString Prefix() {
 #ifdef Q_OS_WIN
