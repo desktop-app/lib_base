@@ -67,7 +67,7 @@ bool ShowInFolder(const QString &filepath) {
 	}
 	const auto pathEscaped = nativePath.replace('"', QString("\"\""));
 	const auto command = ("/select," + pathEscaped).toStdWString();
-	const auto result = int(ShellExecute(
+	const auto result = int64(ShellExecute(
 		0,
 		0,
 		L"explorer",

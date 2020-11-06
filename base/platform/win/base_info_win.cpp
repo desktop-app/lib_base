@@ -141,11 +141,16 @@ QString GetLangCodeById(unsigned int lngId) {
 } // namespace
 
 QString DeviceModelPretty() {
+#ifdef Q_PROCESSOR_X86_64
+	return "PC 64bit";
+#elif defined Q_PROCESSOR_X86_32 // Q_PROCESSOR_X86_64
 	auto bIsWow64 = BOOL(FALSE);
 	if (IsWow64Process(GetCurrentProcess(), &bIsWow64)) {
 		return bIsWow64 ? "PC 64bit" : "PC 32bit";
 	}
-	return "PC unknown";
+#else // Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
+	return "PC " + QSysInfo::buildCpuArchitecture();
+#endif // else for Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
 }
 
 QString SystemVersionPretty() {
