@@ -44,7 +44,7 @@ bool DBusShowInFolder(const QString &filepath) {
 		"ShowItems");
 
 	message.setArguments({
-		QStringList("file://" + filepath),
+		QStringList{QUrl::fromLocalFile(filepath).toString()},
 		QString()
 	});
 
