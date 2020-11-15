@@ -28,7 +28,19 @@ std::optional<xcb_window_t> GetRootWindowFromQt() {
 	}
 
 	return static_cast<xcb_window_t>(reinterpret_cast<quintptr>(
-		native->nativeResourceForIntegration(QByteArray("rootwindow"))));;
+		native->nativeResourceForIntegration(QByteArray("rootwindow"))));
+}
+
+std::optional<xcb_timestamp_t> GetAppTimeFromQt() {
+	const auto native = QGuiApplication::platformNativeInterface();
+	if (!native) {
+		return std::nullopt;
+	}
+
+	return static_cast<xcb_timestamp_t>(reinterpret_cast<quintptr>(
+		native->nativeResourceForScreen(
+			QByteArray("apptime"),
+			QGuiApplication::primaryScreen())));
 }
 
 std::optional<xcb_atom_t> GetAtom(
