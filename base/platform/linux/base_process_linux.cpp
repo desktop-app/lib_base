@@ -9,6 +9,8 @@
 #include "base/platform/linux/base_info_linux.h"
 #include "base/platform/linux/base_xcb_utilities_linux.h"
 
+#include <QtGui/QGuiApplication>
+
 namespace base::Platform {
 namespace {
 
@@ -23,6 +25,11 @@ void XCBActivateWindow(WId window) {
 		return;
 	}
 
+	const auto appTime = XCB::GetAppTimeFromQt();
+	if (!appTime.has_value()) {
+		return;
+	}
+
 	const auto activeWindowAtom = XCB::GetAtom(
 		connection,
 		"_NET_ACTIVE_WINDOW");
@@ -30,6 +37,8 @@ void XCBActivateWindow(WId window) {
 	if (!activeWindowAtom.has_value()) {
 		return;
 	}
+
+	const auto focusWindow = QGuiApplication::focusWindow();
 
 	// map the window first
 	xcb_map_window(connection, window);
@@ -49,17 +58,20 @@ void XCBActivateWindow(WId window) {
 	xev.sequence = 0;
 	xev.window = window;
 	xev.type = *activeWindowAtom;
-	xev.data.data32[0] = 1UL; // source: 1=application 2=pager
-	xev.data.data32[1] = 1UL; // timestamp
-	xev.data.data32[2] = 0UL; // currently active window (none)
-	xev.data.data32[3] = 0UL;
-	xev.data.data32[4] = 0UL;
+	xev.data.data32[0] = 1; // source: 1=application 2=pager
+	xev.data.data32[1] = *appTime; // timestamp
+	xev.data.data32[2] = focusWindow // currently active window
+		? focusWindow->winId()
+		: XCB_NONE;
+	xev.data.data32[3] = 0;
+	xev.data.data32[4] = 0;
 
 	xcb_send_event(
 		connection,
-		true,
+		false,
 		*root,
-		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT,
+		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
+			| XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY,
 		reinterpret_cast<const char *>(&xev));
 }
 
