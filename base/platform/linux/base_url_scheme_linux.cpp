@@ -15,13 +15,42 @@ extern "C" {
 } // extern "C"
 
 namespace base::Platform {
+namespace {
+
+[[nodiscard]] QByteArray EscapeShell(const QByteArray &content) {
+	auto result = QByteArray();
+
+	auto b = content.constData(), e = content.constEnd();
+	for (auto ch = b; ch != e; ++ch) {
+		if (*ch == ' ' || *ch == '"' || *ch == '\'' || *ch == '\\') {
+			if (result.isEmpty()) {
+				result.reserve(content.size() * 2);
+			}
+			if (ch > b) {
+				result.append(b, ch - b);
+			}
+			result.append('\\');
+			b = ch;
+		}
+	}
+	if (result.isEmpty()) {
+		return content;
+	}
+
+	if (e > b) {
+		result.append(b, e - b);
+	}
+	return result;
+}
+
+} // namespace
 
 bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	const auto handlerType = QString("x-scheme-handler/%1")
 		.arg(descriptor.protocol);
 
 	const auto neededCommandline = QString("%1 -- %u")
-		.arg(descriptor.executable);
+		.arg(QString(EscapeShell(QFile::encodeName(descriptor.executable))));
 
 	auto currentAppInfo = g_app_info_get_default_for_type(
 		handlerType.toUtf8(),
@@ -51,7 +80,7 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		.arg(descriptor.protocol);
 
 	const auto commandlineForCreator = QString("%1 --")
-		.arg(descriptor.executable);
+		.arg(QString(EscapeShell(QFile::encodeName(descriptor.executable))));
 
 	auto newAppInfo = g_app_info_create_from_commandline(
 		commandlineForCreator.toUtf8(),
@@ -80,7 +109,7 @@ void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		.arg(descriptor.protocol);
 
 	const auto neededCommandline = QString("%1 -- %u")
-		.arg(descriptor.executable);
+		.arg(QString(EscapeShell(QFile::encodeName(descriptor.executable))));
 
 	auto registeredAppInfoList = g_app_info_get_recommended_for_type(
 		handlerType.toUtf8());
