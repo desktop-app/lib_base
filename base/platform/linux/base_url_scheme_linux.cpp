@@ -8,6 +8,8 @@
 
 #include "base/integration.h"
 
+#include <QtCore/QFile>
+
 extern "C" {
 #undef signals
 #include <gio/gio.h>
