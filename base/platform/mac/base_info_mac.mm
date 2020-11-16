@@ -15,6 +15,7 @@
 
 #include <QtCore/QDate>
 #include <QtCore/QJsonObject>
+#include <QtCore/QOperatingSystemVersion>
 
 @interface WakeUpObserver : NSObject {
 }
@@ -70,19 +71,26 @@ QString FromIdentifier(const QString &model) {
 	return result;
 }
 
+int MajorVersion() {
+	static const auto current = QOperatingSystemVersion::current();
+	return current.majorVersion();
+}
+
 int MinorVersion() {
-	static const int version = QSysInfo::macVersion();
-	constexpr int kShift = 2;
-	if (version == QSysInfo::MV_Unknown || version < kShift + 6) {
-		return 0;
-	}
-	return version - kShift;
+	static const auto current = QOperatingSystemVersion::current();
+	return current.minorVersion();
+}
+
+template <int Major, int Minor>
+bool IsMacThatOrGreater() {
+	static const auto result = (MajorVersion() >= Major)
+		&& ((MajorVersion() > Major) || (MinorVersion() >= Minor));
+	return result;
 }
 
 template <int Minor>
-bool IsMacThatOrGreater() {
-	static const auto result = (MinorVersion() >= Minor);
-	return result;
+bool IsMac10ThatOrGreater() {
+	return IsMacThatOrGreater<10, Minor>();
 }
 
 } // namespace
@@ -157,39 +165,47 @@ QString AutoUpdateKey() {
 }
 
 bool IsMac10_6OrGreater() {
-	return IsMacThatOrGreater<6>();
+	return IsMac10ThatOrGreater<6>();
 }
 
 bool IsMac10_7OrGreater() {
-	return IsMacThatOrGreater<7>();
+	return IsMac10ThatOrGreater<7>();
 }
 
 bool IsMac10_8OrGreater() {
-	return IsMacThatOrGreater<8>();
+	return IsMac10ThatOrGreater<8>();
 }
 
 bool IsMac10_9OrGreater() {
-	return IsMacThatOrGreater<9>();
+	return IsMac10ThatOrGreater<9>();
 }
 
 bool IsMac10_10OrGreater() {
-	return IsMacThatOrGreater<10>();
+	return IsMac10ThatOrGreater<10>();
 }
 
 bool IsMac10_11OrGreater() {
-	return IsMacThatOrGreater<11>();
+	return IsMac10ThatOrGreater<11>();
 }
 
 bool IsMac10_12OrGreater() {
-	return IsMacThatOrGreater<12>();
+	return IsMac10ThatOrGreater<12>();
 }
 
 bool IsMac10_13OrGreater() {
-	return IsMacThatOrGreater<13>();
+	return IsMac10ThatOrGreater<13>();
 }
 
 bool IsMac10_14OrGreater() {
-	return IsMacThatOrGreater<14>();
+	return IsMac10ThatOrGreater<14>();
+}
+
+bool IsMac10_15OrGreater() {
+	return IsMac10ThatOrGreater<15>();
+}
+
+bool IsMac11_0OrGreater() {
+	return IsMacThatOrGreater<11, 0>();
 }
 
 void Start(QJsonObject settings) {
