@@ -9,11 +9,15 @@
 #include "base/algorithm.h"
 
 #include <QtGui/QScreen>
+#include <QtGui/QImage>
 #include <QtGui/QGuiApplication>
 #include <QtNetwork/QLocalSocket>
 #include <QtNetwork/QNetworkReply>
-
 #include <QtCore/QString>
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#include <QtGui/QColorSpace>
+#endif // Qt >= 5.14
 
 namespace base {
 
@@ -64,6 +68,12 @@ inline constexpr auto QStringSkipEmptyParts = QString::SkipEmptyParts;
     return date.startOfDay();
 #else // Qt >= 5.14
     return QDateTime(date);
+#endif // Qt >= 5.14
+}
+
+inline void QClearColorSpace(QImage &image) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+	image.setColorSpace(QColorSpace());
 #endif // Qt >= 5.14
 }
 
