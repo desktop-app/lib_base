@@ -203,6 +203,8 @@ void TimerObjectWrap::sendEvent(std::unique_ptr<QEvent> event) {
 } // namespace details
 
 ConcurrentTimerEnvironment::ConcurrentTimerEnvironment() {
+	_thread.setObjectName("Concurrent Timer Thread");
+
 	_thread.start();
 	_adjuster.moveToThread(&_thread);
 
