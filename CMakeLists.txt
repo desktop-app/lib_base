@@ -19,6 +19,8 @@ nice_target_sources(lib_base ${src_loc}
 PRIVATE
     base/platform/linux/base_file_utilities_linux.cpp
     base/platform/linux/base_file_utilities_linux.h
+    base/platform/linux/base_global_shortcuts_linux.cpp
+    base/platform/linux/base_global_shortcuts_linux.h
     base/platform/linux/base_info_linux.cpp
     base/platform/linux/base_info_linux.h
     base/platform/linux/base_last_input_linux.cpp
@@ -33,6 +35,8 @@ PRIVATE
     base/platform/linux/base_xcb_utilities_linux.h
     base/platform/mac/base_file_utilities_mac.h
     base/platform/mac/base_file_utilities_mac.mm
+    base/platform/mac/base_global_shortcuts_mac.mm
+    base/platform/mac/base_global_shortcuts_mac.h
     base/platform/mac/base_info_mac.h
     base/platform/mac/base_info_mac.mm
     base/platform/mac/base_last_input_mac.h
@@ -47,6 +51,8 @@ PRIVATE
     base/platform/mac/base_utilities_mac.mm
     base/platform/win/base_file_utilities_win.cpp
     base/platform/win/base_file_utilities_win.h
+    base/platform/win/base_global_shortcuts_win.cpp
+    base/platform/win/base_global_shortcuts_win.h
     base/platform/win/base_info_win.cpp
     base/platform/win/base_info_win.h
     base/platform/win/base_last_input_win.cpp
@@ -58,8 +64,11 @@ PRIVATE
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
     base/platform/win/base_windows_h.h
+    base/platform/win/base_windows_key_codes.cpp
+    base/platform/win/base_windows_key_codes.h
     base/platform/win/base_windows_safe_library.cpp
     base/platform/win/base_windows_safe_library.h
+    base/platform/base_platform_global_shortcuts.h
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
     base/platform/base_platform_layout_switch.h
@@ -135,6 +144,8 @@ PRIVATE
     base/virtual_method.h
     base/weak_ptr.h
     base/zlib_help.h
+
+    base/base_pch.h
 )
 
 target_include_directories(lib_base
