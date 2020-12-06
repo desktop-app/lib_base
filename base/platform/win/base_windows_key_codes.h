@@ -9,8 +9,8 @@
 namespace base::Platform {
 
 struct WinKeyDescriptor {
-	uint32 virtualKeyCode;
-	uint32 lParam;
+	uint32 virtualKeyCode = 0;
+	uint32 lParam = 0;
 };
 
 inline bool operator<(WinKeyDescriptor a, WinKeyDescriptor b) {

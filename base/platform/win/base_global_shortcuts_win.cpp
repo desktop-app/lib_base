@@ -332,7 +332,7 @@ void GlobalShortcutManagerWin::processRecordingRelease(
 	Assert(_recordingUp.size() <= _recordingDown.size());
 	if (_recordingUp.size() == _recordingDown.size()) {
 		// All keys are up, we got the shortcut.
-			// Some down keys are not up yet.
+		// Some down keys are not up yet.
 		finishRecording();
 	}
 }

@@ -43,6 +43,8 @@ PRIVATE
     base/platform/mac/base_last_input_mac.mm
     base/platform/mac/base_layout_switch_mac.h
     base/platform/mac/base_layout_switch_mac.mm
+    base/platform/mac/base_mac_key_codes.h
+    base/platform/mac/base_mac_key_codes.mm
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
     base/platform/mac/base_url_scheme_mac.h
