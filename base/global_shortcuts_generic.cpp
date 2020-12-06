@@ -128,6 +128,11 @@ void GlobalShortcutManagerGeneric::startRecording(
 }
 
 void GlobalShortcutManagerGeneric::stopRecording() {
+	_recordingDown.clear();
+	_recordingUp.clear();
+	_recording = false;
+	_recordingDone = nullptr;
+	_recordingProgress = nullptr;
 }
 
 void GlobalShortcutManagerGeneric::startWatching(
