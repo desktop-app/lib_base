@@ -6,10 +6,10 @@
 //
 #include "base/platform/linux/base_global_shortcuts_linux.h"
 
-namespace base::Platform {
+namespace base {
 
 std::unique_ptr<GlobalShortcutManager> CreateGlobalShortcutManager() {
 	return nullptr;
 }
 
-} // namespace base::Platform
+} // namespace base

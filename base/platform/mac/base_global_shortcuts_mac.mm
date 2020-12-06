@@ -8,36 +8,20 @@
 
 #include "base/platform/mac/base_utilities_mac.h"
 #include "base/invoke_queued.h"
+#include "base/const_string.h"
 
 #include <Carbon/Carbon.h>
+#import <Foundation/Foundation.h>
 #import <IOKit/hidsystem/IOHIDLib.h>
 
-namespace base::Platform {
+namespace base::Platform::GlobalShortcuts {
 namespace {
-
-constexpr auto kShortcutLimit = 4;
 
 CFMachPortRef EventPort = nullptr;
 CFRunLoopSourceRef EventPortSource = nullptr;
 CFRunLoopRef ThreadRunLoop = nullptr;
 std::thread Thread;
-std::mutex GlobalMutex;
-std::vector<not_null<GlobalShortcutManagerMac*>> Managers;
-bool Running = false;
-
-[[nodiscard]] bool HasAccess() {
-	if (@available(macOS 10.15, *)) {
-		// Input Monitoring is required on macOS 10.15 an later.
-		// Even if user grants access, restart is required.
-		static const auto result = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent);
-		return (result == kIOHIDAccessTypeGranted);
-	} else if (@available(macOS 10.14, *)) {
-		// Accessibility is required on macOS 10.14.
-		NSDictionary *const options=@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @FALSE};
-		return AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
-	}
-	return true;
-}
+Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 
 CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void*) {
 	if (CGEventGetIntegerValueField(event, kCGKeyboardEventAutorepeat)) {
@@ -82,318 +66,203 @@ CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef 
 	if (!maybeDown) {
 		return event;
 	}
-	const auto descriptor = MacKeyDescriptor{
-		.keycode = keycode,
-	};
+	const auto descriptor = GlobalShortcutKeyGeneric(keycode);
 	const auto down = *maybeDown;
 
-	std::unique_lock lock{ GlobalMutex };
-	for (const auto manager : Managers) {
-		manager->schedule(descriptor, down);
-	}
+	ProcessCallback(descriptor, down);
+
 	return event;
-}
-
-[[nodiscard]] bool Matches(
-		const std::vector<MacKeyDescriptor> &sorted,
-		const base::flat_set<MacKeyDescriptor> &down) {
-	if (sorted.size() > down.size()) {
-		return false;
-	}
-	auto j = begin(down);
-	for (const auto descriptor : sorted) {
-		while (true) {
-			if (*j > descriptor) {
-				return false;
-			} else if (*j < descriptor) {
-				++j;
-				if (j == end(down)) {
-					return false;
-				}
-			} else {
-				break;
-			}
-		}
-	}
-	return true;
-}
-
-[[nodiscard]] GlobalShortcut MakeShortcut(
-		std::vector<MacKeyDescriptor> descriptors) {
-	return std::make_shared<GlobalShortcutValueMac>(std::move(descriptors));
 }
 
 } // namespace
 
-std::unique_ptr<GlobalShortcutManager> CreateGlobalShortcutManager() {
-	return std::make_unique<GlobalShortcutManagerMac>();
-}
-
-GlobalShortcutValueMac::GlobalShortcutValueMac(
-	std::vector<MacKeyDescriptor> descriptors)
-: _descriptors(std::move(descriptors)) {
-	Expects(!_descriptors.empty());
-}
-
-QString GlobalShortcutValueMac::toDisplayString() {
-	auto result = QStringList();
-	result.reserve(_descriptors.size());
-	for (const auto descriptor : _descriptors) {
-		result.push_back(KeyName(descriptor));
+[[nodiscard]] bool Available() {
+	if (@available(macOS 10.15, *)) {
+		// Input Monitoring is required on macOS 10.15 an later.
+		// Even if user grants access, restart is required.
+		static const auto result = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent);
+		return (result == kIOHIDAccessTypeGranted);
+	} else if (@available(macOS 10.14, *)) {
+		// Accessibility is required on macOS 10.14.
+		NSDictionary *const options=@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @FALSE};
+		return AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
 	}
-	return result.join(" + ");
+	return true;
 }
 
-QByteArray GlobalShortcutValueMac::serialize() {
-	static_assert(sizeof(MacKeyDescriptor) == sizeof(uint64));
+void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process) {
+	Expects(!EventPort);
+	Expects(!EventPortSource);
 
-	const auto size = sizeof(MacKeyDescriptor) * _descriptors.size();
-	auto result = QByteArray(size, Qt::Uninitialized);
-	memcpy(result.data(), _descriptors.data(), size);
-	return result;
-}
-
-GlobalShortcutManagerMac::GlobalShortcutManagerMac()
-: _valid(HasAccess()) {
-	if (!_valid) {
-		return;
-	} else if (!EventPort) {
-		EventPort = CGEventTapCreate(
-			kCGHIDEventTap,
-			kCGHeadInsertEventTap,
-			kCGEventTapOptionListenOnly,
-			(CGEventMaskBit(kCGEventKeyDown)
-				| CGEventMaskBit(kCGEventKeyUp)
-				| CGEventMaskBit(kCGEventFlagsChanged)),
-			EventTapCallback,
-			nullptr);
-		if (!EventPort) {
-			return;
-		}
-		EventPortSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, EventPort, 0);
-		if (!EventPortSource) {
-			CFMachPortInvalidate(EventPort);
-			CFRelease(EventPort);
-			EventPort = nullptr;
-			return;
-		}
-		Thread = std::thread([] {
-			ThreadRunLoop = CFRunLoopGetCurrent();
-			CFRunLoopAddSource(ThreadRunLoop, EventPortSource, kCFRunLoopCommonModes);
-			CGEventTapEnable(EventPort, true);
-			CFRunLoopRun();
-		});
-    }
-
-	std::unique_lock lock{ GlobalMutex };
-	Managers.push_back(this);
-	lock.unlock();
-}
-
-GlobalShortcutManagerMac::~GlobalShortcutManagerMac() {
-	std::unique_lock lock{ GlobalMutex };
-	Managers.erase(ranges::remove(Managers, not_null{ this }), end(Managers));
-	const auto stopThread = Managers.empty();
-	lock.unlock();
-
-	if (stopThread && EventPort) {
-		CFRunLoopStop(ThreadRunLoop);
-		Thread.join();
-
-        CFMachPortInvalidate(EventPort);
-        CFRelease(EventPort);
-        EventPort = nullptr;
-
-        CFRelease(EventPortSource);
-        EventPortSource = nullptr;
-	}
-}
-
-void GlobalShortcutManagerMac::startRecording(
-		Fn<void(GlobalShortcut)> progress,
-		Fn<void(GlobalShortcut)> done) {
-	Expects(done != nullptr);
-
-    if (@available(macOS 10.15, *)) {
-		IOHIDRequestAccess(kIOHIDRequestTypeListenEvent);
-	}
-
-	_recordingDown.clear();
-	_recordingUp.clear();
-	_recording = true;
-	_recordingProgress = std::move(progress);
-	_recordingDone = std::move(done);
-}
-
-void GlobalShortcutManagerMac::stopRecording() {
-}
-
-void GlobalShortcutManagerMac::startWatching(
-		GlobalShortcut shortcut,
-		Fn<void(bool pressed)> callback) {
-	Expects(shortcut != nullptr);
-	Expects(callback != nullptr);
-
-    if (@available(macOS 10.15, *)) {
-		IOHIDRequestAccess(kIOHIDRequestTypeListenEvent);
-	}
-
-	const auto i = ranges::find(_watchlist, shortcut, &Watch::shortcut);
-	if (i != end(_watchlist)) {
-		i->callback = std::move(callback);
-	} else {
-		auto sorted = static_cast<GlobalShortcutValueMac*>(
-			shortcut.get())->descriptors();
-		std::sort(begin(sorted), end(sorted));
-		_watchlist.push_back(Watch{
-			std::move(shortcut),
-			std::move(sorted),
-			std::move(callback)
-		});
-	}
-}
-
-void GlobalShortcutManagerMac::stopWatching(GlobalShortcut shortcut) {
-	const auto i = ranges::find(_watchlist, shortcut, &Watch::shortcut);
-	if (i != end(_watchlist)) {
-		_watchlist.erase(i);
-	}
-	_pressed.erase(ranges::find(_pressed, shortcut), end(_pressed));
-}
-
-GlobalShortcut GlobalShortcutManagerMac::shortcutFromSerialized(
-		QByteArray serialized) {
-	const auto single = sizeof(MacKeyDescriptor);
-	if (serialized.isEmpty() || serialized.size() % single) {
-		return nullptr;
-	}
-	auto count = serialized.size() / single;
-	auto list = std::vector<MacKeyDescriptor>(count);
-	memcpy(list.data(), serialized.constData(), serialized.size());
-	return MakeShortcut(std::move(list));
-}
-
-void GlobalShortcutManagerMac::schedule(
-		MacKeyDescriptor descriptor,
-		bool down) {
-	InvokeQueued(this, [=] { process(descriptor, down); });
-}
-
-void GlobalShortcutManagerMac::process(
-		MacKeyDescriptor descriptor,
-		bool down) {
-	if (!down) {
-		_down.remove(descriptor);
-	}
-	if (_recording) {
-		processRecording(descriptor, down);
+	ProcessCallback = std::move(process);
+	EventPort = CGEventTapCreate(
+		kCGHIDEventTap,
+		kCGHeadInsertEventTap,
+		kCGEventTapOptionListenOnly,
+		(CGEventMaskBit(kCGEventKeyDown)
+			| CGEventMaskBit(kCGEventKeyUp)
+			| CGEventMaskBit(kCGEventFlagsChanged)),
+		EventTapCallback,
+		nullptr);
+	if (!EventPort) {
+		ProcessCallback = nullptr;
 		return;
 	}
-	auto scheduled = std::vector<Fn<void(bool pressed)>>();
-	if (down) {
-		_down.emplace(descriptor);
-		for (const auto &watch : _watchlist) {
-			if (watch.sorted.size() > _down.size()
-				|| ranges::contains(_pressed, watch.shortcut)) {
-				continue;
-			} else if (Matches(watch.sorted, _down)) {
-				_pressed.push_back(watch.shortcut);
-				scheduled.push_back(watch.callback);
-			}
-		}
-	} else {
-		_down.remove(descriptor);
-		for (auto i = begin(_pressed); i != end(_pressed);) {
-			const auto win = static_cast<GlobalShortcutValueMac*>(i->get());
-			if (!ranges::contains(win->descriptors(), descriptor)) {
-				++i;
-			} else {
-				const auto j = ranges::find(
-					_watchlist,
-					*i,
-					&Watch::shortcut);
-				Assert(j != end(_watchlist));
-				scheduled.push_back(j->callback);
-
-				i = _pressed.erase(i);
-			}
-		}
-	}
-	for (const auto &callback : scheduled) {
-		callback(down);
-	}
-}
-
-void GlobalShortcutManagerMac::processRecording(
-		MacKeyDescriptor descriptor,
-		bool down) {
-	if (down) {
-		processRecordingPress(descriptor);
-	} else {
-		processRecordingRelease(descriptor);
-	}
-}
-
-void GlobalShortcutManagerMac::processRecordingPress(
-		MacKeyDescriptor descriptor) {
-	auto changed = false;
-	_recordingUp.remove(descriptor);
-	for (const auto descriptor : _recordingUp) {
-		const auto i = ranges::remove(_recordingDown, descriptor);
-		if (i != end(_recordingDown)) {
-			_recordingDown.erase(i, end(_recordingDown));
-			changed = true;
-		}
-	}
-	_recordingUp.clear();
-
-	const auto i = std::find(
-		begin(_recordingDown),
-		end(_recordingDown),
-		descriptor);
-	if (i == _recordingDown.end()) {
-		_recordingDown.push_back(descriptor);
-		changed = true;
-	}
-	if (!changed) {
-		return;
-	} else if (_recordingDown.size() == kShortcutLimit) {
-		finishRecording();
-	} else if (const auto onstack = _recordingProgress) {
-		onstack(MakeShortcut(_recordingDown));
-	}
-}
-
-void GlobalShortcutManagerMac::processRecordingRelease(
-		MacKeyDescriptor descriptor) {
-	const auto i = std::find(
-		begin(_recordingDown),
-		end(_recordingDown),
-		descriptor);
-	if (i == end(_recordingDown)) {
+	EventPortSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, EventPort, 0);
+	if (!EventPortSource) {
+		CFMachPortInvalidate(EventPort);
+		CFRelease(EventPort);
+		EventPort = nullptr;
+		ProcessCallback = nullptr;
 		return;
 	}
-	_recordingUp.emplace(descriptor);
-	Assert(_recordingUp.size() <= _recordingDown.size());
-	if (_recordingUp.size() == _recordingDown.size()) {
-		// All keys are up, we got the shortcut.
-		// Some down keys are not up yet.
-		finishRecording();
+	Thread = std::thread([] {
+		ThreadRunLoop = CFRunLoopGetCurrent();
+		CFRunLoopAddSource(ThreadRunLoop, EventPortSource, kCFRunLoopCommonModes);
+		CGEventTapEnable(EventPort, true);
+		CFRunLoopRun();
+	});
+}
+
+void Stop() {
+	if (!EventPort) {
+		return;
 	}
+	CFRunLoopStop(ThreadRunLoop);
+	Thread.join();
+
+    CFMachPortInvalidate(EventPort);
+    CFRelease(EventPort);
+    EventPort = nullptr;
+
+    CFRelease(EventPortSource);
+    EventPortSource = nullptr;
+
+	ProcessCallback = nullptr;
 }
 
-void GlobalShortcutManagerMac::finishRecording() {
-	Expects(!_recordingDown.empty());
+QString KeyName(GlobalShortcutKeyGeneric descriptor) {
+	static const auto KeyToString = flat_map<uint64, const_string>{
+		{ kVK_Return, "\xE2\x8F\x8E" },
+		{ kVK_Tab, "\xE2\x87\xA5" },
+		{ kVK_Space, "\xE2\x90\xA3" },
+		{ kVK_Delete, "\xE2\x8C\xAB" },
+		{ kVK_Escape, "\xE2\x8E\x8B" },
+		{ kVK_Command, "\xE2\x8C\x98" },
+		{ kVK_Shift, "\xE2\x87\xA7" },
+		{ kVK_CapsLock, "Caps Lock" },
+		{ kVK_Option, "\xE2\x8C\xA5" },
+		{ kVK_Control, "\xE2\x8C\x83" },
+		{ kVK_RightCommand, "Right \xE2\x8C\x98" },
+		{ kVK_RightShift, "Right \xE2\x87\xA7" },
+		{ kVK_RightOption, "Right \xE2\x8C\xA5" },
+		{ kVK_RightControl, "Right \xE2\x8C\x83" },
+		{ kVK_Function, "Fn" },
+		{ kVK_F17, "F17" },
+		{ kVK_VolumeUp, "Volume Up" },
+		{ kVK_VolumeDown, "Volume Down" },
+		{ kVK_Mute, "Mute" },
+		{ kVK_F18, "F18" },
+		{ kVK_F19, "F19" },
+		{ kVK_F20, "F20" },
+		{ kVK_F5, "F5" },
+		{ kVK_F6, "F6" },
+		{ kVK_F7, "F7" },
+		{ kVK_F3, "F3" },
+		{ kVK_F8, "F8" },
+		{ kVK_F9, "F9" },
+		{ kVK_F11, "F11" },
+		{ kVK_F13, "F13" },
+		{ kVK_F16, "F16" },
+		{ kVK_F14, "F14" },
+		{ kVK_F10, "F10" },
+		{ kVK_F12, "F12" },
+		{ kVK_F15, "F15" },
+		{ kVK_Help, "Help" },
+		{ kVK_Home, "\xE2\x86\x96" },
+		{ kVK_PageUp, "Page Up" },
+		{ kVK_ForwardDelete, "\xe2\x8c\xa6" },
+		{ kVK_F4, "F4" },
+		{ kVK_End, "\xE2\x86\x98" },
+		{ kVK_F2, "F2" },
+		{ kVK_PageDown, "Page Down" },
+		{ kVK_F1, "F1" },
+		{ kVK_LeftArrow, "\xE2\x86\x90" },
+		{ kVK_RightArrow, "\xE2\x86\x92" },
+		{ kVK_DownArrow, "\xE2\x86\x93" },
+		{ kVK_UpArrow, "\xE2\x86\x91" },
 
-	auto result = MakeShortcut(std::move(_recordingDown));
-	_recordingDown.clear();
-	_recordingUp.clear();
-	_recording = false;
-	const auto done = _recordingDone;
-	_recordingDone = nullptr;
-	_recordingProgress = nullptr;
+		{ kVK_ANSI_A, "A" },
+		{ kVK_ANSI_S, "S" },
+		{ kVK_ANSI_D, "D" },
+		{ kVK_ANSI_F, "F" },
+		{ kVK_ANSI_H, "H" },
+		{ kVK_ANSI_G, "G" },
+		{ kVK_ANSI_Z, "Z" },
+		{ kVK_ANSI_X, "X" },
+		{ kVK_ANSI_C, "C" },
+		{ kVK_ANSI_V, "V" },
+		{ kVK_ANSI_B, "B" },
+		{ kVK_ANSI_Q, "Q" },
+		{ kVK_ANSI_W, "W" },
+		{ kVK_ANSI_E, "E" },
+		{ kVK_ANSI_R, "R" },
+		{ kVK_ANSI_Y, "Y" },
+		{ kVK_ANSI_T, "T" },
+		{ kVK_ANSI_1, "1" },
+		{ kVK_ANSI_2, "2" },
+		{ kVK_ANSI_3, "3" },
+		{ kVK_ANSI_4, "4" },
+		{ kVK_ANSI_6, "6" },
+		{ kVK_ANSI_5, "5" },
+		{ kVK_ANSI_Equal, "=" },
+		{ kVK_ANSI_9, "9" },
+		{ kVK_ANSI_7, "7" },
+		{ kVK_ANSI_Minus, "-" },
+		{ kVK_ANSI_8, "8" },
+		{ kVK_ANSI_0, "0" },
+		{ kVK_ANSI_RightBracket, "]" },
+		{ kVK_ANSI_O, "O" },
+		{ kVK_ANSI_U, "U" },
+		{ kVK_ANSI_LeftBracket, "[" },
+		{ kVK_ANSI_I, "I" },
+		{ kVK_ANSI_P, "P" },
+		{ kVK_ANSI_L, "L" },
+		{ kVK_ANSI_J, "J" },
+		{ kVK_ANSI_Quote, "'" },
+		{ kVK_ANSI_K, "K" },
+		{ kVK_ANSI_Semicolon, "/" },
+		{ kVK_ANSI_Backslash, "\\" },
+		{ kVK_ANSI_Comma, "," },
+		{ kVK_ANSI_Slash, "/" },
+		{ kVK_ANSI_N, "N" },
+		{ kVK_ANSI_M, "M" },
+		{ kVK_ANSI_Period, "." },
+		{ kVK_ANSI_Grave, "`" },
+		{ kVK_ANSI_KeypadDecimal, "Num ." },
+		{ kVK_ANSI_KeypadMultiply, "Num *" },
+		{ kVK_ANSI_KeypadPlus, "Num +" },
+		{ kVK_ANSI_KeypadClear, "Num Clear" },
+		{ kVK_ANSI_KeypadDivide, "Num /" },
+		{ kVK_ANSI_KeypadEnter, "Num Enter" },
+		{ kVK_ANSI_KeypadMinus, "Num -" },
+		{ kVK_ANSI_KeypadEquals, "Num =" },
+		{ kVK_ANSI_Keypad0, "Num 0" },
+		{ kVK_ANSI_Keypad1, "Num 1" },
+		{ kVK_ANSI_Keypad2, "Num 2" },
+		{ kVK_ANSI_Keypad3, "Num 3" },
+		{ kVK_ANSI_Keypad4, "Num 4" },
+		{ kVK_ANSI_Keypad5, "Num 5" },
+		{ kVK_ANSI_Keypad6, "Num 6" },
+		{ kVK_ANSI_Keypad7, "Num 7" },
+		{ kVK_ANSI_Keypad8, "Num 8" },
+		{ kVK_ANSI_Keypad9, "Num 9" },
+	};
 
-	done(std::move(result));
+	const auto i = KeyToString.find(descriptor);
+	return (i != end(KeyToString))
+		? i->second.utf16()
+		: QString("\\x%1").arg(descriptor, 0, 16);
 }
 
-} // namespace base::Platform
+} // namespace base::Platform::GlobalShortcuts

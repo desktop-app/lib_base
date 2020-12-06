@@ -6,36 +6,15 @@
 //
 #pragma once
 
-namespace base::Platform {
+#include "base/global_shortcuts_generic.h"
 
-class GlobalShortcutValue {
-public:
-	[[nodiscard]] virtual QString toDisplayString() = 0;
-	[[nodiscard]] virtual QByteArray serialize() = 0;
+namespace base::Platform::GlobalShortcuts {
 
-	virtual ~GlobalShortcutValue() = default;
-};
+[[nodiscard]] bool Available();
 
-using GlobalShortcut = std::shared_ptr<GlobalShortcutValue>;
+void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process);
+void Stop();
 
-// Callbacks are called from unspecified thread.
-class GlobalShortcutManager {
-public:
-	virtual void startRecording(
-		Fn<void(GlobalShortcut)> progress,
-		Fn<void(GlobalShortcut)> done) = 0;
-	virtual void stopRecording() = 0;
-	virtual void startWatching(
-		GlobalShortcut shortcut,
-		Fn<void(bool pressed)> callback) = 0;
-	virtual void stopWatching(GlobalShortcut shortcut) = 0;
+[[nodiscard]] QString KeyName(GlobalShortcutKeyGeneric descriptor);
 
-	[[nodiscard]] virtual GlobalShortcut shortcutFromSerialized(
-		QByteArray serialized) = 0;
-
-	virtual ~GlobalShortcutManager() = default;
-};
-
-std::unique_ptr<GlobalShortcutManager> CreateGlobalShortcutManager();
-
-} // namespace base::Platform
+} // namespace base::Platform::GlobalShortcuts

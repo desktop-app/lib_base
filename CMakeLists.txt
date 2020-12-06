@@ -43,8 +43,6 @@ PRIVATE
     base/platform/mac/base_last_input_mac.mm
     base/platform/mac/base_layout_switch_mac.h
     base/platform/mac/base_layout_switch_mac.mm
-    base/platform/mac/base_mac_key_codes.h
-    base/platform/mac/base_mac_key_codes.mm
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
     base/platform/mac/base_url_scheme_mac.h
@@ -66,8 +64,6 @@ PRIVATE
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
     base/platform/win/base_windows_h.h
-    base/platform/win/base_windows_key_codes.cpp
-    base/platform/win/base_windows_key_codes.h
     base/platform/win/base_windows_safe_library.cpp
     base/platform/win/base_windows_safe_library.h
     base/platform/base_platform_global_shortcuts.h
@@ -80,6 +76,8 @@ PRIVATE
     base/algorithm.h
     base/assertion.cpp
     base/assertion.h
+    base/base_file_utilities.cpp
+    base/base_file_utilities.h
     base/basic_types.h
     base/binary_guard.h
     base/build_config.h
@@ -91,19 +89,20 @@ PRIVATE
     base/concurrent_timer.cpp
     base/concurrent_timer.h
     base/const_string.h
-    base/flags.h
     base/enum_mask.h
-    base/expected.h
     base/event_filter.cpp
     base/event_filter.h
-    base/base_file_utilities.cpp
-    base/base_file_utilities.h
+    base/expected.h
     base/file_lock.h
     base/file_lock_win.cpp
     base/file_lock_posix.cpp
+    base/flags.h
     base/flat_map.h
     base/flat_set.h
     base/functors.h
+    base/global_shortcuts.h
+    base/global_shortcuts_generic.cpp
+    base/global_shortcuts_generic.h
     base/index_based_iterator.h
     base/integration.cpp
     base/integration.h

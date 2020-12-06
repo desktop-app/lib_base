@@ -6,3 +6,4 @@
 //
 #pragma once
 
+#include "base/global_shortcuts.h"
