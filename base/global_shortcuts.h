@@ -36,6 +36,8 @@ public:
 	virtual ~GlobalShortcutManager() = default;
 };
 
-std::unique_ptr<GlobalShortcutManager> CreateGlobalShortcutManager();
+[[nodiscard]] bool GlobalShortcutsAvailable();
+[[nodiscard]] bool GlobalShortcutsAllowed();
+[[nodiscard]] std::unique_ptr<GlobalShortcutManager> CreateGlobalShortcutManager();
 
 } // namespace base

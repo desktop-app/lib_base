@@ -10,12 +10,12 @@
 #include "base/platform/base_platform_info.h"
 #include "base/platform/mac/base_utilities_mac.h"
 
-#include <sys/sysctl.h>
-#include <Cocoa/Cocoa.h>
-
 #include <QtCore/QDate>
 #include <QtCore/QJsonObject>
 #include <QtCore/QOperatingSystemVersion>
+#include <sys/sysctl.h>
+#include <Cocoa/Cocoa.h>
+#import <IOKit/hidsystem/IOHIDLib.h>
 
 @interface WakeUpObserver : NSObject {
 }
@@ -91,6 +91,11 @@ bool IsMacThatOrGreater() {
 template <int Minor>
 bool IsMac10ThatOrGreater() {
 	return IsMacThatOrGreater<10, Minor>();
+}
+
+NSURL *PrivacySettingsUrl(const QString &section) {
+	NSString *url = Q2NSString("x-apple.systempreferences:com.apple.preference.security?" + section);
+	return [NSURL URLWithString:url];
 }
 
 } // namespace
@@ -230,6 +235,18 @@ void Finish() {
 
 	[GlobalWakeUpObserver release];
 	GlobalWakeUpObserver = nil;
+}
+
+void OpenInputMonitoringPrivacySettings() {
+	if (@available(macOS 10.15, *)) {
+		IOHIDRequestAccess(kIOHIDRequestTypeListenEvent);
+	}
+	[[NSWorkspace sharedWorkspace] openURL:PrivacySettingsUrl("Privacy_ListenEvent")];
+}
+
+void OpenAccessibilityPrivacySettings() {
+	NSDictionary *const options=@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @TRUE};
+	AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
 }
 
 } // namespace Platform

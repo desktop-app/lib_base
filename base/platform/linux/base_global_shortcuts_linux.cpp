@@ -6,10 +6,30 @@
 //
 #include "base/platform/linux/base_global_shortcuts_linux.h"
 
-namespace base {
+namespace base::Platform::GlobalShortcuts {
+namespace {
 
-std::unique_ptr<GlobalShortcutManager> CreateGlobalShortcutManager() {
-	return nullptr;
+Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
+
+} // namespace
+
+bool Available() {
+	return false;
 }
 
-} // namespace base
+bool Allowed() {
+	return false;
+}
+
+void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process) {
+	ProcessCallback = std::move(process);
+}
+
+void Stop() {
+}
+
+QString KeyName(GlobalShortcutKeyGeneric descriptor) {
+	return QString("\\x%1").arg(descriptor, 0, 16);
+}
+
+} // namespace base::Platform::GlobalShortcuts

@@ -76,7 +76,11 @@ CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef 
 
 } // namespace
 
-[[nodiscard]] bool Available() {
+bool Available() {
+	return true;
+}
+
+bool Allowed() {
 	if (@available(macOS 10.15, *)) {
 		// Input Monitoring is required on macOS 10.15 an later.
 		// Even if user grants access, restart is required.

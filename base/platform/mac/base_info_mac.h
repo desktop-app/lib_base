@@ -49,4 +49,7 @@ inline bool IsWayland() { return false; }
 inline QString GetLibcName() { return QString(); }
 inline QString GetLibcVersion() { return QString(); }
 
+void OpenInputMonitoringPrivacySettings();
+void OpenAccessibilityPrivacySettings();
+
 } // namespace Platform

@@ -60,6 +60,14 @@ std::unique_ptr<GlobalShortcutManager> CreateGlobalShortcutManager() {
 	return std::make_unique<GlobalShortcutManagerGeneric>();
 }
 
+bool GlobalShortcutsAvailable() {
+	return Platform::GlobalShortcuts::Available();
+}
+
+bool GlobalShortcutsAllowed() {
+	return Platform::GlobalShortcuts::Allowed();
+}
+
 GlobalShortcutValueGeneric::GlobalShortcutValueGeneric(
 	std::vector<GlobalShortcutKeyGeneric> descriptors)
 : _descriptors(std::move(descriptors)) {
@@ -84,12 +92,7 @@ QByteArray GlobalShortcutValueGeneric::serialize() {
 	return result;
 }
 
-GlobalShortcutManagerGeneric::GlobalShortcutManagerGeneric()
-: _valid(Platform::GlobalShortcuts::Available()) {
-	if (!_valid) {
-		return;
-	}
-
+GlobalShortcutManagerGeneric::GlobalShortcutManagerGeneric() {
 	std::unique_lock lock{ GlobalMutex };
 	const auto start = Managers.empty();
 	Managers.push_back(this);
@@ -101,10 +104,6 @@ GlobalShortcutManagerGeneric::GlobalShortcutManagerGeneric()
 }
 
 GlobalShortcutManagerGeneric::~GlobalShortcutManagerGeneric() {
-	if (!_valid) {
-		return;
-	}
-
 	std::unique_lock lock{ GlobalMutex };
 	Managers.erase(ranges::remove(Managers, not_null{ this }), end(Managers));
 	const auto stop = Managers.empty();

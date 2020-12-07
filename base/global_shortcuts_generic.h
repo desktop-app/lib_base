@@ -71,7 +71,6 @@ private:
 	std::vector<GlobalShortcut> _pressed;
 
 	bool _recording = false;
-	bool _valid = false;
 
 };
 

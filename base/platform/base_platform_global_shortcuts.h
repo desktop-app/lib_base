@@ -11,6 +11,7 @@
 namespace base::Platform::GlobalShortcuts {
 
 [[nodiscard]] bool Available();
+[[nodiscard]] bool Allowed();
 
 void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process);
 void Stop();

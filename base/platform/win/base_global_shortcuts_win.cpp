@@ -88,7 +88,11 @@ DWORD WINAPI RunThread(LPVOID) {
 
 } // namespace
 
-[[nodiscard]] bool Available() {
+bool Available() {
+	return true;
+}
+
+bool Allowed() {
 	return true;
 }
 
