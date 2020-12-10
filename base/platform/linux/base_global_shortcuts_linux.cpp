@@ -10,6 +10,7 @@
 #include "base/global_shortcuts_generic.h"
 #include "base/integration.h"
 #include "base/platform/base_platform_info.h" // IsWayland
+#include "base/platform/linux/base_xcb_utilities_linux.h" // IsExtensionPresent
 #include "base/unique_qptr.h"
 
 #include <QKeySequence>
@@ -67,7 +68,7 @@ X11Manager::X11Manager()
 		return;
 	}
 
-	if (!xcb_get_extension_data(_connection, &xcb_record_id)) {
+	if (!XCB::IsExtensionPresent(_connection, &xcb_record_id)) {
 		Log::Instance().logMessage("Global Shortcuts Manager: "
 			"RECORD extension not supported on this X server!");
 		_isAvailable = false;
