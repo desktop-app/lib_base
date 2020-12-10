@@ -40,7 +40,7 @@ Integration::Integration(int argc, char *argv[]) {
 	}
 	auto info = QFileInfo(path);
 	if (info.isSymLink()) {
-		info = info.symLinkTarget();
+		info = QFileInfo(info.symLinkTarget());
 	}
 	if (!info.exists()) {
 		return;

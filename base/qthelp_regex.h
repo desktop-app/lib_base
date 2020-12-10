@@ -59,12 +59,7 @@ enum class RegExOption {
 using RegExOptions = base::flags<RegExOption>;
 inline constexpr auto is_flag_type(RegExOption) { return true; };
 
-inline RegularExpressionMatch regex_match(const QString &string, const QString &subject, RegExOptions options = 0) {
-	auto qtOptions = QRegularExpression::PatternOptions(static_cast<int>(options));
-	return RegularExpressionMatch(QRegularExpression(string, qtOptions).match(subject));
-}
-
-inline RegularExpressionMatch regex_match(const QString &string, const QStringRef &subjectRef, RegExOptions options = 0) {
+inline RegularExpressionMatch regex_match(const QString &string, QStringView subjectRef, RegExOptions options = 0) {
 	auto qtOptions = QRegularExpression::PatternOptions(static_cast<int>(options));
 	return RegularExpressionMatch(QRegularExpression(string, qtOptions).match(subjectRef));
 }
