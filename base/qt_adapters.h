@@ -45,7 +45,6 @@ inline constexpr auto QStringSkipEmptyParts = QString::SkipEmptyParts;
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
     const auto result = QGuiApplication::screenAt(point);
 #else // Qt >= 5.10
-    AssertIsDebug();
     const auto result = [&]() -> QScreen* {
         const auto list = QGuiApplication::screens();
         for (const auto screen : list) {
