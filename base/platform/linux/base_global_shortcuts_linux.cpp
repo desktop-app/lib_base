@@ -13,6 +13,8 @@
 #include "base/platform/linux/base_xcb_utilities_linux.h" // IsExtensionPresent
 #include "base/unique_qptr.h"
 
+#include <climits>
+
 #include <QKeySequence>
 #include <QScopedPointer>
 #include <QSocketNotifier>
@@ -30,10 +32,17 @@ namespace {
 
 using XcbReply = xcb_record_enable_context_reply_t;
 
+constexpr auto kShiftMouseButton = ULLONG_MAX - 100;
+
 Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 
 bool IsKeypad(xcb_keysym_t keysym) {
 	return (xcb_is_keypad_key(keysym) || xcb_is_private_keypad_key(keysym));
+}
+
+bool SkipMouseButton(xcb_button_t b) {
+	return (b == 1) // Ignore the left button.
+		|| (b > 3 && b < 8); // Ignore the wheel.
 }
 
 class X11Manager final {
@@ -81,7 +90,12 @@ X11Manager::X11Manager()
 	auto recordRange = []() -> xcb_record_range_t {
 		xcb_record_range_t rr;
 		memset(&rr, 0, sizeof(rr));
-		rr.device_events = { XCB_KEY_PRESS, XCB_KEY_RELEASE };
+
+		// XCB_KEY_PRESS = 2
+		// XCB_KEY_RELEASE = 3
+		// XCB_BUTTON_PRESS = 4
+		// XCB_BUTTON_RELEASE = 5
+		rr.device_events = { XCB_KEY_PRESS, XCB_BUTTON_RELEASE };
 		return rr;
 	}();
 
@@ -150,20 +164,34 @@ void X11Manager::process(XcbReply *reply) {
 	if (!ProcessCallback) {
 		return;
 	}
-	auto events = reinterpret_cast<xcb_key_press_event_t*>(
+	// Seems like xcb_button_press_event_t and xcb_key_press_event_t structs
+	// are the same, so we can safely cast both of them
+	// to the xcb_key_press_event_t.
+	const auto events = reinterpret_cast<xcb_key_press_event_t*>(
 		xcb_record_enable_context_data(reply));
 
-	auto countEvents = xcb_record_enable_context_data_length(reply) /
+	const auto countEvents = xcb_record_enable_context_data_length(reply) /
 		sizeof(xcb_key_press_event_t);
 
 	for (auto e = events; e < (events + countEvents); e++) {
-		const auto isPress = e->response_type == XCB_KEY_PRESS;
-		const auto isRelease = e->response_type == XCB_KEY_RELEASE;
-		if (!isPress && !isRelease) {
+		const auto type = e->response_type;
+		const auto buttonPress = (type == XCB_BUTTON_PRESS);
+		const auto buttonRelease = (type == XCB_BUTTON_RELEASE);
+		const auto keyPress = (type == XCB_KEY_PRESS);
+		const auto keyRelease = (type == XCB_KEY_RELEASE);
+		const auto isButton = (buttonPress || buttonRelease);
+
+		if (!(keyPress || keyRelease || isButton)) {
 			continue;
 		}
-
-		ProcessCallback(computeKeysym(e->detail, e->state), isPress);
+		const auto code = e->detail;
+		if (isButton && SkipMouseButton(code)) {
+			return;
+		}
+		const auto descriptor = isButton
+			? (kShiftMouseButton + code)
+			: GlobalShortcutKeyGeneric(computeKeysym(code, e->state));
+		ProcessCallback(descriptor, keyPress || buttonPress);
 	}
 }
 
@@ -535,6 +563,47 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 		{ XF86XK_Sleep, Qt::Key_Sleep },
 	};
 
+	// Mouse.
+	// Taken from QXcbConnection::translateMouseButton.
+	static const auto XcbButtonToQt = flat_map<uint64, Qt::MouseButton>{
+		// { 1, Qt::LeftButton }, // Ignore the left button.
+		{ 2, Qt::MiddleButton },
+		{ 3, Qt::RightButton },
+		// Button values 4-7 were already handled as Wheel events.
+		{ 8, Qt::BackButton },
+		{ 9, Qt::ForwardButton },
+		{ 10, Qt::ExtraButton3 },
+		{ 11, Qt::ExtraButton4 },
+		{ 12, Qt::ExtraButton5 },
+		{ 13, Qt::ExtraButton6 },
+		{ 14, Qt::ExtraButton7 },
+		{ 15, Qt::ExtraButton8 },
+		{ 16, Qt::ExtraButton9 },
+		{ 17, Qt::ExtraButton10 },
+		{ 18, Qt::ExtraButton11 },
+		{ 19, Qt::ExtraButton12 },
+		{ 20, Qt::ExtraButton13 },
+		{ 21, Qt::ExtraButton14 },
+		{ 22, Qt::ExtraButton15 },
+		{ 23, Qt::ExtraButton16 },
+		{ 24, Qt::ExtraButton17 },
+		{ 25, Qt::ExtraButton18 },
+		{ 26, Qt::ExtraButton19 },
+		{ 27, Qt::ExtraButton20 },
+		{ 28, Qt::ExtraButton21 },
+		{ 29, Qt::ExtraButton22 },
+		{ 30, Qt::ExtraButton23 },
+		{ 31, Qt::ExtraButton24 },
+	};
+	if (descriptor > kShiftMouseButton) {
+		const auto button = descriptor - kShiftMouseButton;
+		if (XcbButtonToQt.contains(button)) {
+			return QString("Mouse %1").arg(button);
+		}
+	}
+	//
+
+	// Modifiers.
 	static const auto ModifierToString = flat_map<uint64, const_string>{
 		{ XK_Shift_L, "Shift" },
 		{ XK_Shift_R, "Right Shift" },
@@ -551,6 +620,7 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 	if (modIt != end(ModifierToString)) {
 		return modIt->second.utf16();
 	}
+	//
 
 	const auto fromSequence = [](int k) {
 		return QKeySequence(k).toString(QKeySequence::NativeText);
