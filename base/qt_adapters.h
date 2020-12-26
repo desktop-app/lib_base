@@ -43,30 +43,30 @@ inline constexpr auto QStringSkipEmptyParts = QString::SkipEmptyParts;
 
 [[nodiscard]] inline QScreen *QScreenNearestTo(const QPoint &point) {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-    const auto result = QGuiApplication::screenAt(point);
+	const auto result = QGuiApplication::screenAt(point);
 #else // Qt >= 5.10
-    const auto result = [&]() -> QScreen* {
-        const auto list = QGuiApplication::screens();
-        for (const auto screen : list) {
-            if (screen->geometry().contains(point)) {
-                return screen;
-            }
-        }
-        const auto proj = [&](QScreen *screen) {
-            return (screen->geometry().center() - point).manhattanLength();
-        };
-        const auto i = ranges::min_element(list, ranges::less(), proj);
-        return (i == list.end()) ? nullptr : *i;
-    }();
+	const auto result = [&]() -> QScreen* {
+		const auto list = QGuiApplication::screens();
+		for (const auto screen : list) {
+			if (screen->geometry().contains(point)) {
+				return screen;
+			}
+		}
+		const auto proj = [&](QScreen *screen) {
+			return (screen->geometry().center() - point).manhattanLength();
+		};
+		const auto i = ranges::min_element(list, ranges::less(), proj);
+		return (i == list.end()) ? nullptr : *i;
+	}();
 #endif // Qt >= 5.10
-    return result ? result : QGuiApplication::primaryScreen();
+	return result ? result : QGuiApplication::primaryScreen();
 }
 
 [[nodiscard]] inline QDateTime QDateToDateTime(const QDate &date) {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-    return date.startOfDay();
+	return date.startOfDay();
 #else // Qt >= 5.14
-    return QDateTime(date);
+	return QDateTime(date);
 #endif // Qt >= 5.14
 }
 

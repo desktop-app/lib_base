@@ -13,8 +13,8 @@ class QDate;
 namespace Platform {
 
 enum class OutdateReason {
-    IsOld,
-    Is32Bit,
+	IsOld,
+	Is32Bit,
 };
 
 [[nodiscard]] QString DeviceModelPretty();

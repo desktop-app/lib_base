@@ -135,12 +135,12 @@ void Stop() {
 	CFRunLoopStop(ThreadRunLoop);
 	Thread.join();
 
-    CFMachPortInvalidate(EventPort);
-    CFRelease(EventPort);
-    EventPort = nullptr;
+	CFMachPortInvalidate(EventPort);
+	CFRelease(EventPort);
+	EventPort = nullptr;
 
-    CFRelease(EventPortSource);
-    EventPortSource = nullptr;
+	CFRelease(EventPortSource);
+	EventPortSource = nullptr;
 
 	ProcessCallback = nullptr;
 }

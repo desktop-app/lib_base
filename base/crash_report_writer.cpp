@@ -188,11 +188,11 @@ void SignalHandler(int signum) {
 	if (name) {
 		ReportHeaderWriter() << "Caught signal " << signum << " (" << name << ") in thread " << uint64(thread) << "\n";
 	} else if (signum == -1) {
-        ReportHeaderWriter() << "Google Breakpad caught a crash, minidump written in thread " << uint64(thread) << "\n";
-        if (BreakpadDumpId) {
-            ReportHeaderWriter() << "Minidump: " << BreakpadDumpId << "\n";
-        }
-    } else {
+		ReportHeaderWriter() << "Google Breakpad caught a crash, minidump written in thread " << uint64(thread) << "\n";
+		if (BreakpadDumpId) {
+			ReportHeaderWriter() << "Minidump: " << BreakpadDumpId << "\n";
+		}
+	} else {
 		ReportHeaderWriter() << "Caught signal " << signum << " in thread " << uint64(thread) << "\n";
 	}
 
@@ -261,7 +261,7 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor &md, void *context, 
 	CrashLogged = true;
 
 #ifdef Q_OS_WIN
-    BreakpadDumpId = _minidump_id;
+	BreakpadDumpId = _minidump_id;
 	SignalHandler(-1);
 #else // Q_OS_WIN
 
@@ -415,11 +415,11 @@ void CrashReportWriter::startCatching() {
 	const auto handler = (Integration::Instance().executablePath() + "/Contents/Helpers/crashpad_handler").toStdString();
 	const auto database = QFile::encodeName(_path).constData();
 	if (crashpad_client.StartHandler(base::FilePath(handler),
-		                                base::FilePath(database),
-		                                std::string(),
-		                                Annotations,
-		                                std::vector<std::string>(),
-		                                false)) {
+										base::FilePath(database),
+										std::string(),
+										Annotations,
+										std::vector<std::string>(),
+										false)) {
 		crashpad_client.UseHandler();
 	}
 #endif // USE_BREAKPAD
