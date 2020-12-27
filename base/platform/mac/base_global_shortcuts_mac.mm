@@ -14,8 +14,12 @@
 #import <Foundation/Foundation.h>
 #import <IOKit/hidsystem/IOHIDLib.h>
 
+#include <climits>
+
 namespace base::Platform::GlobalShortcuts {
 namespace {
+
+constexpr auto kShiftMouseButton = ULLONG_MAX - 100;
 
 CFMachPortRef EventPort = nullptr;
 CFRunLoopSourceRef EventPortSource = nullptr;
@@ -23,14 +27,24 @@ CFRunLoopRef ThreadRunLoop = nullptr;
 std::thread Thread;
 Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 
-CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event, void*) {
+struct EventData {
+	GlobalShortcutKeyGeneric descriptor = 0;
+	bool down = false;
+};
+using MaybeEventData = std::optional<EventData>;
+
+MaybeEventData ProcessKeyEvent(CGEventType type, CGEventRef event) {
 	if (CGEventGetIntegerValueField(event, kCGKeyboardEventAutorepeat)) {
-		return event;
+		return std::nullopt;
 	}
-	const auto keycode = CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
+
+	const auto keycode = CGEventGetIntegerValueField(
+		event,
+		kCGKeyboardEventKeycode);
+
 	if (keycode == 0xB3) {
 		// Some KeyDown+KeyUp sent when quickly pressing and releasing Fn.
-		return event;
+		return std::nullopt;
 	}
 
 	const auto flags = CGEventGetFlags(event);
@@ -64,13 +78,48 @@ CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef 
 		}
 	}();
 	if (!maybeDown) {
-		return event;
+		return std::nullopt;
 	}
 	const auto descriptor = GlobalShortcutKeyGeneric(keycode);
 	const auto down = *maybeDown;
 
-	ProcessCallback(descriptor, down);
+	return EventData{ descriptor, down };
+}
 
+MaybeEventData ProcessMouseEvent(CGEventType type, CGEventRef event) {
+	const auto button = CGEventGetIntegerValueField(
+		event,
+		kCGMouseEventButtonNumber);
+	if (!button) {
+		return std::nullopt;
+	}
+	const auto code = GlobalShortcutKeyGeneric(kShiftMouseButton
+		+ button
+		// Increase the value by 1, because the right button = 1.
+		+ 1);
+
+	const auto down = (type == kCGEventOtherMouseDown)
+		|| (type == kCGEventRightMouseDown);
+
+	return EventData{ code, down };
+}
+
+CGEventRef EventTapCallback(
+		CGEventTapProxy,
+		CGEventType type,
+		CGEventRef event,
+		void*) {
+	const auto isKey = (type == kCGEventKeyDown)
+		|| (type == kCGEventKeyUp)
+		|| (type == kCGEventFlagsChanged);
+
+	const auto maybeData = isKey
+		? ProcessKeyEvent(type, event)
+		: ProcessMouseEvent(type, event);
+
+	if (maybeData) {
+		ProcessCallback(maybeData->descriptor, maybeData->down);
+	}
 	return event;
 }
 
@@ -84,12 +133,15 @@ bool Allowed() {
 	if (@available(macOS 10.15, *)) {
 		// Input Monitoring is required on macOS 10.15 an later.
 		// Even if user grants access, restart is required.
-		static const auto result = IOHIDCheckAccess(kIOHIDRequestTypeListenEvent);
+		static const auto result = IOHIDCheckAccess(
+			kIOHIDRequestTypeListenEvent);
 		return (result == kIOHIDAccessTypeGranted);
 	} else if (@available(macOS 10.14, *)) {
 		// Accessibility is required on macOS 10.14.
-		NSDictionary *const options=@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @FALSE};
-		return AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);
+		NSDictionary *const options=
+			@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @FALSE};
+		return AXIsProcessTrustedWithOptions(
+			(__bridge CFDictionaryRef)options);
 	}
 	return true;
 }
@@ -105,6 +157,10 @@ void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process) {
 		kCGEventTapOptionListenOnly,
 		(CGEventMaskBit(kCGEventKeyDown)
 			| CGEventMaskBit(kCGEventKeyUp)
+			| CGEventMaskBit(kCGEventOtherMouseDown)
+			| CGEventMaskBit(kCGEventOtherMouseUp)
+			| CGEventMaskBit(kCGEventRightMouseDown)
+			| CGEventMaskBit(kCGEventRightMouseUp)
 			| CGEventMaskBit(kCGEventFlagsChanged)),
 		EventTapCallback,
 		nullptr);
@@ -112,7 +168,10 @@ void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process) {
 		ProcessCallback = nullptr;
 		return;
 	}
-	EventPortSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, EventPort, 0);
+	EventPortSource = CFMachPortCreateRunLoopSource(
+		kCFAllocatorDefault,
+		EventPort,
+		0);
 	if (!EventPortSource) {
 		CFMachPortInvalidate(EventPort);
 		CFRelease(EventPort);
@@ -122,7 +181,10 @@ void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process) {
 	}
 	Thread = std::thread([] {
 		ThreadRunLoop = CFRunLoopGetCurrent();
-		CFRunLoopAddSource(ThreadRunLoop, EventPortSource, kCFRunLoopCommonModes);
+		CFRunLoopAddSource(
+			ThreadRunLoop,
+			EventPortSource,
+			kCFRunLoopCommonModes);
 		CGEventTapEnable(EventPort, true);
 		CFRunLoopRun();
 	});
@@ -262,6 +324,10 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 		{ kVK_ANSI_Keypad8, "Num 8" },
 		{ kVK_ANSI_Keypad9, "Num 9" },
 	};
+
+	if (descriptor > kShiftMouseButton) {
+		return QString("Mouse %1").arg(descriptor - kShiftMouseButton);
+	}
 
 	const auto i = KeyToString.find(descriptor);
 	return (i != end(KeyToString))
