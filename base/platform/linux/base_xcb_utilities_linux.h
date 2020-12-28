@@ -50,4 +50,6 @@ std::vector<xcb_atom_t> GetWMSupported(
 		xcb_connection_t *connection,
 		xcb_window_t root);
 
+bool IsSupportedByWM(const QString &atomName);
+
 } // namespace base::Platform::XCB
