@@ -10,6 +10,28 @@
 
 namespace base::Platform::XCB {
 
+class CustomConnection {
+public:
+	CustomConnection()
+	: _connection(xcb_connect(nullptr, nullptr)) {
+	}
+
+	~CustomConnection() {
+		xcb_disconnect(_connection);
+	}
+
+	[[nodiscard]] operator xcb_connection_t*() const {
+		return _connection;
+	}
+
+	[[nodiscard]] not_null<xcb_connection_t*> get() const {
+		return _connection;
+	}
+
+private:
+	not_null<xcb_connection_t*> _connection;
+};
+
 xcb_connection_t *GetConnectionFromQt();
 std::optional<xcb_window_t> GetRootWindowFromQt();
 std::optional<xcb_timestamp_t> GetAppTimeFromQt();
