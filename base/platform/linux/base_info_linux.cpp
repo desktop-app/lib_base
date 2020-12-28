@@ -143,7 +143,11 @@ QString GetLibcVersion() {
 }
 
 bool IsWayland() {
-	return QGuiApplication::platformName().startsWith("wayland", Qt::CaseInsensitive);
+	return QGuiApplication::instance()
+		? QGuiApplication::platformName().startsWith(
+			"wayland",
+			Qt::CaseInsensitive)
+		: qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
 }
 
 void Start(QJsonObject options) {
