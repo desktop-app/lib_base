@@ -14,12 +14,10 @@
 #import <Foundation/Foundation.h>
 #import <IOKit/hidsystem/IOHIDLib.h>
 
-#include <climits>
-
 namespace base::Platform::GlobalShortcuts {
 namespace {
 
-constexpr auto kShiftMouseButton = ULLONG_MAX - 100;
+constexpr auto kShiftMouseButton = std::numeric_limits<uint64>::max() - 100;
 
 CFMachPortRef EventPort = nullptr;
 CFRunLoopSourceRef EventPortSource = nullptr;

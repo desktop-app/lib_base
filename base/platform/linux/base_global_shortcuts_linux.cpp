@@ -13,8 +13,6 @@
 #include "base/platform/linux/base_xcb_utilities_linux.h" // IsExtensionPresent
 #include "base/unique_qptr.h"
 
-#include <climits>
-
 #include <QKeySequence>
 #include <QScopedPointer>
 #include <QSocketNotifier>
@@ -32,7 +30,7 @@ namespace {
 
 using XcbReply = xcb_record_enable_context_reply_t;
 
-constexpr auto kShiftMouseButton = ULLONG_MAX - 100;
+constexpr auto kShiftMouseButton = std::numeric_limits<uint64>::max() - 100;
 
 Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 

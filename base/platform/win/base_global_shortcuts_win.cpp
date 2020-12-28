@@ -11,7 +11,10 @@
 namespace base::Platform::GlobalShortcuts {
 namespace {
 
-HHOOK GlobalHook = nullptr;
+constexpr auto kShiftMouseButton = std::numeric_limits<uint64>::max() - 100;
+
+HHOOK GlobalHookKeyboard = nullptr;
+HHOOK GlobalHookMouse = nullptr;
 HANDLE ThreadHandle = nullptr;
 HANDLE ThreadEvent = nullptr;
 DWORD ThreadId = 0;
@@ -24,6 +27,12 @@ Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 		(uint64(virtualKeyCode) << 32) | uint64(lParam));
 }
 
+[[nodiscard]] GlobalShortcutKeyGeneric MakeMouseDescriptor(uint8 button) {
+	Expects(button > 0 && button < 100);
+
+	return kShiftMouseButton + button;
+}
+
 [[nodiscard]] uint32 GetVirtualKeyCode(GlobalShortcutKeyGeneric descriptor) {
 	return uint32(uint64(descriptor) >> 32);
 }
@@ -32,7 +41,7 @@ Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 	return uint32(uint64(descriptor) & 0xFFFFFFFFULL);
 }
 
-void ProcessHookedEvent(WPARAM wParam, LPARAM lParam) {
+void ProcessHookedKeyboardEvent(WPARAM wParam, LPARAM lParam) {
 	const auto press = (PKBDLLHOOKSTRUCT)lParam;
 	const auto repeatCount = uint32(0);
 	const auto extendedBit = ((press->flags & LLKHF_EXTENDED) != 0);
@@ -49,14 +58,54 @@ void ProcessHookedEvent(WPARAM wParam, LPARAM lParam) {
 	ProcessCallback(descriptor, down);
 }
 
+void ProcessHookedMouseEvent(WPARAM wParam, LPARAM lParam) {
+	if (wParam != WM_RBUTTONDOWN
+		&& wParam != WM_RBUTTONUP
+		&& wParam != WM_MBUTTONDOWN
+		&& wParam != WM_MBUTTONUP
+		&& wParam != WM_XBUTTONDOWN
+		&& wParam != WM_XBUTTONUP) {
+		return;
+	}
+	const auto button = [&] {
+		if (wParam == WM_RBUTTONDOWN || wParam == WM_RBUTTONUP) {
+			return 2;
+		} else if (wParam == WM_MBUTTONDOWN || wParam == WM_MBUTTONUP) {
+			return 3;
+		}
+		const auto press = (PMSLLHOOKSTRUCT)lParam;
+		const auto xbutton = ((press->mouseData >> 16) & 0xFFU);
+		return (xbutton >= 0x01 && xbutton <= 0x18) ? int(xbutton + 3) : 0;
+	}();
+	if (!button) {
+		return;
+	}
+	const auto descriptor = MakeMouseDescriptor(button);
+	const auto down = (wParam == WM_RBUTTONDOWN)
+		|| (wParam == WM_MBUTTONDOWN)
+		|| (wParam == WM_XBUTTONDOWN);
+
+	ProcessCallback(descriptor, down);
+}
+
 LRESULT CALLBACK LowLevelKeyboardProc(
 		_In_ int nCode,
 		_In_ WPARAM wParam,
 		_In_ LPARAM lParam) {
 	if (nCode == HC_ACTION) {
-		ProcessHookedEvent(wParam, lParam);
+		ProcessHookedKeyboardEvent(wParam, lParam);
 	}
-	return CallNextHookEx(GlobalHook, nCode, wParam, lParam);
+	return CallNextHookEx(GlobalHookKeyboard, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK LowLevelMouseProc(
+		_In_ int nCode,
+		_In_ WPARAM wParam,
+		_In_ LPARAM lParam) {
+	if (nCode == HC_ACTION) {
+		ProcessHookedMouseEvent(wParam, lParam);
+	}
+	return CallNextHookEx(GlobalHookMouse, nCode, wParam, lParam);
 }
 
 DWORD WINAPI RunThread(LPVOID) {
@@ -66,12 +115,27 @@ DWORD WINAPI RunThread(LPVOID) {
 	PeekMessage(&message, nullptr, WM_USER, WM_USER, PM_NOREMOVE);
 	SetEvent(ThreadEvent);
 
-	GlobalHook = SetWindowsHookEx(
+	const auto guard = gsl::finally([&] {
+		if (GlobalHookKeyboard) {
+			UnhookWindowsHookEx(GlobalHookKeyboard);
+			GlobalHookKeyboard = nullptr;
+		}
+		if (GlobalHookMouse) {
+			UnhookWindowsHookEx(GlobalHookMouse);
+			GlobalHookMouse = nullptr;
+		}
+	});
+	GlobalHookKeyboard = SetWindowsHookEx(
 		WH_KEYBOARD_LL,
 		LowLevelKeyboardProc,
 		nullptr,
 		0);
-	if (!GlobalHook) {
+	GlobalHookMouse = SetWindowsHookEx(
+		WH_MOUSE_LL,
+		LowLevelMouseProc,
+		nullptr,
+		0);
+	if (!GlobalHookKeyboard || !GlobalHookMouse) {
 		return -1;
 	}
 
@@ -82,7 +146,6 @@ DWORD WINAPI RunThread(LPVOID) {
 		TranslateMessage(&message);
 		DispatchMessage(&message);
 	}
-	UnhookWindowsHookEx(GlobalHook);
 	return 0;
 }
 
@@ -136,6 +199,10 @@ void Stop() {
 }
 
 QString KeyName(GlobalShortcutKeyGeneric descriptor) {
+	if (descriptor > kShiftMouseButton) {
+		return QString("Mouse %1").arg(descriptor - kShiftMouseButton);
+	}
+
 	constexpr auto kLimit = 1024;
 
 	WCHAR buffer[kLimit + 1] = { 0 };
