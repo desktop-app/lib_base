@@ -44,6 +44,8 @@ bool IsExtensionPresent(
 		xcb_connection_t *connection,
 		xcb_extension_t *ext);
 
-std::vector<xcb_atom_t> GetWMSupported(xcb_connection_t *connection);
+std::vector<xcb_atom_t> GetWMSupported(
+		xcb_connection_t *connection,
+		xcb_window_t root);
 
 } // namespace base::Platform::XCB
