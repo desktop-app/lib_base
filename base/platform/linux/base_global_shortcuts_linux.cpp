@@ -10,7 +10,7 @@
 #include "base/global_shortcuts_generic.h"
 #include "base/integration.h"
 #include "base/platform/base_platform_info.h" // IsWayland
-#include "base/platform/linux/base_xcb_utilities_linux.h" // IsExtensionPresent
+#include "base/platform/linux/base_xcb_utilities_linux.h" // CustomConnection, IsExtensionPresent
 #include "base/unique_qptr.h"
 
 #include <QKeySequence>
@@ -53,7 +53,7 @@ private:
 	void process(XcbReply *reply);
 	xcb_keysym_t computeKeysym(xcb_keycode_t detail, uint16_t state);
 
-	not_null<xcb_connection_t*> _connection;
+	XCB::CustomConnection _connection;
 	const unique_qptr<QObject> _object;
 	not_null<xcb_key_symbols_t*> _keySymbols;
 	std::unique_ptr<QSocketNotifier> _notifier;
@@ -62,8 +62,7 @@ private:
 };
 
 X11Manager::X11Manager()
-: _connection(xcb_connect(nullptr, nullptr))
-, _object(make_unique_q<QObject>())
+: _object(make_unique_q<QObject>())
 , _keySymbols(xcb_key_symbols_alloc(_connection)) {
 
 	using Log = Integration;
