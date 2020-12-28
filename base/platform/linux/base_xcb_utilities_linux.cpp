@@ -81,13 +81,10 @@ bool IsExtensionPresent(
 	return reply->present;
 }
 
-std::vector<xcb_atom_t> GetWMSupported(xcb_connection_t *connection) {
+std::vector<xcb_atom_t> GetWMSupported(
+		xcb_connection_t *connection,
+		xcb_window_t root) {
 	auto netWmAtoms = std::vector<xcb_atom_t>{};
-
-	const auto root = GetRootWindowFromQt();
-	if (!root.has_value()) {
-		return netWmAtoms;
-	}
 
 	const auto supportedAtom = GetAtom(connection, "_NET_SUPPORTED");
 	if (!supportedAtom.has_value()) {
@@ -101,7 +98,7 @@ std::vector<xcb_atom_t> GetWMSupported(xcb_connection_t *connection) {
 		const auto cookie = xcb_get_property(
 			connection,
 			false,
-			*root,
+			root,
 			*supportedAtom,
 			XCB_ATOM_ATOM,
 			offset,
