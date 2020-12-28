@@ -147,4 +147,23 @@ std::vector<xcb_atom_t> GetWMSupported(
 	return netWmAtoms;
 }
 
+bool IsSupportedByWM(const QString &atomName) {
+	CustomConnection connection;
+	if (xcb_connection_has_error(connection)) {
+		return false;
+	}
+
+	const auto root = GetRootWindow(connection);
+	if (!root.has_value()) {
+		return false;
+	}
+
+	const auto atom = GetAtom(connection, atomName);
+	if (!atom.has_value()) {
+		return false;
+	}
+
+	return ranges::contains(GetWMSupported(connection, *root), *atom);
+}
+
 } // namespace base::Platform::XCB
