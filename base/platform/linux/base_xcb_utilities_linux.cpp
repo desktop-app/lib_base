@@ -147,6 +147,45 @@ std::vector<xcb_atom_t> GetWMSupported(
 	return netWmAtoms;
 }
 
+std::optional<xcb_window_t> GetSupportingWMCheck(
+		xcb_connection_t *connection,
+		xcb_window_t root) {
+	const auto supportingAtom = base::Platform::XCB::GetAtom(
+		connection,
+		"_NET_SUPPORTING_WM_CHECK");
+
+	if (!supportingAtom.has_value()) {
+		return std::nullopt;
+	}
+
+	const auto cookie = xcb_get_property(
+		connection,
+		false,
+		root,
+		*supportingAtom,
+		XCB_ATOM_WINDOW,
+		0,
+		1024);
+
+	auto reply = xcb_get_property_reply(
+		connection,
+		cookie,
+		nullptr);
+
+	if (!reply) {
+		return std::nullopt;
+	}
+
+	const auto window = (reply->format == 32 && reply->type == XCB_ATOM_WINDOW)
+		? std::optional<xcb_window_t>{
+			*reinterpret_cast<xcb_window_t*>(
+				xcb_get_property_value(reply))
+		} : std::nullopt;
+
+	free(reply);
+	return window;
+}
+
 bool IsSupportedByWM(const QString &atomName) {
 	CustomConnection connection;
 	if (xcb_connection_has_error(connection)) {
