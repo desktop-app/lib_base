@@ -43,6 +43,17 @@ std::optional<xcb_timestamp_t> GetAppTimeFromQt() {
 			QGuiApplication::primaryScreen())));
 }
 
+std::optional<xcb_window_t> GetRootWindow(xcb_connection_t *connection) {
+	const auto screen = xcb_setup_roots_iterator(
+		xcb_get_setup(connection)).data;
+
+	if (!screen) {
+		return std::nullopt;
+	}
+
+	return screen->root;
+}
+
 std::optional<xcb_atom_t> GetAtom(
 		xcb_connection_t *connection,
 		const QString &name) {

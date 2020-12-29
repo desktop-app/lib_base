@@ -36,6 +36,8 @@ xcb_connection_t *GetConnectionFromQt();
 std::optional<xcb_window_t> GetRootWindowFromQt();
 std::optional<xcb_timestamp_t> GetAppTimeFromQt();
 
+std::optional<xcb_window_t> GetRootWindow(xcb_connection_t *connection)
+
 std::optional<xcb_atom_t> GetAtom(
 		xcb_connection_t *connection,
 		const QString &name);
