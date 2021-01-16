@@ -17,7 +17,7 @@
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusMessage>
-#include <QtDBus/QDBusReply>
+#include <QtDBus/QDBusError>
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 extern "C" {
@@ -48,14 +48,8 @@ bool DBusShowInFolder(const QString &filepath) {
 		QString()
 	});
 
-	const QDBusReply<void> reply = QDBusConnection::sessionBus().call(
-		message);
-
-	if (reply.isValid()) {
-		return true;
-	}
-
-	return false;
+	const QDBusError error = QDBusConnection::sessionBus().call(message);
+	return !error.isValid();
 }
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
