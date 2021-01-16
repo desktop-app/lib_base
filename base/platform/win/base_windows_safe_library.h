@@ -8,8 +8,7 @@
 
 #include "base/platform/win/base_windows_h.h"
 
-namespace base {
-namespace Platform {
+namespace base::Platform {
 
 HINSTANCE SafeLoadLibrary(const QString &name);
 
@@ -25,5 +24,4 @@ bool LoadMethod(HINSTANCE library, LPCSTR name, Function &func, WORD id = 0) {
 	return (func != nullptr);
 }
 
-} // namespace Platform
-} // namespace base
+} // namespace base::Platform
