@@ -180,7 +180,8 @@ if (LINUX)
     )
 endif()
 
-target_precompile_headers(lib_base_crash_report_writer REUSE_FROM lib_base)
+#target_precompile_headers(lib_base_crash_report_writer REUSE_FROM lib_base)
+target_precompile_headers(lib_base_crash_report_writer PRIVATE ${src_loc}/base/base_pch.h)
 nice_target_sources(lib_base_crash_report_writer ${src_loc}
 PRIVATE
     base/crash_report_header.cpp
