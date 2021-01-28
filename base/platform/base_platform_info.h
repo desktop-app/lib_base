@@ -27,6 +27,8 @@ enum class OutdateReason {
 [[nodiscard]] QString AutoUpdateKey();
 
 [[nodiscard]] constexpr bool IsWindows();
+[[nodiscard]] constexpr bool IsWindows32Bit();
+[[nodiscard]] constexpr bool IsWindows64Bit();
 [[nodiscard]] constexpr bool IsWindowsStoreBuild();
 [[nodiscard]] bool IsWindowsXPOrGreater();
 [[nodiscard]] bool IsWindowsVistaOrGreater();

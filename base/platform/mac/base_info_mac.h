@@ -35,6 +35,8 @@ inline constexpr bool IsMacStoreBuild() {
 }
 
 inline constexpr bool IsWindows() { return false; }
+inline constexpr bool IsWindows32Bit() { return false; }
+inline constexpr bool IsWindows64Bit() { return false; }
 inline constexpr bool IsWindowsStoreBuild() { return false; }
 inline bool IsWindowsXPOrGreater() { return false; }
 inline bool IsWindowsVistaOrGreater() { return false; }

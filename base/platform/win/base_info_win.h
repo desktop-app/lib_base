@@ -18,6 +18,22 @@ inline constexpr bool IsWindows() {
 	return true;
 }
 
+inline constexpr bool IsWindows32Bit() {
+#ifdef Q_PROCESSOR_X86_32
+	return true;
+#else // Q_PROCESSOR_X86_32
+	return false;
+#endif // Q_PROCESSOR_X86_32
+}
+
+inline constexpr bool IsWindows64Bit() {
+#ifdef Q_PROCESSOR_X86_64
+	return true;
+#else // Q_PROCESSOR_X86_64
+	return false;
+#endif // Q_PROCESSOR_X86_64
+}
+
 inline constexpr bool IsWindowsStoreBuild() {
 #ifdef OS_WIN_STORE
 	return true;
