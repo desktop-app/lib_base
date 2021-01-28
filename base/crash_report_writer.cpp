@@ -94,9 +94,13 @@ std::unique_ptr<ReservedMemoryChunk> ReservedMemory;
 
 const char *PlatformString() {
 	if (Platform::IsWindowsStoreBuild()) {
-		return "WinStore";
-	} else if (Platform::IsWindows()) {
-		return "Windows";
+		return Platform::IsWindows64Bit()
+			? "WinStore64Bit"
+			: "WinStore32Bit";
+	} else if (Platform::IsWindows32Bit()) {
+		return "Windows32Bit";
+	} else if (Platform::IsWindows64Bit()) {
+		return "Windows64Bit";
 	} else if (Platform::IsMacStoreBuild()) {
 		return "MacAppStore";
 	} else if (Platform::IsOSXBuild()) {
