@@ -115,13 +115,14 @@ QString DeviceModelPretty() {
 }
 
 QString SystemVersionPretty() {
-	const auto version = MinorVersion();
-	if (!version) {
+	const auto major = MajorVersion();
+	const auto minor = MinorVersion();
+	if (major < 10) {
 		return "OS X";
-	} else if (version < 12) {
-		return QString("OS X 10.%1").arg(version);
+	} else if (major == 10 && minor < 12) {
+		return QString("OS X 10.%1").arg(minor);
 	}
-	return QString("macOS 10.%1").arg(version);
+	return QString("macOS %1.%2").arg(major).arg(minor);
 }
 
 QString SystemCountry() {
