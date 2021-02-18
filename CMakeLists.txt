@@ -27,8 +27,13 @@ PRIVATE
     base/platform/linux/base_last_input_linux.h
     base/platform/linux/base_layout_switch_linux.cpp
     base/platform/linux/base_layout_switch_linux.h
+    base/platform/linux/base_linux_gtk_integration_p.h
+    base/platform/linux/base_linux_gtk_integration.cpp
+    base/platform/linux/base_linux_gtk_integration.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
+    base/platform/linux/base_linux_xlib_helper.cpp
+    base/platform/linux/base_linux_xlib_helper.h
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
     base/platform/linux/base_url_scheme_linux.cpp
@@ -152,6 +157,20 @@ PRIVATE
     base/base_pch.h
 )
 
+if (DESKTOP_APP_DISABLE_GTK_INTEGRATION)
+    remove_target_sources(lib_base ${src_loc}
+        base/platform/linux/base_linux_gtk_integration_p.h
+        base/platform/linux/base_linux_gtk_integration.cpp
+        base/platform/linux/base_linux_xlib_helper.cpp
+        base/platform/linux/base_linux_xlib_helper.h
+    )
+
+    nice_target_sources(lib_base ${src_loc}
+    PRIVATE
+        base/platform/linux/base_linux_gtk_integration_dummy.cpp
+    )
+endif()
+
 target_include_directories(lib_base
 PUBLIC
     ${src_loc}
@@ -178,6 +197,25 @@ if (LINUX)
         desktop-app::external_xcb
         desktop-app::external_glib
     )
+
+    if (NOT DESKTOP_APP_DISABLE_GTK_INTEGRATION)
+        find_package(PkgConfig REQUIRED)
+
+        if (DESKTOP_APP_USE_PACKAGED AND NOT DESKTOP_APP_USE_PACKAGED_LAZY)
+            pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)
+            pkg_check_modules(X11 REQUIRED IMPORTED_TARGET x11)
+
+            target_link_libraries(lib_base
+            PRIVATE
+                PkgConfig::GTK3
+                PkgConfig::X11
+            )
+        else()
+            pkg_search_module(GTK REQUIRED gtk+-3.0 gtk+-2.0)
+            target_include_directories(lib_base PRIVATE ${GTK_INCLUDE_DIRS})
+            target_link_libraries(lib_base PRIVATE X11)
+        endif()
+    endif()
 endif()
 
 #target_precompile_headers(lib_base_crash_report_writer REUSE_FROM lib_base)
