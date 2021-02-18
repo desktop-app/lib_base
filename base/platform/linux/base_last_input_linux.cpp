@@ -8,7 +8,7 @@
 
 #include "base/integration.h"
 #include "base/platform/linux/base_info_linux.h"
-#include "base/platform/linux/base_xcb_utilities_linux.h"
+#include "base/platform/linux/base_linux_xcb_utilities.h"
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <QtDBus/QDBusConnection>

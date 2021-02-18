@@ -10,7 +10,7 @@
 #include "base/global_shortcuts_generic.h"
 #include "base/integration.h"
 #include "base/platform/base_platform_info.h" // IsWayland
-#include "base/platform/linux/base_xcb_utilities_linux.h" // CustomConnection, IsExtensionPresent
+#include "base/platform/linux/base_linux_xcb_utilities.h" // CustomConnection, IsExtensionPresent
 #include "base/unique_qptr.h"
 
 #include <QKeySequence>

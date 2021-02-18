@@ -27,12 +27,12 @@ PRIVATE
     base/platform/linux/base_last_input_linux.h
     base/platform/linux/base_layout_switch_linux.cpp
     base/platform/linux/base_layout_switch_linux.h
+    base/platform/linux/base_linux_xcb_utilities.cpp
+    base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
-    base/platform/linux/base_xcb_utilities_linux.cpp
-    base/platform/linux/base_xcb_utilities_linux.h
     base/platform/mac/base_file_utilities_mac.h
     base/platform/mac/base_file_utilities_mac.mm
     base/platform/mac/base_global_shortcuts_mac.mm
