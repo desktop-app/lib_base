@@ -7,12 +7,17 @@
 #include "base/platform/linux/base_info_linux.h"
 
 #include "base/platform/linux/base_linux_xcb_utilities.h"
+#include "base/platform/linux/base_linux_gtk_integration.h"
+#include "base/integration.h"
 
 #include <QtCore/QJsonObject>
 #include <QtCore/QLocale>
 #include <QtCore/QVersionNumber>
 #include <QtCore/QDate>
 #include <QtGui/QGuiApplication>
+#include <QtGui/QIcon>
+
+#include <glib.h>
 
 // this file is used on both Linux & BSD
 #ifdef Q_OS_LINUX
@@ -214,6 +219,21 @@ bool IsWayland() {
 }
 
 void Start(QJsonObject options) {
+	base::Integration::Instance().logMessage(
+		QString("Icon theme: %1")
+			.arg(QIcon::themeName()));
+
+	base::Integration::Instance().logMessage(
+		QString("Fallback icon theme: %1")
+			.arg(QIcon::fallbackThemeName()));
+
+	using base::Platform::GtkIntegration;
+	if (const auto integration = GtkIntegration::Instance()) {
+		integration->prepareEnvironment();
+		integration->load();
+	} else {
+		g_warning("GTK integration is disabled, some feature unavailable. ");
+	}
 }
 
 void Finish() {
