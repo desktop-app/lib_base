@@ -4,7 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/linux/base_xcb_utilities_linux.h"
+#include "base/platform/linux/base_linux_xcb_utilities.h"
 
 #include <QtGui/QGuiApplication>
 #include <qpa/qplatformnativeinterface.h>

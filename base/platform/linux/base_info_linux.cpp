@@ -6,7 +6,7 @@
 //
 #include "base/platform/linux/base_info_linux.h"
 
-#include "base/platform/linux/base_xcb_utilities_linux.h"
+#include "base/platform/linux/base_linux_xcb_utilities.h"
 
 #include <QtCore/QJsonObject>
 #include <QtCore/QLocale>
