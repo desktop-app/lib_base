@@ -118,7 +118,11 @@ std::optional<T> GtkSetting(const QString &propertyName) {
 	}
 	auto settings = gtk_settings_get_default();
 	T value;
-	g_object_get(settings, propertyName.toUtf8(), &value, nullptr);
+	g_object_get(
+		settings,
+		propertyName.toUtf8().constData(),
+		&value,
+		nullptr);
 	return value;
 }
 
@@ -207,7 +211,7 @@ GtkIntegration::GtkIntegration() {
 
 GtkIntegration *GtkIntegration::Instance() {
 	static const auto useGtkIntegration = !qEnvironmentVariableIsSet(
-		kDisableGtkIntegration.utf8());
+		kDisableGtkIntegration.utf8().constData());
 	
 	if (!useGtkIntegration) {
 		return nullptr;
@@ -222,7 +226,7 @@ void GtkIntegration::prepareEnvironment() {
 	// if gtk integration and qgtk3/qgtk2 platformtheme (or qgtk2 style)
 	// is used at the same time, the app will crash
 	if (!qEnvironmentVariableIsSet(
-			kIgnoreGtkIncompatibility.utf8())) {
+			kIgnoreGtkIncompatibility.utf8().constData())) {
 		g_warning(
 			"Unfortunately, GTK integration "
 			"conflicts with qgtk2 platformtheme and style. "
@@ -294,7 +298,7 @@ std::optional<bool> GtkIntegration::getBoolSetting(
 	Integration::Instance().logMessage(
 		QString("Getting GTK setting, %1: %2")
 			.arg(propertyName)
-			.arg(Logs::b(*value)));
+			.arg(*value ? "[TRUE]" : "[FALSE]"));
 	return *value;
 }
 
@@ -334,7 +338,7 @@ void GtkIntegration::connectToSetting(
 
 	g_signal_connect(
 		gtk_settings_get_default(),
-		("notify::" + propertyName).toUtf8(),
+		("notify::" + propertyName).toUtf8().constData(),
 		G_CALLBACK(callback),
 		nullptr);
 }

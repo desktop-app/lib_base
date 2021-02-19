@@ -114,7 +114,10 @@ bool ShowInFolder(const QString &filepath) {
 	}
 
 	if (g_app_info_launch_default_for_uri(
-		g_filename_to_uri(absoluteDirPath.toUtf8(), nullptr, nullptr),
+		g_filename_to_uri(
+			absoluteDirPath.toUtf8().constData(),
+			nullptr,
+			nullptr),
 		nullptr,
 		nullptr)) {
 		return true;

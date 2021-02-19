@@ -61,7 +61,7 @@ std::optional<xcb_atom_t> GetAtom(
 		connection,
 		0,
 		name.size(),
-		name.toUtf8());
+		name.toUtf8().constData());
 
 	auto reply = xcb_intern_atom_reply(
 		connection,
