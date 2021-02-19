@@ -23,7 +23,7 @@ namespace Platform {
 namespace {
 
 QString GetDesktopEnvironment() {
-	const auto value = qgetenv("XDG_CURRENT_DESKTOP");
+	const auto value = qEnvironmentVariable("XDG_CURRENT_DESKTOP");
 	return value.contains(':')
 		? value.left(value.indexOf(':'))
 		: value;
