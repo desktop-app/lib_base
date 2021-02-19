@@ -55,7 +55,7 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		.arg(QString(EscapeShell(QFile::encodeName(descriptor.executable))));
 
 	auto currentAppInfo = g_app_info_get_default_for_type(
-		handlerType.toUtf8(),
+		handlerType.toUtf8().constData(),
 		true);
 
 	if (currentAppInfo) {
@@ -85,15 +85,15 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		.arg(QString(EscapeShell(QFile::encodeName(descriptor.executable))));
 
 	auto newAppInfo = g_app_info_create_from_commandline(
-		commandlineForCreator.toUtf8(),
-		descriptor.displayAppName.toUtf8(),
+		commandlineForCreator.toUtf8().constData(),
+		descriptor.displayAppName.toUtf8().constData(),
 		G_APP_INFO_CREATE_SUPPORTS_URIS,
 		&error);
 
 	if (newAppInfo) {
 		g_app_info_set_as_default_for_type(
 			newAppInfo,
-			handlerType.toUtf8(),
+			handlerType.toUtf8().constData(),
 			&error);
 
 		g_object_unref(newAppInfo);
@@ -114,7 +114,7 @@ void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		.arg(QString(EscapeShell(QFile::encodeName(descriptor.executable))));
 
 	auto registeredAppInfoList = g_app_info_get_recommended_for_type(
-		handlerType.toUtf8());
+		handlerType.toUtf8().constData());
 
 	for (auto l = registeredAppInfoList; l != nullptr; l = l->next) {
 		const auto currentRegisteredAppInfo = reinterpret_cast<GAppInfo*>(
