@@ -74,12 +74,12 @@ std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 		Message);
 
 	static const auto NotSupportedErrors = {
+		QDBusError::Disconnected,
 		QDBusError::ServiceUnknown,
 		QDBusError::NotSupported,
 	};
 
 	static const auto NotSupportedErrorsToLog = {
-		QDBusError::Disconnected,
 		QDBusError::AccessDenied,
 	};
 
@@ -119,11 +119,11 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 		Message);
 
 	static const auto NotSupportedErrors = {
+		QDBusError::Disconnected,
 		QDBusError::ServiceUnknown,
 	};
 
 	static const auto NotSupportedErrorsToLog = {
-		QDBusError::Disconnected,
 		QDBusError::AccessDenied,
 	};
 
