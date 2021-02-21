@@ -10,6 +10,7 @@
 #include "base/algorithm.h"
 
 #include <QtCore/QProcess>
+#include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>
 #include <QtGui/QDesktopServices>
@@ -18,6 +19,7 @@
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusMessage>
 #include <QtDBus/QDBusError>
+#include <QtDBus/QDBusUnixFileDescriptor>
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 extern "C" {
@@ -31,11 +33,36 @@ extern "C" {
 #include <unistd.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <fcntl.h>
 
 namespace base::Platform {
 namespace {
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+bool PortalShowInFolder(const QString &filepath) {
+	const auto fd = open(QFile::encodeName(filepath).constData(), O_RDONLY);
+	if (fd == -1) {
+		return false;
+	}
+
+	auto message = QDBusMessage::createMethodCall(
+		"org.freedesktop.portal.Desktop",
+		"/org/freedesktop/portal/desktop",
+		"org.freedesktop.portal.OpenURI",
+		"OpenDirectory");
+
+	message.setArguments({
+		QString(),
+		QVariant::fromValue(QDBusUnixFileDescriptor(fd)),
+		QVariantMap()
+	});
+
+	close(fd);
+
+	const QDBusError error = QDBusConnection::sessionBus().call(message);
+	return !error.isValid();
+}
+
 bool DBusShowInFolder(const QString &filepath) {
 	auto message = QDBusMessage::createMethodCall(
 		"org.freedesktop.FileManager1",
@@ -105,6 +132,10 @@ bool ShowInFolder(const QString &filepath) {
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	if (DBusShowInFolder(absolutePath)) {
+		return true;
+	}
+
+	if (PortalShowInFolder(absolutePath)) {
 		return true;
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
