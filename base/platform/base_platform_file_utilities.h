@@ -22,6 +22,10 @@ void RemoveQuarantine(const QString &path);
 bool RenameWithOverwrite(const QString &from, const QString &to);
 void FlushFileData(QFile &file);
 
+[[nodiscard]] bool IsNonExtensionMimeFrom(
+    const QString &path,
+    const flat_set<QString> &mimeTypes);
+
 } // namespace base::Platform
 
 #ifdef Q_OS_MAC

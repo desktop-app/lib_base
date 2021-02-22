@@ -12,4 +12,10 @@ inline QString FileNameFromUserString(QString name) {
 	return name;
 }
 
+inline bool IsNonExtensionMimeFrom(
+        const QString &path,
+        const flat_set<QString> &mimeTypes) {
+    return false;
+}
+
 } // namespace base::Platform
