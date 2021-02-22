@@ -7,8 +7,11 @@
 #include "base/platform/linux/base_last_input_linux.h"
 
 #include "base/integration.h"
-#include "base/platform/linux/base_info_linux.h"
+#include "base/platform/base_platform_info.h"
+
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <QtDBus/QDBusConnection>
@@ -17,11 +20,14 @@
 #include <QtDBus/QDBusError>
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include <xcb/screensaver.h>
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 namespace base::Platform {
 namespace {
 
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 std::optional<crl::time> XCBLastUserInputTime() {
 	const auto connection = XCB::GetConnectionFromQt();
 	if (!connection) {
@@ -55,6 +61,7 @@ std::optional<crl::time> XCBLastUserInputTime() {
 
 	return (crl::now() - static_cast<crl::time>(idle));
 }
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
@@ -150,12 +157,14 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 } // namespace
 
 std::optional<crl::time> LastUserInputTime() {
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	if (!::Platform::IsWayland()) {
 		const auto xcbResult = XCBLastUserInputTime();
 		if (xcbResult.has_value()) {
 			return xcbResult;
 		}
 	}
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	const auto freedesktopResult = FreedesktopDBusLastUserInputTime();

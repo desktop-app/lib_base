@@ -7,9 +7,12 @@
 #include "base/platform/linux/base_linux_gtk_integration.h"
 
 #include "base/platform/linux/base_linux_gtk_integration_p.h"
-#include "base/platform/linux/base_linux_xlib_helper.h"
 #include "base/platform/base_platform_info.h"
 #include "base/integration.h"
+
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+#include "base/platform/linux/base_linux_xlib_helper.h"
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QtGui/QIcon>
 
@@ -87,10 +90,12 @@ bool SetupGtkBase(QLibrary &lib) {
 		}
 	}
 
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	// gtk_init will reset the Xlib error handler,
 	// and that causes Qt applications to quit on X errors.
 	// Therefore, we need to manually restore it.
 	XErrorHandlerRestorer handlerRestorer;
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 	Integration::Instance().logMessage("Library gtk functions loaded!");
 	TriedToInit = true;

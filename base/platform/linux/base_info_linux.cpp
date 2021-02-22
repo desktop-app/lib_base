@@ -6,9 +6,12 @@
 //
 #include "base/platform/linux/base_info_linux.h"
 
-#include "base/platform/linux/base_linux_xcb_utilities.h"
 #include "base/platform/linux/base_linux_gtk_integration.h"
 #include "base/integration.h"
+
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+#include "base/platform/linux/base_linux_xcb_utilities.h"
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QtCore/QJsonObject>
 #include <QtCore/QLocale>
@@ -34,6 +37,7 @@ QString GetDesktopEnvironment() {
 		: value;
 }
 
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 QString GetWindowManager() {
 	base::Platform::XCB::CustomConnection connection;
 	if (xcb_connection_has_error(connection)) {
@@ -91,6 +95,7 @@ QString GetWindowManager() {
 	free(reply);
 	return name;
 }
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 } // namespace
 
@@ -117,14 +122,16 @@ QString SystemVersionPretty() {
 		if (const auto desktopEnvironment = GetDesktopEnvironment();
 			!desktopEnvironment.isEmpty()) {
 			resultList << desktopEnvironment;
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 		} else if (const auto windowManager = GetWindowManager();
 			!windowManager.isEmpty()) {
 			resultList << windowManager;
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 		}
 
 		if (IsWayland()) {
 			resultList << "Wayland";
-		} else {
+		} else if (QGuiApplication::platformName() == "xcb") {
 			resultList << "X11";
 		}
 
