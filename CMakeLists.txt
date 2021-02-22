@@ -158,6 +158,15 @@ PRIVATE
     base/base_pch.h
 )
 
+if (DESKTOP_APP_DISABLE_X11_INTEGRATION)
+    remove_target_sources(lib_base ${src_loc}
+        base/platform/linux/base_linux_xcb_utilities.cpp
+        base/platform/linux/base_linux_xcb_utilities.h
+        base/platform/linux/base_linux_xlib_helper.cpp
+        base/platform/linux/base_linux_xlib_helper.h
+    )
+endif()
+
 if (DESKTOP_APP_DISABLE_GTK_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_gtk_integration_p.h
@@ -192,29 +201,37 @@ PUBLIC
 if (LINUX)
     target_link_libraries(lib_base
     PUBLIC
-        desktop-app::external_xcb_keysyms
-        desktop-app::external_xcb_record
-        desktop-app::external_xcb_screensaver
-        desktop-app::external_xcb
         desktop-app::external_glib
     )
+
+    if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
+        target_link_libraries(lib_base
+        PUBLIC
+            desktop-app::external_xcb_keysyms
+            desktop-app::external_xcb_record
+            desktop-app::external_xcb_screensaver
+            desktop-app::external_xcb
+        )
+    endif()
 
     if (NOT DESKTOP_APP_DISABLE_GTK_INTEGRATION)
         find_package(PkgConfig REQUIRED)
 
         if (DESKTOP_APP_USE_PACKAGED AND NOT DESKTOP_APP_USE_PACKAGED_LAZY)
             pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)
-            pkg_check_modules(X11 REQUIRED IMPORTED_TARGET x11)
+            target_link_libraries(lib_base PUBLIC PkgConfig::GTK3)
 
-            target_link_libraries(lib_base
-            PRIVATE
-                PkgConfig::GTK3
-                PkgConfig::X11
-            )
+            if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
+                pkg_check_modules(X11 REQUIRED IMPORTED_TARGET x11)
+                target_link_libraries(lib_base PUBLIC PkgConfig::X11)
+            endif()
         else()
             pkg_search_module(GTK REQUIRED gtk+-3.0 gtk+-2.0)
-            target_include_directories(lib_base PRIVATE ${GTK_INCLUDE_DIRS})
-            target_link_libraries(lib_base PRIVATE X11)
+            target_include_directories(lib_base PUBLIC ${GTK_INCLUDE_DIRS})
+
+            if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
+                target_link_libraries(lib_base PUBLIC X11)
+            endif()
         endif()
     endif()
 endif()

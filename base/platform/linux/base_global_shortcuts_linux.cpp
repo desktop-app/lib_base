@@ -10,13 +10,17 @@
 #include "base/global_shortcuts_generic.h"
 #include "base/integration.h"
 #include "base/platform/base_platform_info.h" // IsWayland
-#include "base/platform/linux/base_linux_xcb_utilities.h" // CustomConnection, IsExtensionPresent
 #include "base/unique_qptr.h"
+
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+#include "base/platform/linux/base_linux_xcb_utilities.h" // CustomConnection, IsExtensionPresent
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QKeySequence>
 #include <QScopedPointer>
 #include <QSocketNotifier>
 
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include <xcb/record.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_keysyms.h> // xcb_key_symbols_*
@@ -24,15 +28,17 @@
 
 #include <X11/XF86keysym.h>
 #include <X11/keysym.h>
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 namespace base::Platform::GlobalShortcuts {
 namespace {
 
-using XcbReply = xcb_record_enable_context_reply_t;
-
 constexpr auto kShiftMouseButton = std::numeric_limits<uint64>::max() - 100;
 
 Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
+
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+using XcbReply = xcb_record_enable_context_reply_t;
 
 bool IsKeypad(xcb_keysym_t keysym) {
 	return (xcb_is_keypad_key(keysym) || xcb_is_private_keypad_key(keysym));
@@ -218,16 +224,19 @@ void EnsureX11ShortcutManager() {
 		_x11Manager = std::make_unique<X11Manager>();
 	}
 }
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 } // namespace
 
 bool Available() {
-	if (::Platform::IsWayland()) {
-		return false;
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+	if (!::Platform::IsWayland()) {
+		EnsureX11ShortcutManager();
+		return _x11Manager->available();
 	}
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-	EnsureX11ShortcutManager();
-	return _x11Manager->available();
+	return false;
 }
 
 bool Allowed() {
@@ -237,15 +246,20 @@ bool Allowed() {
 void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process) {
 	ProcessCallback = std::move(process);
 
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	EnsureX11ShortcutManager();
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 void Stop() {
 	ProcessCallback = nullptr;
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	_x11Manager = nullptr;
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 QString KeyName(GlobalShortcutKeyGeneric descriptor) {
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	// Telegram/ThirdParty/fcitx-qt5/platforminputcontext/qtkey.cpp
 	static const auto KeyToString = flat_map<uint64, int>{
 		{ XK_KP_Space, Qt::Key_Space },
@@ -634,6 +648,9 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 	return (keyIt != end(KeyToString))
 		? prefix + fromSequence(keyIt->second)
 		: QString("\\x%1").arg(descriptor, 0, 16);
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+
+	return {};
 }
 
 } // namespace base::Platform::GlobalShortcuts
