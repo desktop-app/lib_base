@@ -157,7 +157,7 @@ bool CursorSizeShouldBeSet() {
 }
 
 void SetIconTheme() {
-	Integration::Instance().enterFromEventLoop([] {
+	static const auto setter = [] {
 		const auto integration = GtkIntegration::Instance();
 		if (!integration || !IconThemeShouldBeSet()) {
 			return;
@@ -185,11 +185,17 @@ void SetIconTheme() {
 		Integration::Instance().logMessage(
 			QString("New fallback icon theme: %1")
 				.arg(QIcon::fallbackThemeName()));
-	});
+	};
+
+	if (QCoreApplication::instance()) {
+		Integration::Instance().enterFromEventLoop(setter);
+	} else {
+		setter();
+	}
 }
 
 void SetCursorSize() {
-	Integration::Instance().enterFromEventLoop([] {
+	static const auto setter = [] {
 		const auto integration = GtkIntegration::Instance();
 		if (!integration || !CursorSizeShouldBeSet()) {
 			return;
@@ -206,7 +212,13 @@ void SetCursorSize() {
 		qputenv("XCURSOR_SIZE", QByteArray::number(*newCursorSize));
 		Integration::Instance().logMessage(
 			QString("New cursor size: %1").arg(*newCursorSize));
-	});
+	};
+
+	if (QCoreApplication::instance()) {
+		Integration::Instance().enterFromEventLoop(setter);
+	} else {
+		setter();
+	}
 }
 
 } // namespace
@@ -259,6 +271,14 @@ void GtkIntegration::prepareEnvironment() {
 void GtkIntegration::load() {
 	Expects(!loaded());
 	Integration::Instance().logMessage("Loading GTK");
+
+	Integration::Instance().logMessage(
+		QString("Icon theme: %1")
+			.arg(QIcon::themeName()));
+
+	Integration::Instance().logMessage(
+		QString("Fallback icon theme: %1")
+			.arg(QIcon::fallbackThemeName()));
 
 	_lib.setLoadHints(QLibrary::DeepBindHint);
 
