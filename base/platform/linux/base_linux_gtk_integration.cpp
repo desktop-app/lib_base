@@ -115,16 +115,12 @@ bool SetupGtkBase(QLibrary &lib) {
 
 template <typename T>
 std::optional<T> GtkSetting(const QString &propertyName) {
-	const auto integration = GtkIntegration::Instance();
-	if (!integration
-		|| !integration->loaded()
-		|| gtk_settings_get_default == nullptr) {
+	if (gtk_settings_get_default == nullptr) {
 		return std::nullopt;
 	}
-	auto settings = gtk_settings_get_default();
 	T value;
 	g_object_get(
-		settings,
+		gtk_settings_get_default(),
 		propertyName.toUtf8().constData(),
 		&value,
 		nullptr);
@@ -309,7 +305,7 @@ bool GtkIntegration::loaded() const {
 }
 
 bool GtkIntegration::checkVersion(uint major, uint minor, uint micro) const {
-	return (loaded() && gtk_check_version != nullptr)
+	return (gtk_check_version != nullptr)
 		? !gtk_check_version(major, minor, micro)
 		: false;
 }
@@ -357,7 +353,7 @@ std::optional<QString> GtkIntegration::getStringSetting(
 void GtkIntegration::connectToSetting(
 		const QString &propertyName,
 		void (*callback)()) {
-	if (!loaded() || gtk_settings_get_default == nullptr) {
+	if (gtk_settings_get_default == nullptr) {
 		return;
 	}
 
