@@ -55,6 +55,7 @@ enum class OutdateReason {
 [[nodiscard]] constexpr bool IsLinux();
 [[nodiscard]] constexpr bool IsLinux32Bit();
 [[nodiscard]] constexpr bool IsLinux64Bit();
+[[nodiscard]] bool IsX11();
 [[nodiscard]] bool IsWayland();
 
 [[nodiscard]] QString GetLibcName();

@@ -158,7 +158,7 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 
 std::optional<crl::time> LastUserInputTime() {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	if (!::Platform::IsWayland()) {
+	if (::Platform::IsX11()) {
 		const auto xcbResult = XCBLastUserInputTime();
 		if (xcbResult.has_value()) {
 			return xcbResult;

@@ -84,7 +84,7 @@ void XCBActivateWindow(WId window) {
 
 void ActivateProcessWindow(int64 pid, WId windowId) {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	if (!::Platform::IsWayland()) {
+	if (::Platform::IsX11()) {
 		XCBActivateWindow(windowId);
 	}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -92,7 +92,7 @@ void ActivateProcessWindow(int64 pid, WId windowId) {
 
 void ActivateThisProcessWindow(WId windowId) {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	if (!::Platform::IsWayland()) {
+	if (::Platform::IsX11()) {
 		XCBActivateWindow(windowId);
 	}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION

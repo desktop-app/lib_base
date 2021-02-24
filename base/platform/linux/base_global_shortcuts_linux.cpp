@@ -230,7 +230,7 @@ void EnsureX11ShortcutManager() {
 
 bool Available() {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	if (!::Platform::IsWayland()) {
+	if (::Platform::IsX11()) {
 		EnsureX11ShortcutManager();
 		return _x11Manager->available();
 	}
