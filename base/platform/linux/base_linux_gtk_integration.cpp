@@ -79,11 +79,11 @@ bool SetupGtkBase(QLibrary &lib) {
 		// Otherwise we get segfault in Ubuntu 17.04 in gtk_init_check() call.
 		// See https://github.com/telegramdesktop/tdesktop/issues/3176
 		// See https://github.com/telegramdesktop/tdesktop/issues/3162
-		if(::Platform::IsWayland()) {
+		if (::Platform::IsWayland()) {
 			Integration::Instance().logMessage(
 				"Limit allowed GDK backends to wayland,x11");
 			gdk_set_allowed_backends("wayland,x11");
-		} else {
+		} else if (::Platform::IsX11()) {
 			Integration::Instance().logMessage(
 				"Limit allowed GDK backends to x11,wayland");
 			gdk_set_allowed_backends("x11,wayland");
