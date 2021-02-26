@@ -18,28 +18,25 @@ namespace base::Platform {
 namespace {
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-void XCBMoveWindowToCurrentWorkspace(WId window) {
+std::optional<uint32> XCBCurrentWorkspace() {
 	const auto connection = XCB::GetConnectionFromQt();
 	if (!connection) {
-		return;
+		return std::nullopt;
 	}
 
 	const auto root = XCB::GetRootWindowFromQt();
 	if (!root.has_value()) {
-		return;
+		return std::nullopt;
 	}
 
 	const auto currentDesktopAtom = XCB::GetAtom(
 		connection,
 		"_NET_CURRENT_DESKTOP");
 
-	const auto desktopAtom = XCB::GetAtom(
-		connection,
-		"_NET_WM_DESKTOP");
-
-	if (!currentDesktopAtom.has_value() || !desktopAtom.has_value()) {
-		return;
+	if (!currentDesktopAtom.has_value()) {
+		return std::nullopt;
 	}
+
 	const auto cookie = xcb_get_property(
 		connection,
 		false,
@@ -53,18 +50,79 @@ void XCBMoveWindowToCurrentWorkspace(WId window) {
 		connection,
 		cookie,
 		nullptr);
-	
+
 	if (!reply) {
-		return;
+		return std::nullopt;
 	}
 
-	const auto currentDesktop = (reply->type == XCB_ATOM_CARDINAL)
-		? reinterpret_cast<ulong*>(xcb_get_property_value(reply))
-		: nullptr;
+	const auto result = (reply->type == XCB_ATOM_CARDINAL)
+		? std::make_optional(
+			*reinterpret_cast<ulong*>(xcb_get_property_value(reply)))
+		: std::nullopt;
 
 	free(reply);
 
-	if (!currentDesktop) {
+	return result;
+}
+
+std::optional<uint32> XCBGetWindowWorkspace(WId window) {
+	const auto connection = XCB::GetConnectionFromQt();
+	if (!connection) {
+		return std::nullopt;
+	}
+
+	const auto desktopAtom = XCB::GetAtom(
+		connection,
+		"_NET_WM_DESKTOP");
+
+	if (!desktopAtom.has_value()) {
+		return std::nullopt;
+	}
+
+	const auto cookie = xcb_get_property(
+		connection,
+		false,
+		window,
+		*desktopAtom,
+		XCB_ATOM_CARDINAL,
+		0,
+		1024);
+
+	auto reply = xcb_get_property_reply(
+		connection,
+		cookie,
+		nullptr);
+	
+	if (!reply) {
+		return std::nullopt;
+	}
+
+	const auto result = (reply->type == XCB_ATOM_CARDINAL)
+		? std::make_optional(
+			*reinterpret_cast<ulong*>(xcb_get_property_value(reply)))
+		: std::nullopt;
+
+	free(reply);
+
+	return result;
+}
+
+void XCBMoveWindowToWorkspace(WId window, uint32 workspace) {
+	const auto connection = XCB::GetConnectionFromQt();
+	if (!connection) {
+		return;
+	}
+
+	const auto root = XCB::GetRootWindowFromQt();
+	if (!root.has_value()) {
+		return;
+	}
+
+	const auto desktopAtom = XCB::GetAtom(
+		connection,
+		"_NET_WM_DESKTOP");
+
+	if (!desktopAtom.has_value()) {
 		return;
 	}
 
@@ -74,7 +132,7 @@ void XCBMoveWindowToCurrentWorkspace(WId window) {
 	xev.sequence = 0;
 	xev.window = window;
 	xev.type = *desktopAtom;
-	xev.data.data32[0] = *currentDesktop;
+	xev.data.data32[0] = workspace;
 	xev.data.data32[1] = 0;
 	xev.data.data32[2] = 0;
 	xev.data.data32[3] = 0;
@@ -87,6 +145,16 @@ void XCBMoveWindowToCurrentWorkspace(WId window) {
 		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
 			| XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY,
 		reinterpret_cast<const char *>(&xev));
+}
+
+void XCBMoveWindowToCurrentWorkspace(WId window) {
+	if (const auto windowWorkspace = XCBGetWindowWorkspace(window);
+		*windowWorkspace != 0xFFFFFFFF) {
+		if (const auto currentWorkspace = XCBCurrentWorkspace();
+			*currentWorkspace != *windowWorkspace) {
+			XCBMoveWindowToWorkspace(window, *currentWorkspace);
+		}
+	}
 }
 
 void XCBActivateWindow(WId window) {
