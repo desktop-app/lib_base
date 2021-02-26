@@ -6,6 +6,8 @@
 //
 #pragma once
 
+#include "base/algorithm.h"
+
 #include <QtCore/QPointer>
 
 namespace base {
