@@ -27,7 +27,7 @@ PRIVATE
     base/platform/linux/base_last_input_linux.h
     base/platform/linux/base_layout_switch_linux.cpp
     base/platform/linux/base_layout_switch_linux.h
-    base/platform/linux/base_linux_glib_helper.h
+    base/platform/linux/base_linux_glibmm_helper.h
     base/platform/linux/base_linux_gtk_integration_p.h
     base/platform/linux/base_linux_gtk_integration.cpp
     base/platform/linux/base_linux_gtk_integration.h
@@ -201,6 +201,7 @@ PUBLIC
 if (LINUX)
     target_link_libraries(lib_base
     PUBLIC
+        desktop-app::external_glibmm
         desktop-app::external_glib
     )
 

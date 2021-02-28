@@ -7,8 +7,6 @@
 #include "base/platform/linux/base_file_utilities_linux.h"
 
 #include "base/platform/base_platform_file_utilities.h"
-#include "base/platform/linux/base_linux_glib_helper.h"
-#include "base/integration.h"
 #include "base/algorithm.h"
 
 #include <QtCore/QProcess>
@@ -23,6 +21,13 @@
 #include <QtDBus/QDBusError>
 #include <QtDBus/QDBusUnixFileDescriptor>
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+
+#undef foreach
+#undef slots
+#undef signals
+#undef emit
+#include <glibmm.h>
+#include <giomm.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -77,38 +82,40 @@ bool DBusShowInFolder(const QString &filepath) {
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 bool ProcessShowInFolder(const QString &filepath) {
-	auto fileManagerAppInfo = g_app_info_get_default_for_type(
-		"inode/directory",
-		false);
+	const auto fileManager = [] {
+		try {
+			const auto appInfo = Gio::AppInfo::get_default_for_type(
+				"inode/directory",
+				false);
 
-	if (!fileManagerAppInfo) {
-		return false;
-	}
+			if (appInfo) {
+				return QString::fromStdString(appInfo->get_id());
+			}
+		} catch (...) {
+		}
 
-	const auto fileManagerAppInfoId = QString(
-		g_app_info_get_id(fileManagerAppInfo));
+		return QString();
+	}();
 
-	g_object_unref(fileManagerAppInfo);
-
-	if (fileManagerAppInfoId == qstr("dolphin.desktop")
-		|| fileManagerAppInfoId == qstr("org.kde.dolphin.desktop")) {
+	if (fileManager == qstr("dolphin.desktop")
+		|| fileManager == qstr("org.kde.dolphin.desktop")) {
 		return QProcess::startDetached("dolphin", {
 			"--select",
 			filepath
 		});
-	} else if (fileManagerAppInfoId == qstr("nautilus.desktop")
-		|| fileManagerAppInfoId == qstr("org.gnome.Nautilus.desktop")
-		|| fileManagerAppInfoId == qstr("nautilus-folder-handler.desktop")) {
+	} else if (fileManager == qstr("nautilus.desktop")
+		|| fileManager == qstr("org.gnome.Nautilus.desktop")
+		|| fileManager == qstr("nautilus-folder-handler.desktop")) {
 		return QProcess::startDetached("nautilus", {
 			filepath
 		});
-	} else if (fileManagerAppInfoId == qstr("nemo.desktop")) {
+	} else if (fileManager == qstr("nemo.desktop")) {
 		return QProcess::startDetached("nemo", {
 			"--no-desktop",
 			filepath
 		});
-	} else if (fileManagerAppInfoId == qstr("konqueror.desktop")
-		|| fileManagerAppInfoId == qstr("kfmclient_dir.desktop")) {
+	} else if (fileManager == qstr("konqueror.desktop")
+		|| fileManager == qstr("kfmclient_dir.desktop")) {
 		return QProcess::startDetached("konqueror", {
 			"--select",
 			filepath
@@ -140,14 +147,12 @@ bool ShowInFolder(const QString &filepath) {
 		return true;
 	}
 
-	if (g_app_info_launch_default_for_uri(
-		g_filename_to_uri(
-			absoluteDirPath.toUtf8().constData(),
-			nullptr,
-			nullptr),
-		nullptr,
-		nullptr)) {
-		return true;
+	try {
+		if (Gio::AppInfo::launch_default_for_uri(
+			Glib::filename_to_uri(absoluteDirPath.toStdString()))) {
+			return true;
+		}
+	} catch (...) {
 	}
 
 	if (QDesktopServices::openUrl(QUrl::fromLocalFile(absoluteDirPath))) {
@@ -228,42 +233,6 @@ void FlushFileData(QFile &file) {
 	if (const auto descriptor = file.handle()) {
 		fsync(descriptor);
 	}
-}
-
-bool IsNonExtensionMimeFrom(
-		const QString &path,
-		const flat_set<QString> &mimeTypes) {
-	const auto utf8 = path.toUtf8();
-	const auto file = gobject_wrap(g_file_new_for_path(utf8.constData()));
-	if (!file) {
-		return false;
-	}
-	const auto attributes = ""
-		G_FILE_ATTRIBUTE_STANDARD_TYPE ","
-		G_FILE_ATTRIBUTE_ACCESS_CAN_EXECUTE ","
-		G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE;
-	const auto info = gobject_wrap(g_file_query_info(
-		file.get(),
-		attributes,
-		G_FILE_QUERY_INFO_NONE,
-		nullptr,
-		nullptr));
-	if (!info) {
-		return false;
-	}
-	const auto type = g_file_info_get_content_type(info.get());
-	if (!type) {
-		Integration::Instance().logMessage(
-			QString("Content-Type for path '%1' could not be guessed.")
-				.arg(path));
-		return false;
-	}
-	const auto utf16 = QString::fromUtf8(type).toLower();
-	Integration::Instance().logMessage(
-		QString("Content-Type for path '%1' guessed as '%2'.")
-			.arg(path)
-			.arg(utf16));
-	return mimeTypes.contains(utf16);
 }
 
 } // namespace base::Platform

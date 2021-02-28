@@ -10,10 +10,4 @@ namespace base::Platform {
 
 bool CloseProcesses(const QString &filename);
 
-inline bool IsNonExtensionMimeFrom(
-        const QString &path,
-        const flat_set<QString> &mimeTypes) {
-    return false;
-}
-
 } // namespace base::Platform
