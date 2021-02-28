@@ -20,6 +20,13 @@
 
 #include <glib.h>
 
+#undef foreach
+#undef slots
+#undef signals
+#undef emit
+#include <glibmm.h>
+#include <giomm.h>
+
 // this file is used on both Linux & BSD
 #ifdef Q_OS_LINUX
 #include <gnu/libc-version.h>
@@ -230,6 +237,9 @@ bool IsWayland() {
 }
 
 void Start(QJsonObject options) {
+	Glib::init();
+	Gio::init();
+
 	using base::Platform::GtkIntegration;
 	if (const auto integration = GtkIntegration::Instance()) {
 		integration->prepareEnvironment();
