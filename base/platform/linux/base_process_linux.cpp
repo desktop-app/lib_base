@@ -18,77 +18,6 @@ namespace base::Platform {
 namespace {
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-void XCBMoveWindowToCurrentWorkspace(WId window) {
-	const auto connection = XCB::GetConnectionFromQt();
-	if (!connection) {
-		return;
-	}
-
-	const auto root = XCB::GetRootWindowFromQt();
-	if (!root.has_value()) {
-		return;
-	}
-
-	const auto currentDesktopAtom = XCB::GetAtom(
-		connection,
-		"_NET_CURRENT_DESKTOP");
-
-	const auto desktopAtom = XCB::GetAtom(
-		connection,
-		"_NET_WM_DESKTOP");
-
-	if (!currentDesktopAtom.has_value() || !desktopAtom.has_value()) {
-		return;
-	}
-	const auto cookie = xcb_get_property(
-		connection,
-		false,
-		*root,
-		*currentDesktopAtom,
-		XCB_ATOM_CARDINAL,
-		0,
-		1024);
-
-	auto reply = xcb_get_property_reply(
-		connection,
-		cookie,
-		nullptr);
-	
-	if (!reply) {
-		return;
-	}
-
-	const auto currentDesktop = (reply->type == XCB_ATOM_CARDINAL)
-		? reinterpret_cast<ulong*>(xcb_get_property_value(reply))
-		: nullptr;
-
-	free(reply);
-
-	if (!currentDesktop) {
-		return;
-	}
-
-	xcb_client_message_event_t xev;
-	xev.response_type = XCB_CLIENT_MESSAGE;
-	xev.format = 32;
-	xev.sequence = 0;
-	xev.window = window;
-	xev.type = *desktopAtom;
-	xev.data.data32[0] = *currentDesktop;
-	xev.data.data32[1] = 0;
-	xev.data.data32[2] = 0;
-	xev.data.data32[3] = 0;
-	xev.data.data32[4] = 0;
-
-	xcb_send_event(
-		connection,
-		false,
-		*root,
-		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
-			| XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY,
-		reinterpret_cast<const char *>(&xev));
-}
-
 void XCBActivateWindow(WId window) {
 	const auto connection = XCB::GetConnectionFromQt();
 	if (!connection) {
@@ -156,7 +85,6 @@ void XCBActivateWindow(WId window) {
 void ActivateProcessWindow(int64 pid, WId windowId) {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	if (::Platform::IsX11()) {
-		XCBMoveWindowToCurrentWorkspace(windowId);
 		XCBActivateWindow(windowId);
 	}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -165,7 +93,6 @@ void ActivateProcessWindow(int64 pid, WId windowId) {
 void ActivateThisProcessWindow(WId windowId) {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	if (::Platform::IsX11()) {
-		XCBMoveWindowToCurrentWorkspace(windowId);
 		XCBActivateWindow(windowId);
 	}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
