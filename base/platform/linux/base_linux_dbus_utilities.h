@@ -1,0 +1,39 @@
+// This file is part of Desktop App Toolkit,
+// a set of libraries for developing nice desktop applications.
+//
+// For license and copyright information please follow this link:
+// https://github.com/desktop-app/legal/blob/master/LEGAL
+//
+#pragma once
+
+#include "base/const_string.h"
+
+#undef foreach
+#undef slots
+#undef signals
+#undef emit
+#include <glibmm.h>
+#include <giomm.h>
+
+namespace base::Platform::DBus {
+
+inline constexpr auto kDBusService = "org.freedesktop.DBus"_cs;
+inline constexpr auto kDBusObjectPath = "/org/freedesktop/DBus"_cs;
+inline constexpr auto kDBusInterface = kDBusService;
+
+bool NameHasOwner(
+	const Glib::RefPtr<Gio::DBus::Connection> &connection,
+	const Glib::ustring &name);
+
+std::vector<Glib::ustring> ListActivatableNames(
+	const Glib::RefPtr<Gio::DBus::Connection> &connection);
+
+uint RegisterServiceWatcher(
+	const Glib::RefPtr<Gio::DBus::Connection> &connection,
+	const Glib::ustring &service,
+	Fn<void(
+		const Glib::ustring &,
+		const Glib::ustring &,
+		const Glib::ustring &)> callback);
+
+} // namespace base::Platform::DBus
