@@ -15,17 +15,11 @@
 #include <QtCore/QDir>
 #include <QtGui/QDesktopServices>
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-#include <QtDBus/QDBusConnection>
-#include <QtDBus/QDBusMessage>
-#include <QtDBus/QDBusError>
-#include <QtDBus/QDBusUnixFileDescriptor>
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-
 #undef foreach
 #undef slots
 #undef signals
 #undef emit
+#include <gio/gunixfdlist.h>
 #include <glibmm.h>
 #include <giomm.h>
 
@@ -41,43 +35,64 @@ namespace {
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 bool PortalShowInFolder(const QString &filepath) {
-	const auto fd = open(QFile::encodeName(filepath).constData(), O_RDONLY);
-	if (fd == -1) {
-		return false;
+	try {
+		const auto connection = Gio::DBus::Connection::get_sync(
+			Gio::DBus::BusType::BUS_TYPE_SESSION);
+
+		const auto fd = open(
+			QFile::encodeName(filepath).constData(),
+			O_RDONLY);
+
+		if (fd == -1) {
+			return false;
+		}
+
+		const auto guard = gsl::finally([&] { close(fd); });
+		auto outFdList = Glib::RefPtr<Gio::UnixFDList>();
+
+		connection->call_sync(
+			"/org/freedesktop/portal/desktop",
+			"org.freedesktop.portal.OpenURI",
+			"OpenDirectory",
+			Glib::VariantContainerBase::create_tuple({
+				Glib::Variant<Glib::ustring>::create({}),
+				Glib::wrap(g_variant_new_handle(0)),
+				Glib::Variant<
+					std::map<Glib::ustring, Glib::VariantBase>>::create({}),
+			}),
+			Glib::wrap(g_unix_fd_list_new_from_array(&fd, 1)),
+			outFdList,
+			"org.freedesktop.portal.Desktop");
+
+		return true;
+	} catch (...) {
 	}
 
-	auto message = QDBusMessage::createMethodCall(
-		"org.freedesktop.portal.Desktop",
-		"/org/freedesktop/portal/desktop",
-		"org.freedesktop.portal.OpenURI",
-		"OpenDirectory");
-
-	message.setArguments({
-		QString(),
-		QVariant::fromValue(QDBusUnixFileDescriptor(fd)),
-		QVariantMap()
-	});
-
-	close(fd);
-
-	const QDBusError error = QDBusConnection::sessionBus().call(message);
-	return !error.isValid();
+	return false;
 }
 
 bool DBusShowInFolder(const QString &filepath) {
-	auto message = QDBusMessage::createMethodCall(
-		"org.freedesktop.FileManager1",
-		"/org/freedesktop/FileManager1",
-		"org.freedesktop.FileManager1",
-		"ShowItems");
+	try {
+		const auto connection = Gio::DBus::Connection::get_sync(
+			Gio::DBus::BusType::BUS_TYPE_SESSION);
 
-	message.setArguments({
-		QStringList{QUrl::fromLocalFile(filepath).toString()},
-		QString()
-	});
+		connection->call_sync(
+			"/org/freedesktop/FileManager1",
+			"org.freedesktop.FileManager1",
+			"ShowItems",
+			Glib::VariantContainerBase::create_tuple({
+				Glib::Variant<std::vector<Glib::ustring>>::create({
+					Glib::filename_to_uri(filepath.toStdString())
+				}),
+				Glib::Variant<Glib::ustring>::create({}),
+			}),
+			"org.freedesktop.FileManager1");
 
-	const QDBusError error = QDBusConnection::sessionBus().call(message);
-	return !error.isValid();
+		return true;
+	} catch (...) {
+	}
+
+	return false;
 }
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
