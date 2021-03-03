@@ -14,15 +14,10 @@
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-#undef foreach
-#undef slots
-#undef signals
-#undef emit
+#include "base/platform/linux/base_linux_glibmm_helper.h"
+
 #include <glibmm.h>
 #include <giomm.h>
-
-// must be after undefs
-#include "base/platform/linux/base_linux_glibmm_helper.h"
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION

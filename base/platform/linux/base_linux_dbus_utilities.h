@@ -8,10 +8,6 @@
 
 #include "base/const_string.h"
 
-#undef foreach
-#undef slots
-#undef signals
-#undef emit
 #include <glibmm.h>
 #include <giomm.h>
 
