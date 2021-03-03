@@ -19,11 +19,6 @@
 #include <QtGui/QGuiApplication>
 
 #include <glib.h>
-
-#undef foreach
-#undef slots
-#undef signals
-#undef emit
 #include <glibmm.h>
 #include <giomm.h>
 

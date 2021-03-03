@@ -11,10 +11,8 @@
 #include <QtCore/QLibrary>
 
 extern "C" {
-#undef signals
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
-#define signals public
 } // extern "C"
 
 #if defined DESKTOP_APP_USE_PACKAGED && !defined DESKTOP_APP_USE_PACKAGED_LAZY

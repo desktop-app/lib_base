@@ -10,16 +10,7 @@
 
 #include <QtCore/QFile>
 
-extern "C" {
-#undef signals
 #include <gio/gio.h>
-#define signals public
-} // extern "C"
-
-#undef foreach
-#undef slots
-#undef signals
-#undef emit
 #include <glibmm.h>
 #include <giomm.h>
 

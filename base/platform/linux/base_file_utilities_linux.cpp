@@ -15,10 +15,6 @@
 #include <QtCore/QDir>
 #include <QtGui/QDesktopServices>
 
-#undef foreach
-#undef slots
-#undef signals
-#undef emit
 #include <gio/gunixfdlist.h>
 #include <glibmm.h>
 #include <giomm.h>
