@@ -81,7 +81,7 @@ std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 			"GetSessionIdleTime",
 			{},
 			"org.freedesktop.ScreenSaver");
-		
+
 		const auto value = GlibVariantCast<uint>(reply.get_child(0));
 		return (crl::now() - static_cast<crl::time>(value));
 	} catch (const Glib::Error &e) {
@@ -134,7 +134,7 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 			"GetIdletime",
 			{},
 			"org.gnome.Mutter.IdleMonitor");
-		
+
 		const auto value = GlibVariantCast<ulong>(reply.get_child(0));
 		return (crl::now() - static_cast<crl::time>(value));
 	} catch (const Glib::Error &e) {
