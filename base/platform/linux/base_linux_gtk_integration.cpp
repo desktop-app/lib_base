@@ -225,7 +225,7 @@ GtkIntegration::GtkIntegration() {
 GtkIntegration *GtkIntegration::Instance() {
 	static const auto useGtkIntegration = !qEnvironmentVariableIsSet(
 		kDisableGtkIntegration.utf8().constData());
-	
+
 	if (!useGtkIntegration) {
 		return nullptr;
 	}

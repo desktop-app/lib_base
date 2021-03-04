@@ -122,7 +122,7 @@ void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 			g_app_info_delete(currentRegisteredAppInfo);
 		}
 	}
-	
+
 	if (registeredAppInfoList) {
 		g_list_free_full(registeredAppInfoList, g_object_unref);
 	}

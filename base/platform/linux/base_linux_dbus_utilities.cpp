@@ -19,7 +19,7 @@ bool NameHasOwner(
 		"NameHasOwner",
 		base::Platform::MakeGlibVariant(std::tuple{name}),
 		std::string(kDBusService));
-	
+
 	const auto value = GlibVariantCast<bool>(reply.get_child(0));
 
 	return value;
@@ -33,7 +33,7 @@ std::vector<Glib::ustring> ListActivatableNames(
 		"ListActivatableNames",
 		{},
 		kDBusService.utf8().toStdString());
-	
+
 	const auto value = GlibVariantCast<std::vector<Glib::ustring>>(
 		reply.get_child(0));
 
