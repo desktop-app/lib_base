@@ -139,34 +139,35 @@ bool ProcessShowInFolder(const QString &filepath) {
 } // namespace
 
 bool ShowInFolder(const QString &filepath) {
-	const auto absolutePath = QFileInfo(filepath).absoluteFilePath();
-	const auto absoluteDirPath = QFileInfo(filepath)
-		.absoluteDir()
-		.absolutePath();
-
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-	if (DBusShowInFolder(absolutePath)) {
+	if (DBusShowInFolder(filepath)) {
 		return true;
 	}
 
-	if (PortalShowInFolder(absolutePath)) {
+	if (PortalShowInFolder(filepath)) {
 		return true;
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
-	if (ProcessShowInFolder(absolutePath)) {
+	if (ProcessShowInFolder(filepath)) {
 		return true;
 	}
 
+	const auto folder = QFileInfo(filepath).absolutePath();
 	try {
 		if (Gio::AppInfo::launch_default_for_uri(
-			Glib::filename_to_uri(absoluteDirPath.toStdString()))) {
+			Glib::filename_to_uri(folder.toStdString()))) {
 			return true;
 		}
 	} catch (...) {
 	}
 
-	if (QDesktopServices::openUrl(QUrl::fromLocalFile(absoluteDirPath))) {
+	const auto qUrlFolder = QUrl::fromLocalFile(folder);
+	if (QDesktopServices::openUrl(qUrlFolder)) {
+		return true;
+	}
+
+	if (!QProcess::execute("xdg-open", { qUrlFolder.toEncoded() })) {
 		return true;
 	}
 
