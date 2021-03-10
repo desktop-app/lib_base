@@ -240,7 +240,7 @@ void Start(QJsonObject options) {
 		integration->prepareEnvironment();
 		integration->load();
 	} else {
-		g_warning("GTK integration is disabled, some feature unavailable. ");
+		g_warning("GTK integration is disabled, some feature unavailable.");
 	}
 }
 
