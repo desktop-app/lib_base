@@ -344,9 +344,9 @@ std::optional<QString> GtkIntegration::getStringSetting(
 	const auto str = QString::fromUtf8(*value);
 	g_free(*value);
 	Integration::Instance().logMessage(
-		QString("Getting GTK setting, %1: '%2'")
-			.arg(propertyName)
-			.arg(str));
+		QString("Getting GTK setting, %1: '%2'").arg(
+			propertyName,
+			str));
 	return str;
 }
 
