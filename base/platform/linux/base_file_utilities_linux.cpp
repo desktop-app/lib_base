@@ -182,7 +182,7 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 		auto filename = QFile::decodeName(result);
 		auto deletedPostfix = qstr(" (deleted)");
 		if (filename.endsWith(deletedPostfix)
-			&& !QFileInfo(filename).exists()) {
+			&& !QFileInfo::exists(filename)) {
 			filename.chop(deletedPostfix.size());
 		}
 		return filename;
