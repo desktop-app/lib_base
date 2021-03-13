@@ -317,9 +317,9 @@ std::optional<bool> GtkIntegration::getBoolSetting(
 		return std::nullopt;
 	}
 	Integration::Instance().logMessage(
-		QString("Getting GTK setting, %1: %2")
-			.arg(propertyName)
-			.arg(*value ? "[TRUE]" : "[FALSE]"));
+		QString("Getting GTK setting, %1: %2").arg(
+			propertyName,
+			*value ? "[TRUE]" : "[FALSE]"));
 	return *value;
 }
 
