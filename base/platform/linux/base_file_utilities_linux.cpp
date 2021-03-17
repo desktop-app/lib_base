@@ -167,7 +167,7 @@ bool ShowInFolder(const QString &filepath) {
 		return true;
 	}
 
-	if (!QProcess::execute("xdg-open", { qUrlFolder.toEncoded() })) {
+	if (QProcess::startDetached("xdg-open", { qUrlFolder.toEncoded() })) {
 		return true;
 	}
 
