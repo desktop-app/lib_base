@@ -50,9 +50,6 @@ using float64 = double;
 
 using TimeId = int32;
 
-#define MACRO_TO_STRING_HELPER(V) #V
-#define MACRO_TO_STRING(V) MACRO_TO_STRING_HELPER(V)
-
 [[nodiscard]] inline QByteArray operator""_q(
 		const char *data,
 		std::size_t size) {
