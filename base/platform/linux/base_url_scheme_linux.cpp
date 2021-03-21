@@ -146,10 +146,12 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	try {
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		if (qEnvironmentVariableIsSet("SNAP")) {
 			SnapDefaultHandler(descriptor.protocol);
 			return;
 		}
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 		if (CheckUrlScheme(descriptor)) {
 			return;
