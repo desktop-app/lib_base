@@ -7,6 +7,7 @@
 #include "base/platform/linux/base_url_scheme_linux.h"
 
 #include "base/platform/linux/base_linux_glibmm_helper.h"
+#include "base/const_string.h"
 #include "base/integration.h"
 
 #include <QtCore/QFile>
