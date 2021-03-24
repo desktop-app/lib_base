@@ -17,7 +17,7 @@ bool NameHasOwner(
 		std::string(kDBusObjectPath),
 		std::string(kDBusInterface),
 		"NameHasOwner",
-		base::Platform::MakeGlibVariant(std::tuple{name}),
+		MakeGlibVariant(std::tuple{name}),
 		std::string(kDBusService));
 
 	const auto value = GlibVariantCast<bool>(reply.get_child(0));
@@ -28,11 +28,11 @@ bool NameHasOwner(
 std::vector<Glib::ustring> ListActivatableNames(
 		const Glib::RefPtr<Gio::DBus::Connection> &connection) {
 	auto reply = connection->call_sync(
-		kDBusObjectPath.utf8().toStdString(),
-		kDBusInterface.utf8().toStdString(),
+		std::string(kDBusObjectPath),
+		std::string(kDBusInterface),
 		"ListActivatableNames",
 		{},
-		kDBusService.utf8().toStdString());
+		std::string(kDBusService));
 
 	const auto value = GlibVariantCast<std::vector<Glib::ustring>>(
 		reply.get_child(0));
@@ -58,14 +58,14 @@ uint RegisterServiceWatcher(
 			try {
 				auto parametersCopy = parameters;
 
-				const auto name = base::Platform::GlibVariantCast<
-					Glib::ustring>(parametersCopy.get_child(0));
+				const auto name = GlibVariantCast<Glib::ustring>(
+					parametersCopy.get_child(0));
 
-				const auto oldOwner = base::Platform::GlibVariantCast<
-					Glib::ustring>(parametersCopy.get_child(1));
+				const auto oldOwner = GlibVariantCast<Glib::ustring>(
+					parametersCopy.get_child(1));
 
-				const auto newOwner = base::Platform::GlibVariantCast<
-					Glib::ustring>(parametersCopy.get_child(2));
+				const auto newOwner = GlibVariantCast<Glib::ustring>(
+					parametersCopy.get_child(2));
 
 				if (name != service) {
 					return;
