@@ -35,6 +35,8 @@ PRIVATE
     base/platform/linux/base_linux_gtk_integration.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
+    base/platform/linux/base_linux_xdp_utilities.cpp
+    base/platform/linux/base_linux_xdp_utilities.h
     base/platform/linux/base_linux_xlib_helper.cpp
     base/platform/linux/base_linux_xlib_helper.h
     base/platform/linux/base_process_linux.cpp
@@ -164,6 +166,8 @@ if (DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_dbus_utilities.cpp
         base/platform/linux/base_linux_dbus_utilities.h
+        base/platform/linux/base_linux_xdp_utilities.cpp
+        base/platform/linux/base_linux_xdp_utilities.h
     )
 endif()
 
