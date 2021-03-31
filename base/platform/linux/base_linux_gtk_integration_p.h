@@ -20,14 +20,16 @@ extern "C" {
 #endif // DESKTOP_APP_USE_PACKAGED && !DESKTOP_APP_USE_PACKAGED_LAZY
 
 #ifdef LINK_TO_GTK
-#define LOAD_GTK_SYMBOL(lib, name, func) (func = ::func)
+#define LOAD_GTK_SYMBOL(lib, func) (func = ::func)
 #else // LINK_TO_GTK
-#define LOAD_GTK_SYMBOL base::Platform::Gtk::LoadSymbol
+#define LOAD_GTK_SYMBOL(lib, func) base::Platform::Gtk::LoadSymbol(lib, #func, func)
 #endif // !LINK_TO_GTK
 
 namespace base {
 namespace Platform {
 namespace Gtk {
+
+bool LoadLibrary(QLibrary &lib, const char *name, int version);
 
 template <typename Function>
 bool LoadSymbol(QLibrary &lib, const char *name, Function &func) {
