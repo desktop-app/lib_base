@@ -35,6 +35,12 @@ bool LoadLibrary(QLibrary &lib, const char *name, int version) {
 				.arg(QLatin1String(name))
 				.arg(version));
 		return true;
+	} else {
+		Integration::Instance().logMessage(
+			QString("Could not load '%1' with version %2! Error: %3")
+				.arg(QLatin1String(name))
+				.arg(version)
+				.arg(lib.errorString()));
 	}
 	lib.setFileNameAndVersion(QLatin1String(name), QString());
 	if (lib.load()) {
@@ -42,11 +48,12 @@ bool LoadLibrary(QLibrary &lib, const char *name, int version) {
 			QString("Loaded '%1' without version!")
 				.arg(QLatin1String(name)));
 		return true;
+	} else {
+		Integration::Instance().logMessage(
+			QString("Could not load '%1' without version! Error: %2")
+				.arg(QLatin1String(name))
+				.arg(lib.errorString()));
 	}
-	Integration::Instance().logMessage(
-		QString("Could not load '%1' with version %2 :(")
-			.arg(QLatin1String(name))
-			.arg(version));
 	return false;
 #endif // !LINK_TO_GTK
 }
