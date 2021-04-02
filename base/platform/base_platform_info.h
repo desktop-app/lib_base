@@ -60,6 +60,7 @@ enum class OutdateReason {
 
 [[nodiscard]] QString GetLibcName();
 [[nodiscard]] QString GetLibcVersion();
+[[nodiscard]] QString GetWindowManager();
 
 void Start(QJsonObject settings);
 void Finish();

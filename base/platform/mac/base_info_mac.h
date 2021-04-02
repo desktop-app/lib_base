@@ -51,6 +51,7 @@ inline bool IsX11() { return false; }
 inline bool IsWayland() { return false; }
 inline QString GetLibcName() { return QString(); }
 inline QString GetLibcVersion() { return QString(); }
+inline QString GetWindowManager() { return QString(); }
 
 void OpenInputMonitoringPrivacySettings();
 void OpenAccessibilityPrivacySettings();
