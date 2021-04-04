@@ -20,9 +20,7 @@ bool NameHasOwner(
 		MakeGlibVariant(std::tuple{name}),
 		std::string(kDBusService));
 
-	const auto value = GlibVariantCast<bool>(reply.get_child(0));
-
-	return value;
+	return GlibVariantCast<bool>(reply.get_child(0));
 }
 
 std::vector<Glib::ustring> ListActivatableNames(
@@ -34,10 +32,40 @@ std::vector<Glib::ustring> ListActivatableNames(
 		{},
 		std::string(kDBusService));
 
-	const auto value = GlibVariantCast<std::vector<Glib::ustring>>(
+	return GlibVariantCast<std::vector<Glib::ustring>>(
 		reply.get_child(0));
+}
 
-	return value;
+StartReply StartServiceByName(
+		const Glib::RefPtr<Gio::DBus::Connection> &connection,
+		const Glib::ustring &name) {
+	auto reply = connection->call_sync(
+		std::string(kDBusObjectPath),
+		std::string(kDBusInterface),
+		"StartServiceByName",
+		MakeGlibVariant(std::tuple{ name, uint(0) }),
+		std::string(kDBusService));
+
+	return StartReply(GlibVariantCast<uint>(reply.get_child(0)));
+}
+
+void StartServiceByNameAsync(
+		const Glib::RefPtr<Gio::DBus::Connection> &connection,
+		const Glib::ustring &name,
+		Fn<void(Fn<StartReply()>)> callback,
+		const Glib::RefPtr<Gio::Cancellable> &cancellable) {
+	connection->call(
+		std::string(kDBusObjectPath),
+		std::string(kDBusInterface),
+		"StartServiceByName",
+		MakeGlibVariant(std::tuple{ name, uint(0) }),
+		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+			callback([=] {
+				auto reply = connection->call_finish(result);
+				return StartReply(GlibVariantCast<uint>(reply.get_child(0)));
+			});
+		},
+		std::string(kDBusService));
 }
 
 uint RegisterServiceWatcher(
