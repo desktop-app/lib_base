@@ -17,12 +17,27 @@ inline constexpr auto kDBusService = "org.freedesktop.DBus"_cs;
 inline constexpr auto kDBusObjectPath = "/org/freedesktop/DBus"_cs;
 inline constexpr auto kDBusInterface = kDBusService;
 
+enum class StartReply {
+	Success,
+	AlreadyRunning,
+};
+
 bool NameHasOwner(
 	const Glib::RefPtr<Gio::DBus::Connection> &connection,
 	const Glib::ustring &name);
 
 std::vector<Glib::ustring> ListActivatableNames(
 	const Glib::RefPtr<Gio::DBus::Connection> &connection);
+
+StartReply StartServiceByName(
+	const Glib::RefPtr<Gio::DBus::Connection> &connection,
+	const Glib::ustring &name);
+
+void StartServiceByNameAsync(
+	const Glib::RefPtr<Gio::DBus::Connection> &connection,
+	const Glib::ustring &name,
+	Fn<void(Fn<StartReply()>)> callback,
+	const Glib::RefPtr<Gio::Cancellable> &cancellable = Glib::RefPtr<Gio::Cancellable>());
 
 uint RegisterServiceWatcher(
 	const Glib::RefPtr<Gio::DBus::Connection> &connection,
