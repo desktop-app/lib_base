@@ -39,6 +39,8 @@ PRIVATE
     base/platform/linux/base_linux_xdp_utilities.h
     base/platform/linux/base_linux_xlib_helper.cpp
     base/platform/linux/base_linux_xlib_helper.h
+    base/platform/linux/base_network_reachability_linux.cpp
+    base/platform/linux/base_network_reachability_linux.h
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
     base/platform/linux/base_url_scheme_linux.cpp
@@ -53,6 +55,7 @@ PRIVATE
     base/platform/mac/base_last_input_mac.mm
     base/platform/mac/base_layout_switch_mac.h
     base/platform/mac/base_layout_switch_mac.mm
+    base/platform/mac/base_network_reachability_mac.h
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
     base/platform/mac/base_url_scheme_mac.h
@@ -69,6 +72,7 @@ PRIVATE
     base/platform/win/base_last_input_win.h
     base/platform/win/base_layout_switch_win.cpp
     base/platform/win/base_layout_switch_win.h
+    base/platform/win/base_network_reachability_win.h
     base/platform/win/base_process_win.cpp
     base/platform/win/base_process_win.h
     base/platform/win/base_url_scheme_win.cpp
@@ -83,6 +87,8 @@ PRIVATE
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
     base/platform/base_platform_layout_switch.h
+    base/platform/base_platform_network_reachability.cpp
+    base/platform/base_platform_network_reachability.h
     base/platform/base_platform_file_utilities.h
     base/platform/base_platform_process.h
     base/platform/base_platform_url_scheme.h
@@ -124,6 +130,8 @@ PRIVATE
     base/last_user_input.cpp
     base/last_user_input.h
     base/match_method.h
+    base/network_reachability.cpp
+    base/network_reachability.h
     base/object_ptr.h
     base/observer.cpp
     base/observer.h
