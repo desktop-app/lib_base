@@ -300,14 +300,20 @@ void GtkIntegration::load() {
 	if (Loaded) {
 		LOAD_GTK_SYMBOL(_lib, gtk_check_version);
 		LOAD_GTK_SYMBOL(_lib, gtk_settings_get_default);
-
-		SetIconTheme();
-		SetCursorSize();
-		connectToSetting("gtk-icon-theme-name", SetIconTheme);
-		connectToSetting("gtk-cursor-theme-size", SetCursorSize);
 	} else {
 		Integration::Instance().logMessage("Could not load gtk-3 or gtk-x11-2.0!");
 	}
+}
+
+void GtkIntegration::initializeSettings() {
+	if (!loaded()) {
+		return;
+	}
+
+	SetIconTheme();
+	SetCursorSize();
+	connectToSetting("gtk-icon-theme-name", SetIconTheme);
+	connectToSetting("gtk-cursor-theme-size", SetCursorSize);
 }
 
 bool GtkIntegration::loaded() const {
