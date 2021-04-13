@@ -101,6 +101,8 @@ bool SetupGtkBase(QLibrary &lib) {
 	}
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+	InitXThreads();
+
 	// gtk_init will reset the Xlib error handler,
 	// and that causes Qt applications to quit on X errors.
 	// Therefore, we need to manually restore it.
@@ -276,8 +278,6 @@ void GtkIntegration::prepareEnvironment() {
 
 void GtkIntegration::load() {
 	Expects(!loaded());
-
-	InitXThreads();
 
 	Integration::Instance().logMessage("Loading GTK");
 
