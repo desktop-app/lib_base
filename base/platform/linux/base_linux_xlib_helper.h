@@ -20,5 +20,7 @@ private:
 	const std::unique_ptr<Private> _private;
 };
 
+void InitXThreads();
+
 } // namespace Platform
 } // namespace base

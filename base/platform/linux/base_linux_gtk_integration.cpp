@@ -276,6 +276,9 @@ void GtkIntegration::prepareEnvironment() {
 
 void GtkIntegration::load() {
 	Expects(!loaded());
+
+	InitXThreads();
+
 	Integration::Instance().logMessage("Loading GTK");
 
 	Integration::Instance().logMessage(

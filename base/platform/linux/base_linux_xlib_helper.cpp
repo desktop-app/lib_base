@@ -26,6 +26,7 @@ public:
 
 private:
 	int (*_oldErrorHandler)(Display *, XErrorEvent *);
+
 };
 
 XErrorHandlerRestorer::XErrorHandlerRestorer()
@@ -33,6 +34,10 @@ XErrorHandlerRestorer::XErrorHandlerRestorer()
 }
 
 XErrorHandlerRestorer::~XErrorHandlerRestorer() = default;
+
+void InitXThreads() {
+	XInitThreads();
+}
 
 } // namespace Platform
 } // namespace base
