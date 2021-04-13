@@ -22,6 +22,9 @@ void GtkIntegration::prepareEnvironment() {
 void GtkIntegration::load() {
 }
 
+void GtkIntegration::initializeSettings() {
+}
+
 bool GtkIntegration::loaded() const {
 	return false;
 }
