@@ -103,11 +103,11 @@ std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 			NotSupported = true;
 		}
 
-		DEBUG_LOG(("Unable to get last user input time "
+		LOG(("Unable to get last user input time "
 			"from org.freedesktop.ScreenSaver: %1")
 			.arg(QString::fromStdString(e.what())));
 	} catch (const std::exception &e) {
-		DEBUG_LOG(("Unable to get last user input time "
+		LOG(("Unable to get last user input time "
 			"from org.freedesktop.ScreenSaver: %1")
 			.arg(QString::fromStdString(e.what())));
 	}
@@ -153,11 +153,11 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 			NotSupported = true;
 		}
 
-		DEBUG_LOG(("Unable to get last user input time "
+		LOG(("Unable to get last user input time "
 			"from org.gnome.Mutter.IdleMonitor: %1")
 			.arg(QString::fromStdString(e.what())));
 	} catch (const std::exception &e) {
-		DEBUG_LOG(("Unable to get last user input time "
+		LOG(("Unable to get last user input time "
 			"from org.gnome.Mutter.IdleMonitor: %1")
 			.arg(QString::fromStdString(e.what())));
 	}

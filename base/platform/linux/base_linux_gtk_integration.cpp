@@ -45,7 +45,7 @@ bool LoadLibrary(QLibrary &lib, const char *name, int version) {
 		DEBUG_LOG(("Loaded '%1' without version!").arg(QLatin1String(name)));
 		return true;
 	} else {
-		DEBUG_LOG(("Could not load '%1' without version! Error: %2")
+		LOG(("Could not load '%1' without version! Error: %2")
 			.arg(QLatin1String(name))
 			.arg(lib.errorString()));
 	}
@@ -286,7 +286,7 @@ void GtkIntegration::load() {
 		LOAD_GTK_SYMBOL(_lib, gtk_check_version);
 		LOAD_GTK_SYMBOL(_lib, gtk_settings_get_default);
 	} else {
-		DEBUG_LOG(("Could not load gtk-3 or gtk-x11-2.0!"));
+		LOG(("Could not load gtk-3 or gtk-x11-2.0!"));
 	}
 }
 
