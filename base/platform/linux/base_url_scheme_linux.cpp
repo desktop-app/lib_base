@@ -98,7 +98,7 @@ SnapDefaultHandler::SnapDefaultHandler(const QString &protocol) {
 				try {
 					connection->call_finish(result);
 				} catch (const Glib::Error &e) {
-					DEBUG_LOG(("Snap Default Handler Error: %1")
+					LOG(("Snap Default Handler Error: %1")
 						.arg(QString::fromStdString(e.what())));
 				}
 
@@ -110,7 +110,7 @@ SnapDefaultHandler::SnapDefaultHandler(const QString &protocol) {
 		loop.exec();
 		QGuiApplicationPrivate::hideModalWindow(this);
 	} catch (const Glib::Error &e) {
-		DEBUG_LOG(("Snap Default Handler Error: %1")
+		LOG(("Snap Default Handler Error: %1")
 			.arg(QString::fromStdString(e.what())));
 	}
 }
@@ -173,7 +173,7 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 			newAppInfo->set_as_default_for_type(handlerType.toStdString());
 		}
 	} catch (const Glib::Error &e) {
-		DEBUG_LOG(("Glib Error: %1").arg(QString::fromStdString(e.what())));
+		LOG(("Register Url Scheme Error: %1").arg(QString::fromStdString(e.what())));
 	}
 }
 

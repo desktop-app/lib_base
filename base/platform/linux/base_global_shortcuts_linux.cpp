@@ -72,14 +72,14 @@ X11Manager::X11Manager()
 , _keySymbols(xcb_key_symbols_alloc(_connection)) {
 
 	if (xcb_connection_has_error(_connection)) {
-		DEBUG_LOG((
+		LOG((
 			"Global Shortcuts Manager: Error to open local display!"));
 		_isAvailable = false;
 		return;
 	}
 
 	if (!XCB::IsExtensionPresent(_connection, &xcb_record_id)) {
-		DEBUG_LOG(("Global Shortcuts Manager: "
+		LOG(("Global Shortcuts Manager: "
 			"RECORD extension not supported on this X server!"));
 		_isAvailable = false;
 		return;
@@ -109,7 +109,7 @@ X11Manager::X11Manager()
 		&clientSpec,
 		&recordRange);
 	if (xcb_request_check(_connection, createCookie)) {
-		DEBUG_LOG((
+		LOG((
 			"Global Shortcuts Manager: Could not create a record context!"));
 		_isAvailable = false;
 		return;

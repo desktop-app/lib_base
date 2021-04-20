@@ -43,7 +43,7 @@ bool LoadSymbol(QLibrary &lib, const char *name, Function &func) {
 		return true;
 	}
 
-	DEBUG_LOG(("Error: failed to load '%1' function!").arg(name));
+	LOG(("Error: failed to load '%1' function!").arg(name));
 
 	return false;
 }
