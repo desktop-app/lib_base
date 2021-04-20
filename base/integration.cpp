@@ -8,6 +8,7 @@
 
 #include "base/integration.h"
 #include "base/platform/base_platform_file_utilities.h"
+#include "base/debug_log.h"
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QDir>

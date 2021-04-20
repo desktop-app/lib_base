@@ -108,6 +108,8 @@ PRIVATE
     base/concurrent_timer.cpp
     base/concurrent_timer.h
     base/const_string.h
+    base/debug_log.cpp
+    base/debug_log.h
     base/enum_mask.h
     base/event_filter.cpp
     base/event_filter.h

@@ -8,9 +8,9 @@
 
 #include "base/const_string.h"
 #include "base/global_shortcuts_generic.h"
-#include "base/integration.h"
 #include "base/platform/base_platform_info.h" // IsWayland
 #include "base/unique_qptr.h"
+#include "base/debug_log.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h" // CustomConnection, IsExtensionPresent
@@ -71,18 +71,16 @@ X11Manager::X11Manager()
 : _object(make_unique_q<QObject>())
 , _keySymbols(xcb_key_symbols_alloc(_connection)) {
 
-	using Log = Integration;
-
 	if (xcb_connection_has_error(_connection)) {
-		Log::Instance().logMessage(
-			"Global Shortcuts Manager: Error to open local display!");
+		DEBUG_LOG((
+			"Global Shortcuts Manager: Error to open local display!"));
 		_isAvailable = false;
 		return;
 	}
 
 	if (!XCB::IsExtensionPresent(_connection, &xcb_record_id)) {
-		Log::Instance().logMessage("Global Shortcuts Manager: "
-			"RECORD extension not supported on this X server!");
+		DEBUG_LOG(("Global Shortcuts Manager: "
+			"RECORD extension not supported on this X server!"));
 		_isAvailable = false;
 		return;
 	}
@@ -111,8 +109,8 @@ X11Manager::X11Manager()
 		&clientSpec,
 		&recordRange);
 	if (xcb_request_check(_connection, createCookie)) {
-		Log::Instance().logMessage(
-			"Global Shortcuts Manager: Could not create a record context!");
+		DEBUG_LOG((
+			"Global Shortcuts Manager: Could not create a record context!"));
 		_isAvailable = false;
 		return;
 	}

@@ -20,6 +20,8 @@ public:
 
 	virtual void enterFromEventLoop(FnMut<void()> &&method) = 0;
 
+	virtual bool logSkipDebug() = 0;
+	virtual void logMessageDebug(const QString &message) = 0;
 	virtual void logMessage(const QString &message) = 0;
 	virtual void logAssertionViolation(const QString &info);
 

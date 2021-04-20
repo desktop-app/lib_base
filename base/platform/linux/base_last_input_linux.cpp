@@ -6,8 +6,8 @@
 //
 #include "base/platform/linux/base_last_input_linux.h"
 
-#include "base/integration.h"
 #include "base/platform/base_platform_info.h"
+#include "base/debug_log.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
@@ -103,15 +103,13 @@ std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 			NotSupported = true;
 		}
 
-		Integration::Instance().logMessage(
-			QString("Unable to get last user input time "
-				"from org.freedesktop.ScreenSaver: %1")
-				.arg(QString::fromStdString(e.what())));
+		DEBUG_LOG(("Unable to get last user input time "
+			"from org.freedesktop.ScreenSaver: %1")
+			.arg(QString::fromStdString(e.what())));
 	} catch (const std::exception &e) {
-		Integration::Instance().logMessage(
-			QString("Unable to get last user input time "
-				"from org.freedesktop.ScreenSaver: %1")
-				.arg(QString::fromStdString(e.what())));
+		DEBUG_LOG(("Unable to get last user input time "
+			"from org.freedesktop.ScreenSaver: %1")
+			.arg(QString::fromStdString(e.what())));
 	}
 
 	return std::nullopt;
@@ -155,15 +153,13 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 			NotSupported = true;
 		}
 
-		Integration::Instance().logMessage(
-			QString("Unable to get last user input time "
-				"from org.gnome.Mutter.IdleMonitor: %1")
-				.arg(QString::fromStdString(e.what())));
+		DEBUG_LOG(("Unable to get last user input time "
+			"from org.gnome.Mutter.IdleMonitor: %1")
+			.arg(QString::fromStdString(e.what())));
 	} catch (const std::exception &e) {
-		Integration::Instance().logMessage(
-			QString("Unable to get last user input time "
-				"from org.gnome.Mutter.IdleMonitor: %1")
-				.arg(QString::fromStdString(e.what())));
+		DEBUG_LOG(("Unable to get last user input time "
+			"from org.gnome.Mutter.IdleMonitor: %1")
+			.arg(QString::fromStdString(e.what())));
 	}
 
 	return std::nullopt;

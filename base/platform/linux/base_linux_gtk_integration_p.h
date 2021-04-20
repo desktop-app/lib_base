@@ -6,7 +6,7 @@
 //
 #pragma once
 
-#include "base/integration.h"
+#include "base/debug_log.h"
 
 #include <QtCore/QLibrary>
 
@@ -43,8 +43,7 @@ bool LoadSymbol(QLibrary &lib, const char *name, Function &func) {
 		return true;
 	}
 
-	Integration::Instance().logMessage(
-		QString("Error: failed to load '%1' function!").arg(name));
+	DEBUG_LOG(("Error: failed to load '%1' function!").arg(name));
 
 	return false;
 }

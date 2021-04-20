@@ -8,7 +8,7 @@
 
 #include "base/platform/linux/base_linux_glibmm_helper.h"
 #include "base/const_string.h"
-#include "base/integration.h"
+#include "base/debug_log.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QEventLoop>
@@ -98,9 +98,8 @@ SnapDefaultHandler::SnapDefaultHandler(const QString &protocol) {
 				try {
 					connection->call_finish(result);
 				} catch (const Glib::Error &e) {
-					Integration::Instance().logMessage(
-						u"Snap Default Handler Error: %1"_q.arg(
-							QString::fromStdString(e.what())));
+					DEBUG_LOG(("Snap Default Handler Error: %1")
+						.arg(QString::fromStdString(e.what())));
 				}
 
 				loop.quit();
@@ -111,9 +110,8 @@ SnapDefaultHandler::SnapDefaultHandler(const QString &protocol) {
 		loop.exec();
 		QGuiApplicationPrivate::hideModalWindow(this);
 	} catch (const Glib::Error &e) {
-		Integration::Instance().logMessage(
-			u"Snap Default Handler Error: %1"_q.arg(
-				QString::fromStdString(e.what())));
+		DEBUG_LOG(("Snap Default Handler Error: %1")
+			.arg(QString::fromStdString(e.what())));
 	}
 }
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
@@ -175,7 +173,7 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 			newAppInfo->set_as_default_for_type(handlerType.toStdString());
 		}
 	} catch (const Glib::Error &e) {
-		Integration::Instance().logMessage(QString::fromStdString(e.what()));
+		DEBUG_LOG(("Glib Error: %1").arg(QString::fromStdString(e.what())));
 	}
 }
 
