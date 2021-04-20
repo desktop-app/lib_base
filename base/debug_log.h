@@ -23,14 +23,14 @@ void LogWriteDebug(const QString &message, const char *file, int line);
 
 #define PROFILE_LOG(message) {\
 	if (!::base::LogSkipDebug()) {\
-		::base::LogWriteMain(::base::LogProfilePrefix() + QString msg);\
+		::base::LogWriteMain(::base::LogProfilePrefix() + QString message);\
 	}\
 }
 //usage PROFILE_LOG(("step: %1 %2").arg(1).arg(2))
 
-#define DEBUG_LOG(msg) {\
+#define DEBUG_LOG(message) {\
 	if (!::base::LogSkipDebug()) {\
-		::base::LogWriteDebug(QString msg, SOURCE_FILE_BASENAME, __LINE__);\
+		::base::LogWriteDebug(QString message, SOURCE_FILE_BASENAME, __LINE__);\
 	}\
 }
 //usage DEBUG_LOG(("log: %1 %2").arg(1).arg(2))
