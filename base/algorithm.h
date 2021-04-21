@@ -12,17 +12,17 @@
 namespace base {
 
 template <typename Type>
-inline Type take(Type &value) {
+inline constexpr Type take(Type &value) noexcept {
 	return std::exchange(value, Type {});
 }
 
 template <typename Type>
-inline Type duplicate(const Type &value) {
+inline constexpr Type duplicate(const Type &value) {
 	return value;
 }
 
 template <typename Type, size_t Size>
-inline constexpr size_t array_size(const Type(&)[Size]) {
+inline constexpr size_t array_size(const Type(&)[Size]) noexcept {
 	return Size;
 }
 
