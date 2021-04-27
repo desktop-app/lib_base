@@ -12,6 +12,16 @@ namespace base::Platform {
 
 // glib is better on linux due to portal support
 std::optional<bool> NetworkAvailable() {
+	// crashes on 2.46.0...2.60.0, but not on >=2.56.3, >=2.58.1 (fix backported)
+	if ((!glib_check_version(2, 56, 0) && glib_check_version(2, 56, 3))
+		|| (!glib_check_version(2, 58, 0) && glib_check_version(2, 58, 1))
+		|| (glib_check_version(2, 60, 0)
+			&& glib_check_version(2, 58, 0)
+			&& glib_check_version(2, 56, 0)
+			&& !glib_check_version(2, 46, 0))) {
+		return std::nullopt;
+	}
+
 	static const auto Inited = [] {
 		g_signal_connect(
 			g_network_monitor_get_default(),
