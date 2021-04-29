@@ -235,8 +235,6 @@ void GtkIntegration::load() {
 	DEBUG_LOG(("Icon theme: %1").arg(QIcon::themeName()));
 	DEBUG_LOG(("Fallback icon theme: %1").arg(QIcon::fallbackThemeName()));
 
-	_lib.setLoadHints(QLibrary::DeepBindHint);
-
 	if (LoadGtkLibrary(_lib, "gtk-3", 0)) {
 		Loaded = SetupGtkBase(_lib);
 	}
