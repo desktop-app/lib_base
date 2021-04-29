@@ -15,6 +15,7 @@
 #include "base/platform/linux/base_linux_xlib_helper.h"
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
+#include <QtGui/QGuiApplication>
 #include <QtGui/QIcon>
 
 namespace base {
@@ -224,6 +225,9 @@ void GtkIntegration::prepareEnvironment() {
 
 		qunsetenv("QT_QPA_PLATFORMTHEME");
 		qunsetenv("QT_STYLE_OVERRIDE");
+
+		// Don't allow qgtk3 to init gtk earlier than us
+		QGuiApplication::setDesktopSettingsAware(false);
 	}
 #endif // DESKTOP_APP_USE_PACKAGED
 }
