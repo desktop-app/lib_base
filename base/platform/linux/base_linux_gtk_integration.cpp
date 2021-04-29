@@ -19,42 +19,6 @@
 
 namespace base {
 namespace Platform {
-namespace Gtk {
-
-bool LoadLibrary(QLibrary &lib, const char *name, int version) {
-#ifdef LINK_TO_GTK
-	return true;
-#else // LINK_TO_GTK
-	DEBUG_LOG(("Loading '%1' with version %2...")
-		.arg(QLatin1String(name))
-		.arg(version));
-	lib.setFileNameAndVersion(QLatin1String(name), version);
-	if (lib.load()) {
-		DEBUG_LOG(("Loaded '%1' with version %2!")
-			.arg(QLatin1String(name))
-			.arg(version));
-		return true;
-	} else {
-		DEBUG_LOG(("Could not load '%1' with version %2! Error: %3")
-			.arg(QLatin1String(name))
-			.arg(version)
-			.arg(lib.errorString()));
-	}
-	lib.setFileNameAndVersion(QLatin1String(name), QString());
-	if (lib.load()) {
-		DEBUG_LOG(("Loaded '%1' without version!").arg(QLatin1String(name)));
-		return true;
-	} else {
-		LOG(("Could not load '%1' without version! Error: %2")
-			.arg(QLatin1String(name))
-			.arg(lib.errorString()));
-	}
-	return false;
-#endif // !LINK_TO_GTK
-}
-
-} // namespace Gtk
-
 namespace {
 
 using namespace Gtk;
@@ -273,12 +237,12 @@ void GtkIntegration::load() {
 
 	_lib.setLoadHints(QLibrary::DeepBindHint);
 
-	if (LoadLibrary(_lib, "gtk-3", 0)) {
+	if (LoadGtkLibrary(_lib, "gtk-3", 0)) {
 		Loaded = SetupGtkBase(_lib);
 	}
 	if (!Loaded
 		&& !TriedToInit
-		&& LoadLibrary(_lib, "gtk-x11-2.0", 0)) {
+		&& LoadGtkLibrary(_lib, "gtk-x11-2.0", 0)) {
 		Loaded = SetupGtkBase(_lib);
 	}
 

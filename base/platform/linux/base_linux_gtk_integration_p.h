@@ -6,9 +6,7 @@
 //
 #pragma once
 
-#include "base/debug_log.h"
-
-#include <QtCore/QLibrary>
+#include "base/platform/linux/base_linux_library.h"
 
 extern "C" {
 #include <gtk/gtk.h>
@@ -22,30 +20,22 @@ extern "C" {
 #ifdef LINK_TO_GTK
 #define LOAD_GTK_SYMBOL(lib, func) (func = ::func)
 #else // LINK_TO_GTK
-#define LOAD_GTK_SYMBOL(lib, func) base::Platform::Gtk::LoadSymbol(lib, #func, func)
+#define LOAD_GTK_SYMBOL LOAD_LIBRARY_SYMBOL
 #endif // !LINK_TO_GTK
 
 namespace base {
 namespace Platform {
 namespace Gtk {
 
-bool LoadLibrary(QLibrary &lib, const char *name, int version);
-
-template <typename Function>
-bool LoadSymbol(QLibrary &lib, const char *name, Function &func) {
-	func = nullptr;
-	if (!lib.isLoaded()) {
-		return false;
-	}
-
-	func = reinterpret_cast<Function>(lib.resolve(name));
-	if (func) {
-		return true;
-	}
-
-	LOG(("Error: failed to load '%1' function!").arg(name));
-
-	return false;
+inline bool LoadGtkLibrary(
+		QLibrary &lib,
+		const char *name,
+		std::optional<int> version = std::nullopt) {
+#ifdef LINK_TO_GTK
+	return true;
+#else // LINK_TO_GTK
+	return LoadLibrary(lib, name, version);
+#endif // LINK_TO_GTK
 }
 
 inline gboolean (*gtk_init_check)(int *argc, char ***argv) = nullptr;

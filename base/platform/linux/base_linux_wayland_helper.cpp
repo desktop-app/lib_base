@@ -4,18 +4,19 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/linux/base_linux_wayland_integration.h"
+#include "base/platform/linux/base_linux_wayland_helper.h"
 
 #include "base/platform/linux/base_linux_gtk_integration_p.h"
+#include "base/debug_log.h"
 
 #include <wayland-egl.h>
 #include <wayland-cursor.h>
 
-#if defined DESKTOP_APP_USE_PACKAGED && !defined DESKTOP_APP_USE_PACKAGED_LAZY
+#ifdef DESKTOP_APP_USE_PACKAGED
 #define LINK_TO_WAYLAND
-#else // DESKTOP_APP_USE_PACKAGED && !DESKTOP_APP_USE_PACKAGED_LAZY
-#define LOAD_SYMBOL(lib, func) Gtk::LoadSymbol(lib, #func, func)
-#endif // DESKTOP_APP_USE_PACKAGED && !DESKTOP_APP_USE_PACKAGED_LAZY
+#else // DESKTOP_APP_USE_PACKAGED
+#define LOAD_SYMBOL LOAD_LIBRARY_SYMBOL
+#endif // DESKTOP_APP_USE_PACKAGED
 
 namespace base {
 namespace Platform {
@@ -186,18 +187,18 @@ bool ResolveWayland() {
 		DEBUG_LOG(("Loading wayland client."));
 
 		QLibrary egl, cursor, client;
-		return Gtk::LoadLibrary(egl, "libwayland-egl.so.1", 1)
+		return LoadLibrary(egl, "libwayland-egl.so.1")
 			&& LOAD_SYMBOL(egl, wl_egl_window_create)
 			&& LOAD_SYMBOL(egl, wl_egl_window_destroy)
 			&& LOAD_SYMBOL(egl, wl_egl_window_resize)
 			&& LOAD_SYMBOL(egl, wl_egl_window_get_attached_size)
-			&& Gtk::LoadLibrary(cursor, "libwayland-cursor.so.0", 0)
+			&& LoadLibrary(cursor, "libwayland-cursor.so.0")
 			&& LOAD_SYMBOL(cursor, wl_cursor_image_get_buffer)
 			&& LOAD_SYMBOL(cursor, wl_cursor_theme_load)
 			&& LOAD_SYMBOL(cursor, wl_cursor_theme_destroy)
 			&& LOAD_SYMBOL(cursor, wl_cursor_theme_get_cursor)
 			&& LOAD_SYMBOL(cursor, wl_cursor_frame_and_duration)
-			&& Gtk::LoadLibrary(client, "libwayland-client.so.0", 0)
+			&& LoadLibrary(client, "libwayland-client.so.0")
 			&& LOAD_SYMBOL(client, wl_proxy_destroy)
 			&& LOAD_SYMBOL(client, wl_proxy_get_version)
 			&& LOAD_SYMBOL(client, wl_array_init)

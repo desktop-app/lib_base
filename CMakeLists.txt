@@ -33,8 +33,10 @@ PRIVATE
     base/platform/linux/base_linux_gtk_integration_p.h
     base/platform/linux/base_linux_gtk_integration.cpp
     base/platform/linux/base_linux_gtk_integration.h
-    base/platform/linux/base_linux_wayland_integration.cpp
-    base/platform/linux/base_linux_wayland_integration.h
+    base/platform/linux/base_linux_library.cpp
+    base/platform/linux/base_linux_library.h
+    base/platform/linux/base_linux_wayland_helper.cpp
+    base/platform/linux/base_linux_wayland_helper.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_linux_xdp_utilities.cpp
