@@ -11,6 +11,7 @@
 
 #include <wayland-egl.h>
 #include <wayland-cursor.h>
+#include <errno.h>
 
 #ifdef DESKTOP_APP_USE_PACKAGED
 #define LINK_TO_WAYLAND
@@ -445,6 +446,7 @@ int wl_display_dispatch_pending(struct wl_display *display) {
 
 struct wl_display *wl_display_connect(const char *name) {
 	if (!W::wl_display_connect) {
+		errno = ENOENT;
 		return nullptr;
 	}
 	return W::wl_display_connect(name);
