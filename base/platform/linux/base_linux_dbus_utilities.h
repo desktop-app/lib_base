@@ -36,8 +36,7 @@ StartReply StartServiceByName(
 void StartServiceByNameAsync(
 	const Glib::RefPtr<Gio::DBus::Connection> &connection,
 	const Glib::ustring &name,
-	Fn<void(Fn<StartReply()>)> callback,
-	const Glib::RefPtr<Gio::Cancellable> &cancellable = Glib::RefPtr<Gio::Cancellable>());
+	Fn<void(Fn<StartReply()>)> callback);
 
 uint RegisterServiceWatcher(
 	const Glib::RefPtr<Gio::DBus::Connection> &connection,

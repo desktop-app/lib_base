@@ -52,8 +52,7 @@ StartReply StartServiceByName(
 void StartServiceByNameAsync(
 		const Glib::RefPtr<Gio::DBus::Connection> &connection,
 		const Glib::ustring &name,
-		Fn<void(Fn<StartReply()>)> callback,
-		const Glib::RefPtr<Gio::Cancellable> &cancellable) {
+		Fn<void(Fn<StartReply()>)> callback) {
 	connection->call(
 		std::string(kDBusObjectPath),
 		std::string(kDBusInterface),
