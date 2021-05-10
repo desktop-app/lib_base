@@ -19,16 +19,18 @@
 #include <RestartManager.h>
 #include <io.h>
 
+#define LOAD_SYMBOL(lib, name) ::base::Platform::LoadMethod(lib, #name, name)
+
 namespace base::Platform {
 namespace {
 
 // RSTRTMGR.DLL
 
-using f_RmStartSession = DWORD(FAR STDAPICALLTYPE*)(
+DWORD(__stdcall *RmStartSession)(
 	_Out_ DWORD *pSessionHandle,
 	_Reserved_ DWORD dwSessionFlags,
 	_Out_writes_(CCH_RM_SESSION_KEY + 1) WCHAR strSessionKey[]);
-using f_RmRegisterResources = DWORD(FAR STDAPICALLTYPE*)(
+DWORD(__stdcall *RmRegisterResources)(
 	_In_ DWORD dwSessionHandle,
 	_In_ UINT nFiles,
 	_In_reads_opt_(nFiles) LPCWSTR rgsFileNames[],
@@ -36,24 +38,18 @@ using f_RmRegisterResources = DWORD(FAR STDAPICALLTYPE*)(
 	_In_reads_opt_(nApplications) RM_UNIQUE_PROCESS rgApplications[],
 	_In_ UINT nServices,
 	_In_reads_opt_(nServices) LPCWSTR rgsServiceNames[]);
-using f_RmGetList = DWORD(FAR STDAPICALLTYPE*)(
+DWORD(__stdcall *RmGetList)(
 	_In_ DWORD dwSessionHandle,
 	_Out_ UINT *pnProcInfoNeeded,
 	_Inout_ UINT *pnProcInfo,
 	_Inout_updates_opt_(*pnProcInfo) RM_PROCESS_INFO rgAffectedApps[],
 	_Out_ LPDWORD lpdwRebootReasons);
-using f_RmShutdown = DWORD(FAR STDAPICALLTYPE*)(
+DWORD(__stdcall *RmShutdown)(
 	_In_ DWORD dwSessionHandle,
 	_In_ ULONG lActionFlags,
 	_In_opt_ RM_WRITE_STATUS_CALLBACK fnStatus);
-using f_RmEndSession = DWORD(FAR STDAPICALLTYPE*)(
+DWORD(__stdcall *RmEndSession)(
 	_In_ DWORD dwSessionHandle);
-
-f_RmStartSession RmStartSession;
-f_RmRegisterResources RmRegisterResources;
-f_RmGetList RmGetList;
-f_RmShutdown RmShutdown;
-f_RmEndSession RmEndSession;
 
 } // namespace
 
@@ -172,16 +168,11 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 bool CloseProcesses(const QString &filename) {
 	static const auto loaded = [&] {
 		const auto LibRstrtMgr = SafeLoadLibrary(u"rstrtmgr.dll"_q);
-		LoadMethod(LibRstrtMgr, "RmStartSession", RmStartSession);
-		LoadMethod(LibRstrtMgr, "RmRegisterResources", RmRegisterResources);
-		LoadMethod(LibRstrtMgr, "RmGetList", RmGetList);
-		LoadMethod(LibRstrtMgr, "RmShutdown", RmShutdown);
-		LoadMethod(LibRstrtMgr, "RmEndSession", RmEndSession);
-		return RmStartSession
-			&& RmRegisterResources
-			&& RmGetList
-			&& RmShutdown
-			&& RmEndSession;
+		return LOAD_SYMBOL(LibRstrtMgr, RmStartSession)
+			&& LOAD_SYMBOL(LibRstrtMgr, RmRegisterResources)
+			&& LOAD_SYMBOL(LibRstrtMgr, RmGetList)
+			&& LOAD_SYMBOL(LibRstrtMgr, RmShutdown)
+			&& LOAD_SYMBOL(LibRstrtMgr, RmEndSession);
 	}();
 	if (!loaded) {
 		return false;

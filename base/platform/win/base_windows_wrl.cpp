@@ -9,6 +9,8 @@
 #include "base/platform/win/base_windows_safe_library.h"
 #include "base/platform/base_platform_info.h"
 
+#define LOAD_SYMBOL(lib, name) ::base::Platform::LoadMethod(lib, #name, name)
+
 namespace base::Platform {
 namespace {
 
@@ -27,18 +29,10 @@ void InitWRL() {
 		return;
 	}
 	const auto combase = SafeLoadLibrary(u"combase.dll"_q);
-	LoadMethod(
-		combase,
-		"RoGetActivationFactory",
-		RoGetActivationFactory);
-	LoadMethod(
-		combase,
-		"WindowsCreateStringReference",
-		WindowsCreateStringReference);
-	LoadMethod(
-		combase,
-		"WindowsDeleteString",
-		WindowsDeleteString);
+	LOAD_SYMBOL(combase, RoGetActivationFactory);
+	LOAD_SYMBOL(combase, RoActivateInstance);
+	LOAD_SYMBOL(combase, WindowsCreateStringReference);
+	LOAD_SYMBOL(combase, WindowsDeleteString);
 }
 
 } // namespace base::Platform
