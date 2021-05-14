@@ -27,6 +27,8 @@ PRIVATE
     base/platform/linux/base_last_input_linux.h
     base/platform/linux/base_layout_switch_linux.cpp
     base/platform/linux/base_layout_switch_linux.h
+    base/platform/linux/base_linux_allocation_tracer.cpp
+    base/platform/linux/base_linux_allocation_tracer.h
     base/platform/linux/base_linux_dbus_utilities.cpp
     base/platform/linux/base_linux_dbus_utilities.h
     base/platform/linux/base_linux_glibmm_helper.h
@@ -262,7 +264,16 @@ if (LINUX)
     endif()
 endif()
 
-target_compile_definitions(lib_base PRIVATE G_LOG_DOMAIN="lib_base")
+target_compile_definitions(lib_base
+PRIVATE
+    G_LOG_DOMAIN="lib_base"
+)
+if (DESKTOP_APP_USE_ALLOCATION_TRACER)
+    target_compile_definitions(lib_base
+    PRIVATE
+        DESKTOP_APP_USE_ALLOCATION_TRACER
+    )
+endif()
 
 #target_precompile_headers(lib_base_crash_report_writer REUSE_FROM lib_base)
 target_precompile_headers(lib_base_crash_report_writer PRIVATE ${src_loc}/base/base_pch.h)
