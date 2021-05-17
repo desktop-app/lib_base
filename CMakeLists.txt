@@ -254,7 +254,7 @@ if (LINUX)
                 target_link_libraries(lib_base PUBLIC PkgConfig::X11)
             endif()
         else()
-            pkg_search_module(GTK REQUIRED gtk+-3.0)
+            pkg_check_modules(GTK REQUIRED gtk+-3.0)
             target_include_directories(lib_base PUBLIC ${GTK_INCLUDE_DIRS})
 
             if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
