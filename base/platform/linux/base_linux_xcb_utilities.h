@@ -10,26 +10,23 @@
 
 namespace base::Platform::XCB {
 
-class CustomConnection {
+struct ConnectionDeleter {
+	void operator()(xcb_connection_t *value) {
+		xcb_disconnect(value);
+	}
+};
+
+using ConnectionPointer = std::unique_ptr<xcb_connection_t, ConnectionDeleter>;
+
+class CustomConnection : ConnectionPointer {
 public:
 	CustomConnection()
-	: _connection(xcb_connect(nullptr, nullptr)) {
-	}
-
-	~CustomConnection() {
-		xcb_disconnect(_connection);
+	: ConnectionPointer(xcb_connect(nullptr, nullptr)) {
 	}
 
 	[[nodiscard]] operator xcb_connection_t*() const {
-		return _connection;
+		return get();
 	}
-
-	[[nodiscard]] not_null<xcb_connection_t*> get() const {
-		return _connection;
-	}
-
-private:
-	not_null<xcb_connection_t*> _connection;
 };
 
 xcb_connection_t *GetConnectionFromQt();
