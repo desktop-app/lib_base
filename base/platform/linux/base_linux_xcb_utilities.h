@@ -29,6 +29,21 @@ public:
 	}
 };
 
+template <typename T>
+struct ReplyDeleter {
+	void operator()(T *value) {
+		free(value);
+	}
+};
+
+template <typename T>
+using ReplyPointer = std::unique_ptr<T, ReplyDeleter<T>>;
+
+template <typename T>
+ReplyPointer<T> MakeReplyPointer(T *reply) {
+	return ReplyPointer<T>(reply);
+}
+
 xcb_connection_t *GetConnectionFromQt();
 std::optional<xcb_window_t> GetRootWindowFromQt();
 std::optional<xcb_timestamp_t> GetAppTimeFromQt();
