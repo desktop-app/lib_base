@@ -47,19 +47,17 @@ std::optional<crl::time> XCBLastUserInputTime() {
 		connection,
 		*root);
 
-	auto reply = xcb_screensaver_query_info_reply(
-		connection,
-		cookie,
-		nullptr);
+	const auto reply = XCB::MakeReplyPointer(
+		xcb_screensaver_query_info_reply(
+			connection,
+			cookie,
+			nullptr));
 
 	if (!reply) {
 		return std::nullopt;
 	}
 
-	const auto idle = reply->ms_since_user_input;
-	free(reply);
-
-	return (crl::now() - static_cast<crl::time>(idle));
+	return (crl::now() - static_cast<crl::time>(reply->ms_since_user_input));
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 

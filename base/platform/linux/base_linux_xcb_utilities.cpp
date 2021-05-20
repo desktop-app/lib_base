@@ -63,19 +63,16 @@ std::optional<xcb_atom_t> GetAtom(
 		name.size(),
 		name.toUtf8().constData());
 
-	auto reply = xcb_intern_atom_reply(
+	const auto reply = MakeReplyPointer(xcb_intern_atom_reply(
 		connection,
 		cookie,
-		nullptr);
+		nullptr));
 
 	if (!reply) {
 		return std::nullopt;
 	}
 
-	const auto atom = reply->atom;
-	free(reply);
-
-	return atom;
+	return reply->atom;
 }
 
 bool IsExtensionPresent(
@@ -115,10 +112,10 @@ std::vector<xcb_atom_t> GetWMSupported(
 			offset,
 			1024);
 
-		auto reply = xcb_get_property_reply(
+		const auto reply = MakeReplyPointer(xcb_get_property_reply(
 			connection,
 			cookie,
-			nullptr);
+			nullptr));
 
 		if (!reply) {
 			break;
@@ -127,11 +124,11 @@ std::vector<xcb_atom_t> GetWMSupported(
 		remaining = 0;
 
 		if (reply->type == XCB_ATOM_ATOM && reply->format == 32) {
-			const auto len = xcb_get_property_value_length(reply)
+			const auto len = xcb_get_property_value_length(reply.get())
 				/ sizeof(xcb_atom_t);
 
 			const auto atoms = reinterpret_cast<xcb_atom_t*>(
-				xcb_get_property_value(reply));
+				xcb_get_property_value(reply.get()));
 
 			const auto s = netWmAtoms.size();
 			netWmAtoms.resize(s + len);
@@ -140,8 +137,6 @@ std::vector<xcb_atom_t> GetWMSupported(
 			remaining = reply->bytes_after;
 			offset += len;
 		}
-
-		free(reply);
 	} while (remaining > 0);
 
 	return netWmAtoms;
@@ -167,23 +162,20 @@ std::optional<xcb_window_t> GetSupportingWMCheck(
 		0,
 		1024);
 
-	auto reply = xcb_get_property_reply(
+	const auto reply = MakeReplyPointer(xcb_get_property_reply(
 		connection,
 		cookie,
-		nullptr);
+		nullptr));
 
 	if (!reply) {
 		return std::nullopt;
 	}
 
-	const auto window = (reply->format == 32 && reply->type == XCB_ATOM_WINDOW)
+	return (reply->format == 32 && reply->type == XCB_ATOM_WINDOW)
 		? std::optional<xcb_window_t>{
 			*reinterpret_cast<xcb_window_t*>(
-				xcb_get_property_value(reply))
+				xcb_get_property_value(reply.get()))
 		} : std::nullopt;
-
-	free(reply);
-	return window;
 }
 
 bool IsSupportedByWM(const QString &atomName) {
