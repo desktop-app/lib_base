@@ -86,6 +86,7 @@ PRIVATE
     base/platform/win/base_windows_wrl.h
     base/platform/win/base_windows_safe_library.cpp
     base/platform/win/base_windows_safe_library.h
+    base/platform/win/wrl/wrl_event_h.h
     base/platform/win/wrl/wrl_implements_h.h
     base/platform/base_platform_global_shortcuts.h
     base/platform/base_platform_info.h
