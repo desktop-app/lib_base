@@ -58,23 +58,33 @@ using TimeId = int32;
 
 namespace base::details {
 
+template <size_t N>
 struct LiteralResolver {
-	template <size_t N>
-	constexpr LiteralResolver(const char16_t (&text)[N])
-	: utf16text(text)
-	, length(N) {
+	template <size_t ...I>
+	constexpr LiteralResolver(
+		const char16_t (&text)[N],
+		std::index_sequence<I...>)
+	: utf16text{ text[I]... } {
 	}
-	template <size_t N>
-	constexpr LiteralResolver(const char (&text)[N])
-	: utf8text(text)
-	, length(N)
+	template <size_t ...I>
+	constexpr LiteralResolver(
+		const char (&text)[N],
+		std::index_sequence<I...>)
+	: utf8text{ text[I]... }
 	, utf8(true) {
 	}
+	constexpr LiteralResolver(const char16_t (&text)[N])
+	: LiteralResolver(text, std::make_index_sequence<N>{}) {
+	}
+	constexpr LiteralResolver(const char (&text)[N])
+	: LiteralResolver(text, std::make_index_sequence<N>{}) {
+	}
+
 	constexpr auto operator<=>(const LiteralResolver &) const = default;
 
-	const char16_t *utf16text = nullptr;
-	const char *utf8text = nullptr;
-	size_t length = 0;
+	const char16_t utf16text[N]{};
+	const char utf8text[N]{};
+	size_t length = N;
 	bool utf8 = false;
 };
 
@@ -82,13 +92,13 @@ template <size_t N>
 struct StaticStringData {
 	template <std::size_t... I>
 	constexpr StaticStringData(
-		const char16_t *text,
+		const char16_t (&text)[N],
 		std::index_sequence<I...>)
-	: data Q_STATIC_STRING_DATA_HEADER_INITIALIZER(N)
+	: data Q_STATIC_STRING_DATA_HEADER_INITIALIZER(N - 1)
 	, text{ text[I]... } {
 	}
     QArrayData data;
-	char16_t text[N + 1];
+	char16_t text[N];
 
     QStringData *pointer() {
         Q_ASSERT(data.ref.isStatic());
@@ -100,13 +110,13 @@ template <size_t N>
 struct StaticByteArrayData {
 	template <std::size_t... I>
 	constexpr StaticByteArrayData(
-		const char *text,
+		const char (&text)[N],
 		std::index_sequence<I...>)
-	: data Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER(N)
+	: data Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER(N - 1)
 	, text{ text[I]... } {
 	}
 	QByteArrayData data;
-	char text[N + 1];
+	char text[N];
 
     QByteArrayData *pointer() {
         Q_ASSERT(data.ref.isStatic());
@@ -121,16 +131,18 @@ using q_literal_type = std::conditional_t<Resolve.utf8, QByteArray, QString>;
 
 template <base::details::LiteralResolver Resolve>
 base::details::q_literal_type<Resolve> operator""_q() {
+	static_assert(Resolve.length > 0);
+
 	using namespace base::details;
 	if constexpr (Resolve.utf8) {
 		static auto Literal = StaticByteArrayData<Resolve.length>(
 			Resolve.utf8text,
-			std::make_index_sequence<Resolve.length + 1>{});
+			std::make_index_sequence<Resolve.length>{});
 		return QByteArray{ QByteArrayDataPtr{ Literal.pointer() } };
 	} else {
 		static auto Literal = StaticStringData<Resolve.length>(
 			Resolve.utf16text,
-			std::make_index_sequence<Resolve.length + 1>{});
+			std::make_index_sequence<Resolve.length>{});
 		return QString{ QStringDataPtr{ Literal.pointer() } };
 	}
 };
