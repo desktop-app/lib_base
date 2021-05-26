@@ -97,13 +97,13 @@ struct StaticStringData {
 	: data Q_STATIC_STRING_DATA_HEADER_INITIALIZER(N - 1)
 	, text{ text[I]... } {
 	}
-    QArrayData data;
+	QArrayData data;
 	char16_t text[N];
 
-    QStringData *pointer() {
-        Q_ASSERT(data.ref.isStatic());
-        return static_cast<QStringData*>(&data);
-    }
+	QStringData *pointer() {
+		Q_ASSERT(data.ref.isStatic());
+		return static_cast<QStringData*>(&data);
+	}
 };
 
 template <size_t N>
@@ -118,10 +118,10 @@ struct StaticByteArrayData {
 	QByteArrayData data;
 	char text[N];
 
-    QByteArrayData *pointer() {
-        Q_ASSERT(data.ref.isStatic());
-        return &data;
-    }
+	QByteArrayData *pointer() {
+		Q_ASSERT(data.ref.isStatic());
+		return &data;
+	}
 };
 
 template <LiteralResolver Resolve>
