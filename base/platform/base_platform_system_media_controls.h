@@ -59,8 +59,6 @@ private:
 	struct Private;
 
 	const std::unique_ptr<Private> _private;
-
-	rpl::event_stream<Command> _commandRequests;
 };
 
 } // namespace base::Platform

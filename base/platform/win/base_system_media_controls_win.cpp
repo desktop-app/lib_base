@@ -45,6 +45,8 @@ struct SystemMediaControls::Private {
 	EventRegistrationToken registrationToken;
 	bool initialized = false;
 	bool hasValidRegistrationToken = false;
+
+	rpl::event_stream<SystemMediaControls::Command> commandRequests;
 };
 
 namespace {
@@ -154,7 +156,7 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 				return E_FAIL;
 			}
 			Integration::Instance().enterFromEventLoop([&] {
-				_commandRequests.fire(SMTCButtonToCommand(button));
+				_private->commandRequests.fire(SMTCButtonToCommand(button));
 			});
 			return S_OK;
 		});
@@ -364,7 +366,7 @@ void SystemMediaControls::updateDisplay() {
 
 auto SystemMediaControls::commandRequests() const
 -> rpl::producer<SystemMediaControls::Command> {
-	return _commandRequests.events();
+	return _private->commandRequests.events();
 }
 
 rpl::producer<float64> SystemMediaControls::seekRequests() const {

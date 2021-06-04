@@ -68,7 +68,7 @@ void SystemMediaControls::updateDisplay() {
 
 auto SystemMediaControls::commandRequests() const
 -> rpl::producer<SystemMediaControls::Command> {
-	return _commandRequests.events();
+	return rpl::never<Command>();
 }
 
 rpl::producer<float64> SystemMediaControls::seekRequests() const {
