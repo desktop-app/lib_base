@@ -340,6 +340,12 @@ void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 	hr = storeAsyncOperation->put_Completed(storeAsyncCallback.Get());
 }
 
+void SystemMediaControls::setDuration(int duration) {
+}
+
+void SystemMediaControls::setPosition(int position) {
+}
+
 void SystemMediaControls::clearThumbnail() {
 	_private->displayUpdater->put_Thumbnail(nullptr);
 	_private->displayUpdater->Update();
@@ -359,6 +365,14 @@ void SystemMediaControls::updateDisplay() {
 auto SystemMediaControls::commandRequests() const
 -> rpl::producer<SystemMediaControls::Command> {
 	return _commandRequests.events();
+}
+
+rpl::producer<float64> SystemMediaControls::seekRequests() const {
+	return rpl::never<float64>();
+}
+
+bool SystemMediaControls::seekingSupported() const {
+	return false;
 }
 
 bool SystemMediaControls::Supported() {

@@ -13,6 +13,7 @@ namespace base::Platform {
 class SystemMediaControls {
 public:
 	enum class Command {
+		PlayPause,
 		Play,
 		Pause,
 		Next,
@@ -32,6 +33,8 @@ public:
 
 	bool init(std::optional<QWidget*> parent);
 
+	[[nodiscard]] bool seekingSupported() const;
+
 	void setEnabled(bool enabled);
 	void setIsNextEnabled(bool value);
 	void setIsPreviousEnabled(bool value);
@@ -41,11 +44,14 @@ public:
 	void setTitle(const QString &title);
 	void setArtist(const QString &artist);
 	void setThumbnail(const QImage &thumbnail);
+	void setDuration(int duration);
+	void setPosition(int position);
 	void clearThumbnail();
 	void clearMetadata();
 	void updateDisplay();
 
 	[[nodiscard]] rpl::producer<Command> commandRequests() const;
+	[[nodiscard]] rpl::producer<float64> seekRequests() const;
 
 	static bool Supported();
 
