@@ -6,11 +6,11 @@
 //
 #pragma once
 
-#include "base/platform/win/base_windows_h.h"
+class QWidget;
 
 namespace base::Platform {
 
-class SystemMediaControlsWin {
+class SystemMediaControls {
 public:
 	enum class Command {
 		Play,
@@ -27,10 +27,10 @@ public:
 		Stopped,
 	};
 
-	SystemMediaControlsWin();
-	~SystemMediaControlsWin();
+	SystemMediaControls();
+	~SystemMediaControls();
 
-	bool init(HWND hwnd);
+	bool init(std::optional<QWidget*> parent);
 
 	void setEnabled(bool enabled);
 	void setIsNextEnabled(bool value);
@@ -52,10 +52,7 @@ private:
 
 	const std::unique_ptr<Private> _private;
 
-	bool _hasValidRegistrationToken = false;
-	bool _initialized = false;
-
 	rpl::event_stream<Command> _commandRequests;
 };
 
-}  // namespace base::Platform
+} // namespace base::Platform

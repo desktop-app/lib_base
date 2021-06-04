@@ -47,6 +47,7 @@ PRIVATE
     base/platform/linux/base_network_reachability_linux.h
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
+    base/platform/linux/base_system_media_controls_linux.cpp
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
     base/platform/mac/base_file_utilities_mac.h
@@ -62,6 +63,7 @@ PRIVATE
     base/platform/mac/base_network_reachability_mac.h
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
+    base/platform/mac/base_system_media_controls_mac.mm
     base/platform/mac/base_url_scheme_mac.h
     base/platform/mac/base_url_scheme_mac.mm
     base/platform/mac/base_utilities_mac.h
@@ -79,13 +81,12 @@ PRIVATE
     base/platform/win/base_network_reachability_win.h
     base/platform/win/base_process_win.cpp
     base/platform/win/base_process_win.h
+    base/platform/win/base_system_media_controls_win.cpp
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
     base/platform/win/base_windows_h.h
     base/platform/win/base_windows_safe_library.cpp
     base/platform/win/base_windows_safe_library.h
-    base/platform/win/base_windows_system_media_controls.cpp
-    base/platform/win/base_windows_system_media_controls.h
     base/platform/win/base_windows_wrl.cpp
     base/platform/win/base_windows_wrl.h
     base/platform/win/wrl/wrl_event_h.h
@@ -99,6 +100,7 @@ PRIVATE
     base/platform/base_platform_file_utilities.h
     base/platform/base_platform_process.h
     base/platform/base_platform_url_scheme.h
+    base/platform/base_platform_system_media_controls.h
     base/algorithm.h
     base/assertion.cpp
     base/assertion.h
