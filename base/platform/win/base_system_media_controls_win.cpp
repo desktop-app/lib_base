@@ -7,6 +7,7 @@
 #include "base/platform/base_platform_system_media_controls.h"
 
 #include "base/integration.h"
+#include "base/platform/win/base_info_win.h"
 #include "base/platform/win/base_windows_wrl.h"
 #include "base/platform/win/wrl/wrl_event_h.h"
 
@@ -358,6 +359,10 @@ void SystemMediaControls::updateDisplay() {
 auto SystemMediaControls::commandRequests() const
 -> rpl::producer<SystemMediaControls::Command> {
 	return _commandRequests.events();
+}
+
+bool SystemMediaControls::Supported() {
+	return ::Platform::IsWindows10OrGreater();
 }
 
 } // namespace base::Platform

@@ -65,4 +65,11 @@ auto SystemMediaControls::commandRequests() const
 	return _commandRequests.events();
 }
 
+bool SystemMediaControls::Supported() {
+	if (@available(macOS 10.12.2, *)) {
+		return true;
+	}
+	return false;
+}
+
 } // namespace base::Platform

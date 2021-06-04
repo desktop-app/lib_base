@@ -65,4 +65,12 @@ auto SystemMediaControls::commandRequests() const
 	return _commandRequests.events();
 }
 
+bool SystemMediaControls::Supported() {
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+	return true;
+#else // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+	return false;
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+}
+
 } // namespace base::Platform

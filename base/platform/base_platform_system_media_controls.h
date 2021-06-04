@@ -47,6 +47,8 @@ public:
 
 	[[nodiscard]] rpl::producer<Command> commandRequests() const;
 
+	static bool Supported();
+
 private:
 	struct Private;
 
