@@ -133,6 +133,7 @@ public:
 		bool enabled = false;
 		gint64 position = 0;
 		gint64 duration = 0;
+		float64 volume = 0.;
 		PlaybackStatus playbackStatus = PlaybackStatus::Stopped;
 
 		bool canGoNext = false;
@@ -180,6 +181,7 @@ public:
 
 	[[nodiscard]] rpl::producer<Command> commandRequests() const;
 	[[nodiscard]] rpl::producer<gint64> seekRequests() const;
+	[[nodiscard]] rpl::producer<float64> volumeChangeRequests() const;
 
 private:
 	const Gio::DBus::InterfaceVTable _interfaceVTable;
@@ -205,6 +207,7 @@ private:
 
 	rpl::event_stream<Command> _commandRequests;
 	rpl::event_stream<gint64> _seekRequests;
+	rpl::event_stream<float64> _volumeChangeRequests;
 };
 
 SystemMediaControls::Private::Private()
@@ -327,7 +330,7 @@ void SystemMediaControls::Private::handleGetProperty(
 		} else if (propertyName == "Rate") {
 			property = MakeGlibVariant<float64>(1.0);
 		} else if (propertyName == "Volume") {
-			property = MakeGlibVariant<float64>(0);
+			property = MakeGlibVariant<float64>(_player.volume);
 		}
 	});
 }
@@ -383,6 +386,9 @@ bool SystemMediaControls::Private::handleSetProperty(
 	if (propertyName == "Fullscreen") {
 	} else if (propertyName == "Rate") {
 	} else if (propertyName == "Volume") {
+		base::Integration::Instance().enterFromEventLoop([&] {
+			_volumeChangeRequests.fire_copy(GlibVariantCast<float64>(value));
+		});
 	} else {
 		return false;
 	}
@@ -427,6 +433,11 @@ auto SystemMediaControls::Private::commandRequests() const
 
 rpl::producer<gint64> SystemMediaControls::Private::seekRequests() const {
 	return _seekRequests.events();
+}
+
+auto SystemMediaControls::Private::volumeChangeRequests() const
+-> rpl::producer<float64> {
+	return _volumeChangeRequests.events();
 }
 
 SystemMediaControls::SystemMediaControls()
@@ -527,6 +538,13 @@ void SystemMediaControls::setPosition(int position) {
 	}
 }
 
+void SystemMediaControls::setVolume(float64 volume) {
+	_private->player().volume = volume;
+	_private->signalPropertyChanged(
+		"Volume",
+		MakeGlibVariant<float64>(volume));
+}
+
 void SystemMediaControls::clearThumbnail() {
 	_private->player().metadata["mpris:artUrl"] = MakeGlibVariant(
 		Glib::ustring{});
@@ -560,7 +578,15 @@ rpl::producer<float64> SystemMediaControls::seekRequests() const {
 	});
 }
 
+rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {
+	return _private->volumeChangeRequests();
+}
+
 bool SystemMediaControls::seekingSupported() const {
+	return true;
+}
+
+bool SystemMediaControls::volumeSupported() const {
 	return true;
 }
 

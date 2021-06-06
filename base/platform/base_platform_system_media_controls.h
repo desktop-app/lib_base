@@ -36,6 +36,7 @@ public:
 	bool init(std::optional<QWidget*> parent);
 
 	[[nodiscard]] bool seekingSupported() const;
+	[[nodiscard]] bool volumeSupported() const;
 
 	void setApplicationName(const QString &name);
 
@@ -50,12 +51,14 @@ public:
 	void setThumbnail(const QImage &thumbnail);
 	void setDuration(int duration);
 	void setPosition(int position);
+	void setVolume(float64 volume);
 	void clearThumbnail();
 	void clearMetadata();
 	void updateDisplay();
 
 	[[nodiscard]] rpl::producer<Command> commandRequests() const;
 	[[nodiscard]] rpl::producer<float64> seekRequests() const;
+	[[nodiscard]] rpl::producer<float64> volumeChangeRequests() const;
 
 	static bool Supported();
 

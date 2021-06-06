@@ -299,6 +299,9 @@ void SystemMediaControls::setPosition(int position) {
 	updateDisplay();
 }
 
+void SystemMediaControls::setVolume(float64 volume) {
+}
+
 void SystemMediaControls::clearThumbnail() {
 	if (@available(macOS 10.13.2, *)) {
 		[_private->info removeObjectForKey:MPMediaItemPropertyArtwork];
@@ -341,8 +344,16 @@ rpl::producer<float64> SystemMediaControls::seekRequests() const {
 	});
 }
 
+rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {
+	return rpl::never<float64>();
+}
+
 bool SystemMediaControls::seekingSupported() const {
 	return true;
+}
+
+bool SystemMediaControls::volumeSupported() const {
+	return false;
 }
 
 bool SystemMediaControls::Supported() {

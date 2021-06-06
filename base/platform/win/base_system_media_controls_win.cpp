@@ -351,6 +351,9 @@ void SystemMediaControls::setDuration(int duration) {
 void SystemMediaControls::setPosition(int position) {
 }
 
+void SystemMediaControls::setVolume(float64 volume) {
+}
+
 void SystemMediaControls::clearThumbnail() {
 	_private->displayUpdater->put_Thumbnail(nullptr);
 	_private->displayUpdater->Update();
@@ -376,7 +379,15 @@ rpl::producer<float64> SystemMediaControls::seekRequests() const {
 	return rpl::never<float64>();
 }
 
+rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {
+	return rpl::never<float64>();
+}
+
 bool SystemMediaControls::seekingSupported() const {
+	return false;
+}
+
+bool SystemMediaControls::volumeSupported() const {
 	return false;
 }
 
