@@ -18,6 +18,11 @@ auto MakeGlibVariant(T &&data) {
 }
 
 template <typename T>
+auto MakeGlibVariant(const T &data) {
+	return Glib::Variant<T>::create(data);
+}
+
+template <typename T>
 auto GlibVariantCast(const Glib::VariantBase &data) {
 	return Glib::VariantBase::cast_dynamic<Glib::Variant<T>>(data).get();
 }
