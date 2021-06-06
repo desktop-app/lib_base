@@ -115,6 +115,10 @@ auto EventToCommand(const Glib::ustring &event) {
 		return Command::Next;
 	} else if (event == "Previous") {
 		return Command::Previous;
+	} else if (event == "Quit") {
+		return Command::Quit;
+	} else if (event == "Raise") {
+		return Command::Raise;
 	}
 	return Command::None;
 }
@@ -337,9 +341,7 @@ void SystemMediaControls::Private::handleMethodCall(
 		const Glib::VariantContainerBase &parameters,
 		const Glib::RefPtr<Gio::DBus::MethodInvocation> &invocation) {
 
-	if (methodName == "Quit") {
-	} else if (methodName == "Raise") {
-	} else if (methodName == "Seek") {
+	if (methodName == "Seek") {
 		// Seek (x: Offset);
 		Glib::Variant<gint64> offset;
 		parameters.get_child(offset, 1);

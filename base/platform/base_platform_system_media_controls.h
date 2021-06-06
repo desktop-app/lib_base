@@ -19,6 +19,8 @@ public:
 		Next,
 		Previous,
 		Stop,
+		Quit,
+		Raise,
 		None,
 	};
 
