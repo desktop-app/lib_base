@@ -199,6 +199,9 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 	return true;
 }
 
+void SystemMediaControls::setApplicationName(const QString &name) {
+}
+
 void SystemMediaControls::setEnabled(bool enabled) {
 	_private->controls->put_IsEnabled(enabled);
 }

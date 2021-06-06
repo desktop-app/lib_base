@@ -133,6 +133,8 @@ public:
 
 		bool canGoNext = false;
 		bool canGoPrevious = false;
+
+		Glib::ustring applicationName;
 	};
 
 	Private();
@@ -285,8 +287,12 @@ void SystemMediaControls::Private::handleGetProperty(
 		} else if (propertyName == "HasTrackList") {
 			property = MakeGlibVariant(false);
 		} else if (propertyName == "Identity") {
-			property = MakeGlibVariant<Glib::ustring>(
-				QGuiApplication::desktopFileName().chopped(8).toStdString());
+			property = MakeGlibVariant(_player.applicationName.empty()
+				? Glib::ustring{
+					QGuiApplication::desktopFileName()
+						.chopped(8)
+						.toStdString() }
+				: _player.applicationName);
 		} else if (propertyName == "SupportedMimeTypes") {
 			property = MakeGlibVariant<std::vector<Glib::ustring>>({});
 		} else if (propertyName == "SupportedUriSchemes") {
@@ -433,6 +439,10 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 	clearMetadata();
 
 	return true;
+}
+
+void SystemMediaControls::setApplicationName(const QString &name) {
+	_private->player().applicationName = name.toStdString();
 }
 
 void SystemMediaControls::setEnabled(bool enabled) {

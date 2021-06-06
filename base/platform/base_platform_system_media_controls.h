@@ -35,6 +35,8 @@ public:
 
 	[[nodiscard]] bool seekingSupported() const;
 
+	void setApplicationName(const QString &name);
+
 	void setEnabled(bool enabled);
 	void setIsNextEnabled(bool value);
 	void setIsPreviousEnabled(bool value);
