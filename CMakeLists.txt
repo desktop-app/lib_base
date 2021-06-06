@@ -17,6 +17,8 @@ get_filename_component(src_loc . REALPATH)
 target_precompile_headers(lib_base PRIVATE ${src_loc}/base/base_pch.h)
 nice_target_sources(lib_base ${src_loc}
 PRIVATE
+    base/platform/linux/base_bt_utilities_linux.cpp
+    base/platform/linux/base_cellular_utilities_linux.cpp
     base/platform/linux/base_file_utilities_linux.cpp
     base/platform/linux/base_file_utilities_linux.h
     base/platform/linux/base_global_shortcuts_linux.cpp
@@ -40,6 +42,7 @@ PRIVATE
     base/platform/linux/base_linux_xdp_utilities.h
     base/platform/linux/base_linux_xsettings.cpp
     base/platform/linux/base_linux_xsettings.h
+    base/platform/linux/base_location_linux.cpp
     base/platform/linux/base_network_reachability_linux.cpp
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
@@ -47,6 +50,9 @@ PRIVATE
     base/platform/linux/base_system_media_controls_linux.cpp
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
+    base/platform/linux/base_wifi_utilities_linux.cpp
+    base/platform/mac/base_bt_utilities_mac.mm
+    base/platform/mac/base_cellular_utilities_mac.mm
     base/platform/mac/base_file_utilities_mac.h
     base/platform/mac/base_file_utilities_mac.mm
     base/platform/mac/base_global_shortcuts_mac.mm
@@ -57,6 +63,7 @@ PRIVATE
     base/platform/mac/base_last_input_mac.mm
     base/platform/mac/base_layout_switch_mac.h
     base/platform/mac/base_layout_switch_mac.mm
+    base/platform/mac/base_location_mac.mm
     base/platform/mac/base_network_reachability_mac.mm
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
@@ -65,6 +72,9 @@ PRIVATE
     base/platform/mac/base_url_scheme_mac.mm
     base/platform/mac/base_utilities_mac.h
     base/platform/mac/base_utilities_mac.mm
+    base/platform/mac/base_wifi_utilities_mac.mm
+    base/platform/win/base_bt_utilities_win.cpp
+    base/platform/win/base_cellular_utilities_win.cpp
     base/platform/win/base_file_utilities_win.cpp
     base/platform/win/base_file_utilities_win.h
     base/platform/win/base_global_shortcuts_win.cpp
@@ -75,12 +85,14 @@ PRIVATE
     base/platform/win/base_last_input_win.h
     base/platform/win/base_layout_switch_win.cpp
     base/platform/win/base_layout_switch_win.h
+    base/platform/win/base_location_win.cpp
     base/platform/win/base_network_reachability_win.cpp
     base/platform/win/base_process_win.cpp
     base/platform/win/base_process_win.h
     base/platform/win/base_system_media_controls_win.cpp
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
+    base/platform/win/base_wifi_utilities_win.cpp
     base/platform/win/base_windows_h.h
     base/platform/win/base_windows_safe_library.cpp
     base/platform/win/base_windows_safe_library.h
@@ -89,16 +101,20 @@ PRIVATE
     base/platform/win/base_windows_wrl.cpp
     base/platform/win/base_windows_wrl.h
     base/platform/win/wrl/wrl_implements_h.h
+    base/platform/base_platform_bt_utilities.h
+    base/platform/base_platform_cellular_utilities.h
     base/platform/base_platform_global_shortcuts.h
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
     base/platform/base_platform_layout_switch.h
+    base/platform/base_platform_location.h
     base/platform/base_platform_network_reachability.cpp
     base/platform/base_platform_network_reachability.h
     base/platform/base_platform_file_utilities.h
     base/platform/base_platform_process.h
     base/platform/base_platform_url_scheme.h
     base/platform/base_platform_system_media_controls.h
+    base/platform/base_platform_wifi_utilities.h
     base/algorithm.h
     base/assertion.cpp
     base/assertion.h
@@ -139,6 +155,8 @@ PRIVATE
     base/last_used_cache.h
     base/last_user_input.cpp
     base/last_user_input.h
+    base/location.cpp
+    base/location.h
     base/match_method.h
     base/network_reachability.cpp
     base/network_reachability.h

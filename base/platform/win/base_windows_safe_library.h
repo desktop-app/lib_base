@@ -10,6 +10,9 @@
 
 // We try to keep this module free of external dependencies.
 
+#define LOAD_LIBRARY_SYMBOL(lib, func) \
+	::base::Platform::LoadMethod(lib, #func, func)
+
 namespace base::Platform {
 
 void InitDynamicLibraries();
