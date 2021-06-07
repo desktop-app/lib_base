@@ -256,14 +256,12 @@ void SystemMediaControls::setTitle(const QString &title) {
 	[_private->info
 		setObject:Q2NSString(title)
 		forKey:MPMediaItemPropertyTitle];
-	updateDisplay();
 }
 
 void SystemMediaControls::setArtist(const QString &artist) {
 	[_private->info
 		setObject:Q2NSString(artist)
 		forKey:MPMediaItemPropertyArtist];
-	updateDisplay();
 }
 
 void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
@@ -289,14 +287,12 @@ void SystemMediaControls::setDuration(int duration) {
 	[_private->info
 		setObject:[NSNumber numberWithDouble:(duration / 1000.)]
 		forKey:MPMediaItemPropertyPlaybackDuration];
-	updateDisplay();
 }
 
 void SystemMediaControls::setPosition(int position) {
 	[_private->info
 		setObject:[NSNumber numberWithDouble:(position / 1000.)]
 		forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
-	updateDisplay();
 }
 
 void SystemMediaControls::setVolume(float64 volume) {
@@ -305,6 +301,7 @@ void SystemMediaControls::setVolume(float64 volume) {
 void SystemMediaControls::clearThumbnail() {
 	if (@available(macOS 10.13.2, *)) {
 		[_private->info removeObjectForKey:MPMediaItemPropertyArtwork];
+		updateDisplay();
 	}
 }
 
@@ -322,13 +319,19 @@ void SystemMediaControls::clearMetadata() {
 		forKey:MPNowPlayingInfoPropertyDefaultPlaybackRate];
 	[info setObject:@"" forKey:MPMediaItemPropertyTitle];
 	[info setObject:@"" forKey:MPMediaItemPropertyArtist];
+
+	[info
+		setObject:@(MPNowPlayingInfoMediaTypeAudio)
+		forKey:MPNowPlayingInfoPropertyMediaType];
 }
 
 void SystemMediaControls::updateDisplay() {
-	const auto center = [MPNowPlayingInfoCenter defaultCenter];
-	center.nowPlayingInfo = (_private->enabled && _private->duration())
-		? _private->info
-		: nil;
+	[[MPNowPlayingInfoCenter defaultCenter]
+		performSelectorOnMainThread:@selector(setNowPlayingInfo:)
+		withObject:((_private->enabled && _private->duration())
+			? _private->info
+			: nil)
+		waitUntilDone:false];
 }
 
 auto SystemMediaControls::commandRequests() const
