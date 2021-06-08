@@ -245,6 +245,13 @@ void OpenInputMonitoringPrivacySettings() {
 	[[NSWorkspace sharedWorkspace] openURL:PrivacySettingsUrl("Privacy_ListenEvent")];
 }
 
+void OpenDesktopCapturePrivacySettings() {
+	if (@available(macOS 10.15, *)) {
+		CGRequestScreenCaptureAccess();
+	}
+	[[NSWorkspace sharedWorkspace] openURL:PrivacySettingsUrl("Privacy_ScreenCapture")];
+}
+
 void OpenAccessibilityPrivacySettings() {
 	NSDictionary *const options=@{(__bridge NSString *)kAXTrustedCheckOptionPrompt: @TRUE};
 	AXIsProcessTrustedWithOptions((__bridge CFDictionaryRef)options);

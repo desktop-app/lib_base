@@ -54,6 +54,7 @@ inline QString GetLibcVersion() { return QString(); }
 inline QString GetWindowManager() { return QString(); }
 
 void OpenInputMonitoringPrivacySettings();
+void OpenDesktopCapturePrivacySettings();
 void OpenAccessibilityPrivacySettings();
 
 } // namespace Platform
