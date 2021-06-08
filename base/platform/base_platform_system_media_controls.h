@@ -59,6 +59,7 @@ public:
 	[[nodiscard]] rpl::producer<Command> commandRequests() const;
 	[[nodiscard]] rpl::producer<float64> seekRequests() const;
 	[[nodiscard]] rpl::producer<float64> volumeChangeRequests() const;
+	[[nodiscard]] rpl::producer<> updatePositionRequests() const;
 
 	static bool Supported();
 

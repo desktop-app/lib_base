@@ -182,6 +182,7 @@ public:
 	[[nodiscard]] rpl::producer<Command> commandRequests() const;
 	[[nodiscard]] rpl::producer<gint64> seekRequests() const;
 	[[nodiscard]] rpl::producer<float64> volumeChangeRequests() const;
+	[[nodiscard]] rpl::producer<> updatePositionRequests() const;
 
 private:
 	const Gio::DBus::InterfaceVTable _interfaceVTable;
@@ -208,6 +209,7 @@ private:
 	rpl::event_stream<Command> _commandRequests;
 	rpl::event_stream<gint64> _seekRequests;
 	rpl::event_stream<float64> _volumeChangeRequests;
+	rpl::event_stream<> _updatePositionRequests;
 };
 
 SystemMediaControls::Private::Private()
@@ -326,6 +328,7 @@ void SystemMediaControls::Private::handleGetProperty(
 			property = MakeGlibVariant(
 				ConvertPlaybackStatus(_player.playbackStatus));
 		} else if (propertyName == "Position") {
+			_updatePositionRequests.fire({});
 			property = MakeGlibVariant<gint64>(_player.position);
 		} else if (propertyName == "Rate") {
 			property = MakeGlibVariant<float64>(1.0);
@@ -438,6 +441,10 @@ rpl::producer<gint64> SystemMediaControls::Private::seekRequests() const {
 auto SystemMediaControls::Private::volumeChangeRequests() const
 -> rpl::producer<float64> {
 	return _volumeChangeRequests.events();
+}
+
+rpl::producer<> SystemMediaControls::Private::updatePositionRequests() const {
+	return _updatePositionRequests.events();
 }
 
 SystemMediaControls::SystemMediaControls()
@@ -580,6 +587,10 @@ rpl::producer<float64> SystemMediaControls::seekRequests() const {
 
 rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {
 	return _private->volumeChangeRequests();
+}
+
+rpl::producer<> SystemMediaControls::updatePositionRequests() const {
+	return _private->updatePositionRequests();
 }
 
 bool SystemMediaControls::seekingSupported() const {

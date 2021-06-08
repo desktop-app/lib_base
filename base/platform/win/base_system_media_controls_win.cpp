@@ -383,6 +383,10 @@ rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {
 	return rpl::never<float64>();
 }
 
+rpl::producer<> SystemMediaControls::updatePositionRequests() const {
+	return rpl::never<>();
+}
+
 bool SystemMediaControls::seekingSupported() const {
 	return false;
 }
