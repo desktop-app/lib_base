@@ -123,6 +123,13 @@ auto EventToCommand(const Glib::ustring &event) {
 	return Command::None;
 }
 
+void Noexcept(Fn<void()> callback) noexcept {
+	try {
+		callback();
+	} catch (...) {
+	}
+}
+
 } // namespace
 
 struct SystemMediaControls::Private {
@@ -193,7 +200,7 @@ private:
 	const std::string _signalPropertyChangedName;
 	const std::string _signalSeekedName;
 
-	const Glib::RefPtr<Gio::DBus::Connection> _dbusConnection;
+	Glib::RefPtr<Gio::DBus::Connection> _dbusConnection;
 
 	struct {
 		Glib::RefPtr<Gio::DBus::NodeInfo> introspectionData;
@@ -221,39 +228,54 @@ SystemMediaControls::Private::Private()
 , _playerInterface("org.mpris.MediaPlayer2.Player")
 , _propertiesInterface("org.freedesktop.DBus.Properties")
 , _signalPropertyChangedName("PropertiesChanged")
-, _signalSeekedName("Seeked")
-, _dbusConnection(Gio::DBus::Connection::get_sync(
-	Gio::DBus::BusType::BUS_TYPE_SESSION)) {
+, _signalSeekedName("Seeked") {
+	Noexcept([&] {
+		_dbusConnection = Gio::DBus::Connection::get_sync(
+			Gio::DBus::BusType::BUS_TYPE_SESSION);
+	});
 }
 
 bool SystemMediaControls::Private::init() {
-	_dbus.introspectionData = Gio::DBus::NodeInfo::create_for_xml(
-		std::string(kIntrospectionXML));
+	if (!_dbusConnection) {
+		return false;
+	}
+	Noexcept([&] {
+		_dbus.introspectionData = Gio::DBus::NodeInfo::create_for_xml(
+			std::string(kIntrospectionXML));
+	});
 	if (!_dbus.introspectionData) {
 		return false;
 	}
-	_dbus.playerIntrospectionData = Gio::DBus::NodeInfo::create_for_xml(
-		std::string(kPlayerIntrospectionXML));
+	Noexcept([&] {
+		_dbus.playerIntrospectionData = Gio::DBus::NodeInfo::create_for_xml(
+			std::string(kPlayerIntrospectionXML));
+	});
 	if (!_dbus.playerIntrospectionData) {
 		return false;
 	}
-	_dbus.ownId = Gio::DBus::own_name(
-		Gio::DBus::BusType::BUS_TYPE_SESSION,
-		std::string(kService));
+	Noexcept([&] {
+		_dbus.ownId = Gio::DBus::own_name(
+			Gio::DBus::BusType::BUS_TYPE_SESSION,
+			std::string(kService));
+	});
 	if (!_dbus.ownId) {
 		return false;
 	}
-	_dbus.registerId = _dbusConnection->register_object(
-		_objectPath,
-		_dbus.introspectionData->lookup_interface(),
-		_interfaceVTable);
+	Noexcept([&] {
+		_dbus.registerId = _dbusConnection->register_object(
+			_objectPath,
+			_dbus.introspectionData->lookup_interface(),
+			_interfaceVTable);
+	});
 	if (!_dbus.registerId) {
 		return false;
 	}
-	_dbus.playerRegisterId = _dbusConnection->register_object(
-		_objectPath,
-		_dbus.playerIntrospectionData->lookup_interface(),
-		_interfaceVTable);
+	Noexcept([&] {
+		_dbus.playerRegisterId = _dbusConnection->register_object(
+			_objectPath,
+			_dbus.playerIntrospectionData->lookup_interface(),
+			_interfaceVTable);
+	});
 	if (!_dbus.playerRegisterId) {
 		return false;
 	}
@@ -261,12 +283,14 @@ bool SystemMediaControls::Private::init() {
 }
 
 void SystemMediaControls::Private::deinit() {
-	if (_dbus.playerRegisterId) {
-		_dbusConnection->unregister_object(_dbus.playerRegisterId);
-	}
+	if (_dbusConnection) {
+		if (_dbus.playerRegisterId) {
+			_dbusConnection->unregister_object(_dbus.playerRegisterId);
+		}
 
-	if (_dbus.registerId) {
-		_dbusConnection->unregister_object(_dbus.registerId);
+		if (_dbus.registerId) {
+			_dbusConnection->unregister_object(_dbus.registerId);
+		}
 	}
 
 	if (_dbus.ownId) {
@@ -376,7 +400,9 @@ void SystemMediaControls::Private::handleMethodCall(
 		}
 	}
 
-	invocation->return_value({});
+	Noexcept([&] {
+		invocation->return_value({});
+	});
 }
 
 bool SystemMediaControls::Private::handleSetProperty(
@@ -402,27 +428,31 @@ bool SystemMediaControls::Private::handleSetProperty(
 void SystemMediaControls::Private::signalPropertyChanged(
 		const Glib::ustring &name,
 		const Glib::VariantBase &value) {
-	_dbusConnection->emit_signal(
-		_objectPath,
-		_propertiesInterface,
-		_signalPropertyChangedName,
-		{},
-		MakeGlibVariant(std::tuple{
-			_playerInterface,
-			std::map<Glib::ustring, Glib::VariantBase>{
-				{ name, value },
-			},
-			std::vector<Glib::ustring>{},
-		}));
+	Noexcept([&] {
+		_dbusConnection->emit_signal(
+			_objectPath,
+			_propertiesInterface,
+			_signalPropertyChangedName,
+			{},
+			MakeGlibVariant(std::tuple{
+				_playerInterface,
+				std::map<Glib::ustring, Glib::VariantBase>{
+					{ name, value },
+				},
+				std::vector<Glib::ustring>{},
+			}));
+	});
 }
 
 void SystemMediaControls::Private::signalSeeked(gint64 position) {
-	_dbusConnection->emit_signal(
-		_objectPath,
-		_playerInterface,
-		_signalSeekedName,
-		{},
-		MakeGlibVariant(std::tuple{ position }));
+	Noexcept([&] {
+		_dbusConnection->emit_signal(
+			_objectPath,
+			_playerInterface,
+			_signalSeekedName,
+			{},
+			MakeGlibVariant(std::tuple{ position }));
+	});
 }
 
 SystemMediaControls::Private::Player &SystemMediaControls::Private::player() {
