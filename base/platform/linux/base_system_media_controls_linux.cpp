@@ -635,11 +635,7 @@ bool SystemMediaControls::volumeSupported() const {
 }
 
 bool SystemMediaControls::Supported() {
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	return true;
-#else // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-	return false;
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 }
 
 } // namespace base::Platform

@@ -47,6 +47,7 @@ PRIVATE
     base/platform/linux/base_network_reachability_linux.h
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
+    base/platform/linux/base_system_media_controls_linux_dummy.cpp
     base/platform/linux/base_system_media_controls_linux.cpp
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
@@ -187,6 +188,11 @@ if (DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
         base/platform/linux/base_linux_dbus_utilities.h
         base/platform/linux/base_linux_xdp_utilities.cpp
         base/platform/linux/base_linux_xdp_utilities.h
+        base/platform/linux/base_system_media_controls_linux.cpp
+    )
+else()
+    remove_target_sources(lib_base ${src_loc}
+        base/platform/linux/base_system_media_controls_linux_dummy.cpp
     )
 endif()
 
