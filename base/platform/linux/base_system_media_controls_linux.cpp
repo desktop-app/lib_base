@@ -416,7 +416,10 @@ bool SystemMediaControls::Private::handleSetProperty(
 	} else if (propertyName == "Rate") {
 	} else if (propertyName == "Volume") {
 		base::Integration::Instance().enterFromEventLoop([&] {
-			_volumeChangeRequests.fire_copy(GlibVariantCast<float64>(value));
+			Noexcept([&] {
+				_volumeChangeRequests.fire_copy(
+					GlibVariantCast<float64>(value));
+			});
 		});
 	} else {
 		return false;
