@@ -50,6 +50,9 @@ SettingWatcher::SettingWatcher(
 	try {
 		_private->dbusConnection = Gio::DBus::Connection::get_sync(
 			Gio::DBus::BusType::BUS_TYPE_SESSION);
+		if (!_private->dbusConnection) {
+			return;
+		}
 
 		_private->signalId = _private->dbusConnection->signal_subscribe(
 			[=](
