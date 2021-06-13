@@ -154,6 +154,8 @@ public:
 	[[nodiscard]] bool init();
 	void deinit();
 
+	[[nodiscard]] bool dbusAvailable();
+
 	void handleGetProperty(
 		Glib::VariantBase &property,
 		const Glib::RefPtr<Gio::DBus::Connection> &connection,
@@ -296,6 +298,10 @@ void SystemMediaControls::Private::deinit() {
 	if (_dbus.ownId) {
 		Gio::DBus::unown_name(_dbus.ownId);
 	}
+}
+
+bool SystemMediaControls::Private::dbusAvailable() {
+	return static_cast<bool>(_dbusConnection);
 }
 
 void SystemMediaControls::Private::handleGetProperty(
@@ -491,7 +497,7 @@ SystemMediaControls::~SystemMediaControls() {
 bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 	clearMetadata();
 
-	return true;
+	return _private->dbusAvailable();
 }
 
 void SystemMediaControls::setApplicationName(const QString &name) {
