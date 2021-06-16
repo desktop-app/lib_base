@@ -246,7 +246,7 @@ void OpenInputMonitoringPrivacySettings() {
 }
 
 void OpenDesktopCapturePrivacySettings() {
-	if (@available(macOS 10.15, *)) {
+	if (@available(macOS 11.0, *)) {
 		CGRequestScreenCaptureAccess();
 	}
 	[[NSWorkspace sharedWorkspace] openURL:PrivacySettingsUrl("Privacy_ScreenCapture")];
