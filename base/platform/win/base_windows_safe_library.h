@@ -8,6 +8,9 @@
 
 #include "base/platform/win/base_windows_h.h"
 
+#define LOAD_LIBRARY_SYMBOL(lib, func) \
+	::base::Platform::LoadMethod(lib, #func, func)
+
 namespace base::Platform {
 
 HINSTANCE SafeLoadLibrary(const QString &name);
