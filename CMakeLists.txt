@@ -42,8 +42,6 @@ PRIVATE
     base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_linux_xdp_utilities.cpp
     base/platform/linux/base_linux_xdp_utilities.h
-    base/platform/linux/base_linux_xlib_helper.cpp
-    base/platform/linux/base_linux_xlib_helper.h
     base/platform/linux/base_network_reachability_linux.cpp
     base/platform/linux/base_network_reachability_linux.h
     base/platform/linux/base_process_linux.cpp
@@ -203,8 +201,6 @@ if (DESKTOP_APP_DISABLE_X11_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_xcb_utilities.cpp
         base/platform/linux/base_linux_xcb_utilities.h
-        base/platform/linux/base_linux_xlib_helper.cpp
-        base/platform/linux/base_linux_xlib_helper.h
     )
 endif()
 
@@ -212,8 +208,6 @@ if (DESKTOP_APP_DISABLE_GTK_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_gtk_integration_p.h
         base/platform/linux/base_linux_gtk_integration.cpp
-        base/platform/linux/base_linux_xlib_helper.cpp
-        base/platform/linux/base_linux_xlib_helper.h
     )
 else()
     remove_target_sources(lib_base ${src_loc}
@@ -263,26 +257,13 @@ elseif (LINUX)
         if (DESKTOP_APP_USE_PACKAGED AND NOT DESKTOP_APP_USE_PACKAGED_LAZY)
             pkg_check_modules(GTK3 REQUIRED IMPORTED_TARGET gtk+-3.0)
             target_link_libraries(lib_base PUBLIC PkgConfig::GTK3)
-
-            if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
-                pkg_check_modules(X11 REQUIRED IMPORTED_TARGET x11)
-                target_link_libraries(lib_base PUBLIC PkgConfig::X11)
-            endif()
         else()
             pkg_check_modules(GTK REQUIRED gtk+-3.0)
             target_include_directories(lib_base PUBLIC ${GTK_INCLUDE_DIRS})
-
-            if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
-                target_link_libraries(lib_base PUBLIC X11)
-            endif()
         endif()
     endif()
 endif()
 
-target_compile_definitions(lib_base
-PRIVATE
-    G_LOG_DOMAIN="lib_base"
-)
 if (DESKTOP_APP_USE_ALLOCATION_TRACER)
     target_compile_definitions(lib_base
     PRIVATE

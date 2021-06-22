@@ -6,6 +6,7 @@
 //
 #pragma once
 
+#include "base/basic_types.h"
 #include "base/const_string.h"
 
 #include <glibmm.h>

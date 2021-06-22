@@ -6,8 +6,6 @@
 //
 #include "base/platform/linux/base_info_linux.h"
 
-#include "base/platform/linux/base_linux_gtk_integration.h"
-
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -17,10 +15,6 @@
 #include <QtCore/QVersionNumber>
 #include <QtCore/QDate>
 #include <QtGui/QGuiApplication>
-
-#include <glib.h>
-#include <glibmm.h>
-#include <giomm.h>
 
 // this file is used on both Linux & BSD
 #ifdef Q_OS_LINUX
@@ -233,17 +227,6 @@ bool IsWayland() {
 }
 
 void Start(QJsonObject options) {
-	Glib::init();
-	Gio::init();
-
-	using base::Platform::GtkIntegration;
-	if (const auto integration = GtkIntegration::Instance()) {
-		integration->prepareEnvironment();
-		integration->load();
-		integration->initializeSettings();
-	} else {
-		g_warning("GTK integration is disabled, some features unavailable.");
-	}
 }
 
 void Finish() {
