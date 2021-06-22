@@ -33,6 +33,7 @@ PRIVATE
     base/platform/linux/base_linux_dbus_utilities.h
     base/platform/linux/base_linux_glibmm_helper.h
     base/platform/linux/base_linux_gtk_integration_p.h
+    base/platform/linux/base_linux_gtk_integration_dummy.cpp
     base/platform/linux/base_linux_gtk_integration.cpp
     base/platform/linux/base_linux_gtk_integration.h
     base/platform/linux/base_linux_library.cpp
@@ -214,9 +215,8 @@ if (DESKTOP_APP_DISABLE_GTK_INTEGRATION)
         base/platform/linux/base_linux_xlib_helper.cpp
         base/platform/linux/base_linux_xlib_helper.h
     )
-
-    nice_target_sources(lib_base ${src_loc}
-    PRIVATE
+else()
+    remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_gtk_integration_dummy.cpp
     )
 endif()
