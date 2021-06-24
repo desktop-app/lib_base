@@ -15,7 +15,6 @@
 #include <QtCore/QDir>
 #include <QtGui/QDesktopServices>
 
-#include <gio/gunixfdlist.h>
 #include <glibmm.h>
 #include <giomm.h>
 
@@ -44,6 +43,9 @@ bool PortalShowInFolder(const QString &filepath) {
 		}
 
 		const auto guard = gsl::finally([&] { close(fd); });
+
+		const auto fdList = Gio::UnixFDList::create();
+		fdList->append(fd);
 		auto outFdList = Glib::RefPtr<Gio::UnixFDList>();
 
 		connection->call_sync(
@@ -56,7 +58,7 @@ bool PortalShowInFolder(const QString &filepath) {
 				Glib::Variant<
 					std::map<Glib::ustring, Glib::VariantBase>>::create({}),
 			}),
-			Glib::wrap(g_unix_fd_list_new_from_array(&fd, 1)),
+			fdList,
 			outFdList,
 			"org.freedesktop.portal.Desktop");
 
