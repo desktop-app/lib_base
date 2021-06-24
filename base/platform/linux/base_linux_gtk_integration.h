@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/const_string.h"
 
 #include <QtCore/QLibrary>
+#include <optional>
 
 namespace base {
 namespace Platform {
