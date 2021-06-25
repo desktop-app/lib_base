@@ -6,14 +6,17 @@
 //
 #include "base/platform/base_platform_system_media_controls.h"
 
+#include "unknwn.h" // Conversion from winrt::guid_of to GUID.
+
 #include "base/integration.h"
 #include "base/platform/win/base_info_win.h"
-#include "base/platform/win/base_windows_wrl.h"
-#include "base/platform/win/wrl/wrl_event_h.h"
+#include "base/platform/win/base_windows_winrt.h"
+
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Media.h>
+#include <winrt/Windows.Storage.Streams.h>
 
 #include <systemmediatransportcontrolsinterop.h>
-#include <windows.media.control.h>
-#include <wrl/client.h>
 
 #include <qpa/qplatformnativeinterface.h>
 
@@ -22,71 +25,74 @@
 #include <QtGui/QImage>
 #include <QtWidgets/QWidget>
 
+namespace winrt {
+namespace Streams {
+	using namespace Windows::Storage::Streams;
+} // namespace Streams
+namespace Media {
+	using namespace Windows::Media;
+} // namespace Media
+} // namespace winrt
+
 namespace base::Platform {
 
-using namespace Microsoft::WRL;
-
-namespace WinMedia = ABI::Windows::Media;
-namespace WinStreams = ABI::Windows::Storage::Streams;
-
-using SMTControls = WinMedia::ISystemMediaTransportControls;
-using ButtonsEventArgs =
-	WinMedia::ISystemMediaTransportControlsButtonPressedEventArgs;
-using DisplayUpdater = WinMedia::ISystemMediaTransportControlsDisplayUpdater;
-using MediaType = ABI::Windows::Media::MediaPlaybackType;
-
 struct SystemMediaControls::Private {
-	ComPtr<SMTControls> controls;
-	ComPtr<DisplayUpdater> displayUpdater;
-	ComPtr<WinMedia::IMusicDisplayProperties> displayProperties;
-	ComPtr<WinStreams::IDataWriter> iconDataWriter;
-	ComPtr<WinStreams::IRandomAccessStream> thumbStream;
-	ComPtr<WinStreams::IRandomAccessStreamReference> thumbStreamReference;
-	EventRegistrationToken registrationToken;
+	using IReferenceStatics
+		= winrt::Streams::IRandomAccessStreamReferenceStatics;
+	Private()
+	: controls(nullptr)
+	, referenceStatics(winrt::get_activation_factory
+		<winrt::Streams::RandomAccessStreamReference,
+		IReferenceStatics>()) {
+	}
+	winrt::Media::SystemMediaTransportControls controls;
+	winrt::Media::ISystemMediaTransportControlsDisplayUpdater displayUpdater;
+	winrt::Media::IMusicDisplayProperties displayProperties;
+	winrt::Streams::DataWriter iconDataWriter;
+	const IReferenceStatics referenceStatics;
+	winrt::event_token eventToken;
 	bool initialized = false;
-	bool hasValidRegistrationToken = false;
 
 	rpl::event_stream<SystemMediaControls::Command> commandRequests;
 };
 
 namespace {
 
-using WinPlaybackStatus = ABI::Windows::Media::MediaPlaybackStatus;
-
-WinPlaybackStatus SmtcPlaybackStatus(
+winrt::Media::MediaPlaybackStatus SmtcPlaybackStatus(
 		SystemMediaControls::PlaybackStatus status) {
 	switch (status) {
 	case SystemMediaControls::PlaybackStatus::Playing:
-		return WinPlaybackStatus::MediaPlaybackStatus_Playing;
+		return winrt::Media::MediaPlaybackStatus::Playing;
 	case SystemMediaControls::PlaybackStatus::Paused:
-		return WinPlaybackStatus::MediaPlaybackStatus_Paused;
+		return winrt::Media::MediaPlaybackStatus::Paused;
 	case SystemMediaControls::PlaybackStatus::Stopped:
-		return WinPlaybackStatus::MediaPlaybackStatus_Stopped;
+		return winrt::Media::MediaPlaybackStatus::Stopped;
 	}
 	Unexpected("SmtcPlaybackStatus in SystemMediaControls");
 }
 
-using SMTCButton = WinMedia::SystemMediaTransportControlsButton;
 
-auto SMTCButtonToCommand(SMTCButton button) {
+auto SMTCButtonToCommand(
+		winrt::Media::SystemMediaTransportControlsButton button) {
+	using SMTCButton = winrt::Media::SystemMediaTransportControlsButton;
 	using Command = SystemMediaControls::Command;
 
 	switch (button) {
-	case SMTCButton::SystemMediaTransportControlsButton_Play:
+	case SMTCButton::Play:
 		return Command::Play;
-	case SMTCButton::SystemMediaTransportControlsButton_Pause:
+	case SMTCButton::Pause:
 		return Command::Pause;
-	case SMTCButton::SystemMediaTransportControlsButton_Next:
+	case SMTCButton::Next:
 		return Command::Next;
-	case SMTCButton::SystemMediaTransportControlsButton_Previous:
+	case SMTCButton::Previous:
 		return Command::Previous;
-	case SMTCButton::SystemMediaTransportControlsButton_Stop:
+	case SMTCButton::Stop:
 		return Command::Stop;
-	case SMTCButton::SystemMediaTransportControlsButton_Record:
-	case SMTCButton::SystemMediaTransportControlsButton_FastForward:
-	case SMTCButton::SystemMediaTransportControlsButton_Rewind:
-	case SMTCButton::SystemMediaTransportControlsButton_ChannelUp:
-	case SMTCButton::SystemMediaTransportControlsButton_ChannelDown:
+	case SMTCButton::Record:
+	case SMTCButton::FastForward:
+	case SMTCButton::Rewind:
+	case SMTCButton::ChannelUp:
+	case SMTCButton::ChannelDown:
 		return Command::None;
 	}
 	return Command::None;
@@ -99,8 +105,8 @@ SystemMediaControls::SystemMediaControls()
 }
 
 SystemMediaControls::~SystemMediaControls() {
-	if (_private->hasValidRegistrationToken) {
-		_private->controls->remove_ButtonPressed(_private->registrationToken);
+	if (_private->eventToken) {
+		_private->controls.ButtonPressed(base::take(_private->eventToken));
 		clearMetadata();
 	}
 }
@@ -123,77 +129,42 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 		QByteArrayLiteral("handle"),
 		window));
 
-	ComPtr<ISystemMediaTransportControlsInterop> interop;
-	auto hr = GetActivationFactory(
-		StringReferenceWrapper(
-			RuntimeClass_Windows_Media_SystemMediaTransportControls).Get(),
-		&interop);
+	const auto interop = winrt::get_activation_factory
+		<winrt::Media::SystemMediaTransportControls,
+		ISystemMediaTransportControlsInterop>();
 
-	if (FAILED(hr)) {
-		return false;
-	}
-
-	hr = interop->GetForWindow(
+	winrt::com_ptr<winrt::Media::ISystemMediaTransportControls> icontrols;
+	auto hr = interop->GetForWindow(
 		hwnd,
-		IID_PPV_ARGS(&_private->controls));
+		winrt::guid_of<winrt::Media::ISystemMediaTransportControls>(),
+		icontrols.put_void());
+
 	if (FAILED(hr)) {
 		return false;
 	}
+
+	_private->controls = winrt::Media::SystemMediaTransportControls(
+		icontrols.detach(),
+		winrt::take_ownership_from_abi);
 
 	// Buttons handler.
-	{
-		using Args =
-			WinMedia::SystemMediaTransportControlsButtonPressedEventArgs;
-		using SMTC = WinMedia::SystemMediaTransportControls;
-		using namespace ABI::Windows::Foundation;
-		using Handler = ITypedEventHandler<SMTC*, Args*>;
-
-		const auto handler = Callback<Handler>([=](
-				not_null<SMTControls*> sender,
-				not_null<ButtonsEventArgs*> args) {
-			SMTCButton button;
-			if (FAILED(args->get_Button(&button))) {
-				return E_FAIL;
-			}
-			Integration::Instance().enterFromEventLoop([&] {
+	using ButtonsEventArgs =
+		winrt::Media::SystemMediaTransportControlsButtonPressedEventArgs;
+	_private->eventToken = _private->controls.ButtonPressed([=](
+		const auto &sender,
+		const ButtonsEventArgs &args) {
+			// This lambda is called in a non-main thread.
+			const auto button = args.Button();
+			crl::on_main([=] {
 				_private->commandRequests.fire(SMTCButtonToCommand(button));
 			});
-			return S_OK;
 		});
 
-		hr = _private->controls->add_ButtonPressed(
-			handler.Get(),
-			&_private->registrationToken);
+	_private->controls.IsEnabled(true);
 
-		if (FAILED(hr)) {
-			return false;
-		}
-
-		_private->hasValidRegistrationToken = true;
-	}
-
-	hr = _private->controls->put_IsEnabled(true);
-	if (FAILED(hr)) {
-		return false;
-	}
-
-	hr = _private->controls->get_DisplayUpdater(
-		&_private->displayUpdater);
-	if (FAILED(hr)) {
-		return false;
-	}
-
-	hr = _private->displayUpdater->put_Type(
-		MediaType::MediaPlaybackType_Music);
-	if (FAILED(hr)) {
-		return false;
-	}
-
-	hr = _private->displayUpdater->get_MusicProperties(
-		&_private->displayProperties);
-	if (FAILED(hr)) {
-		return false;
-	}
+	_private->displayUpdater = _private->controls.DisplayUpdater();
+	_private->displayUpdater.Type(winrt::Media::MediaPlaybackType::Music);
+	_private->displayProperties = _private->displayUpdater.MusicProperties();
 
 	_private->initialized = true;
 	return true;
@@ -203,74 +174,44 @@ void SystemMediaControls::setApplicationName(const QString &name) {
 }
 
 void SystemMediaControls::setEnabled(bool enabled) {
-	_private->controls->put_IsEnabled(enabled);
+	_private->controls.IsEnabled(enabled);
 }
 
 void SystemMediaControls::setIsNextEnabled(bool value) {
-	_private->controls->put_IsNextEnabled(value);
+	_private->controls.IsNextEnabled(value);
 }
 
 void SystemMediaControls::setIsPreviousEnabled(bool value) {
-	_private->controls->put_IsPreviousEnabled(value);
+	_private->controls.IsPreviousEnabled(value);
 }
 
 void SystemMediaControls::setIsPlayPauseEnabled(bool value) {
-	_private->controls->put_IsPlayEnabled(value);
-	_private->controls->put_IsPauseEnabled(value);
+	_private->controls.IsPlayEnabled(value);
+	_private->controls.IsPauseEnabled(value);
 }
 
 void SystemMediaControls::setIsStopEnabled(bool value) {
-	_private->controls->put_IsStopEnabled(value);
+	_private->controls.IsStopEnabled(value);
 }
 
 void SystemMediaControls::setPlaybackStatus(
 		SystemMediaControls::PlaybackStatus status) {
-	_private->controls->put_PlaybackStatus(SmtcPlaybackStatus(status));
+	_private->controls.PlaybackStatus(SmtcPlaybackStatus(status));
 }
 
 void SystemMediaControls::setTitle(const QString &title) {
-	const auto wtitle = title.toStdWString();
-	_private->displayProperties->put_Title(
-		StringReferenceWrapper(wtitle.data(), wtitle.size()).Get());
+	const auto htitle = winrt::to_hstring(title.toStdString());
+	_private->displayProperties.Title(htitle);
 }
 
 void SystemMediaControls::setArtist(const QString &artist) {
-	const auto wartist = artist.toStdWString();
-	_private->displayProperties->put_Artist(
-		StringReferenceWrapper(wartist.data(), wartist.size()).Get());
+	const auto hartist = winrt::to_hstring(artist.toStdString());
+	_private->displayProperties.Artist(hartist);
 }
 
 void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
-	const auto id = StringReferenceWrapper(
-		RuntimeClass_Windows_Storage_Streams_InMemoryRandomAccessStream);
-	auto hr = base::Platform::ActivateInstance(
-		id.Get(),
-		&_private->thumbStream);
-	if (FAILED(hr)) {
-		return;
-	}
-
-	ComPtr<WinStreams::IDataWriterFactory> dataWriterFactory;
-	hr = GetActivationFactory(
-		StringReferenceWrapper(
-			RuntimeClass_Windows_Storage_Streams_DataWriter).Get(),
-		&dataWriterFactory);
-	if (FAILED(hr)) {
-		return;
-	}
-
-	ComPtr<WinStreams::IOutputStream> outputStream;
-	hr = _private->thumbStream.As(&outputStream);
-	if (FAILED(hr)) {
-		return;
-	}
-
-	hr = dataWriterFactory->CreateDataWriter(
-		outputStream.Get(),
-		&_private->iconDataWriter);
-	if (FAILED(hr)) {
-		return;
-	}
+	auto thumbStream = winrt::Streams::InMemoryRandomAccessStream();
+	_private->iconDataWriter = winrt::Streams::DataWriter(thumbStream);
 
 	const auto bitmapRawData = [&] {
 		QByteArray bytes;
@@ -280,69 +221,26 @@ void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 		buffer.close();
 		return std::vector<unsigned char>(bytes.begin(), bytes.end());
 	}();
-	hr = _private->iconDataWriter->WriteBytes(
-		bitmapRawData.size(),
-		(BYTE*)bitmapRawData.data());
-	if (FAILED(hr)) {
-		return;
-	}
+	_private->iconDataWriter.WriteBytes(bitmapRawData);
 
-	using namespace ABI::Windows::Foundation;
-	using Handler = IAsyncOperationCompletedHandler<uint32>;
-	// Store the written bytes in the stream, an async operation.
-	ComPtr<IAsyncOperation<uint32>> storeAsyncOperation;
-	hr = _private->iconDataWriter->StoreAsync(&storeAsyncOperation);
-	if (FAILED(hr)) {
-		return;
-	}
+	using namespace winrt::Windows;
+	_private->iconDataWriter.StoreAsync().Completed([=,
+			thumbStream = std::move(thumbStream)](
+		Foundation::IAsyncOperation<uint32> asyncOperation,
+		Foundation::AsyncStatus status) {
 
-	const auto storeAsyncCallback = Callback<Handler>([=](
-			not_null<IAsyncOperation<uint32>*> asyncOperation,
-			AsyncStatus status) mutable {
 		// Check the async operation completed successfully.
-		IAsyncInfo *asyncInfo;
-		auto hr = asyncOperation->QueryInterface(
-			IID_IAsyncInfo,
-			reinterpret_cast<void**>(&asyncInfo));
-		if (FAILED(hr)) {
-			return hr;
-		}
-		asyncInfo->get_ErrorCode(&hr);
-		if (!SUCCEEDED(hr) || !(status == AsyncStatus::Completed)) {
-			return hr;
-		}
-		ComPtr<WinStreams::IRandomAccessStreamReferenceStatics>
-			referenceStatics;
-		const auto &streamReferenceString =
-			RuntimeClass_Windows_Storage_Streams_RandomAccessStreamReference;
-		hr = GetActivationFactory(
-			StringReferenceWrapper(streamReferenceString).Get(),
-			&referenceStatics);
-		if (FAILED(hr)) {
-			return hr;
+		if ((status != Foundation::AsyncStatus::Completed)
+			|| FAILED(asyncOperation.ErrorCode())) {
+			return;
 		}
 
-		hr = referenceStatics->CreateFromStream(
-			_private->thumbStream.Get(),
-			&_private->thumbStreamReference);
-		if (FAILED(hr)) {
-			return hr;
-		}
+		auto reference = _private->referenceStatics.CreateFromStream(
+			thumbStream);
 
-		hr = _private->displayUpdater->put_Thumbnail(
-			_private->thumbStreamReference.Get());
-		if (FAILED(hr)) {
-			return hr;
-		}
-
-		hr = _private->displayUpdater->Update();
-		if (FAILED(hr)) {
-			return hr;
-		}
-		return hr;
+		_private->displayUpdater.Thumbnail(reference);
+		_private->displayUpdater.Update();
 	});
-
-	hr = storeAsyncOperation->put_Completed(storeAsyncCallback.Get());
 }
 
 void SystemMediaControls::setDuration(int duration) {
@@ -355,19 +253,19 @@ void SystemMediaControls::setVolume(float64 volume) {
 }
 
 void SystemMediaControls::clearThumbnail() {
-	_private->displayUpdater->put_Thumbnail(nullptr);
-	_private->displayUpdater->Update();
+	_private->displayUpdater.Thumbnail(nullptr);
+	_private->displayUpdater.Update();
 }
 
 void SystemMediaControls::clearMetadata() {
-	_private->displayUpdater->ClearAll();
-	_private->controls->put_IsEnabled(false);
+	_private->displayUpdater.ClearAll();
+	_private->controls.IsEnabled(false);
 }
 
 void SystemMediaControls::updateDisplay() {
-	_private->controls->put_IsEnabled(true);
-	_private->displayUpdater->put_Type(MediaType::MediaPlaybackType_Music);
-	_private->displayUpdater->Update();
+	_private->controls.IsEnabled(true);
+	_private->displayUpdater.Type(winrt::Media::MediaPlaybackType::Music);
+	_private->displayUpdater.Update();
 }
 
 auto SystemMediaControls::commandRequests() const
