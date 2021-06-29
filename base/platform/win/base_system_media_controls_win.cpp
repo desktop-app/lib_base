@@ -147,66 +147,75 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 		icontrols.detach(),
 		winrt::take_ownership_from_abi);
 
-	// Buttons handler.
 	using ButtonsEventArgs =
 		winrt::Media::SystemMediaTransportControlsButtonPressedEventArgs;
-	_private->eventToken = _private->controls.ButtonPressed([=](
-		const auto &sender,
-		const ButtonsEventArgs &args) {
+	const auto result = WinRT::Try([&] {
+		// Buttons handler.
+		_private->eventToken = _private->controls.ButtonPressed([=](
+				const auto &sender,
+				const ButtonsEventArgs &args) {
 			// This lambda is called in a non-main thread.
-			const auto button = args.Button();
 			crl::on_main([=] {
-				_private->commandRequests.fire(SMTCButtonToCommand(button));
+				const auto button = WinRT::Try([&] {
+					return SMTCButtonToCommand(args.Button());
+				}).value_or(SystemMediaControls::Command::None);
+				_private->commandRequests.fire_copy(button);
 			});
 		});
 
-	_private->controls.IsEnabled(true);
+		_private->controls.IsEnabled(true);
 
-	_private->displayUpdater = _private->controls.DisplayUpdater();
-	_private->displayUpdater.Type(winrt::Media::MediaPlaybackType::Music);
-	_private->displayProperties = _private->displayUpdater.MusicProperties();
+		auto displayUpdater = _private->controls.DisplayUpdater();
+		displayUpdater.Type(winrt::Media::MediaPlaybackType::Music);
+		_private->displayProperties = displayUpdater.MusicProperties();
+		_private->displayUpdater = std::move(displayUpdater);
+	});
 
-	_private->initialized = true;
-	return true;
+	_private->initialized = result;
+	return result;
 }
 
 void SystemMediaControls::setApplicationName(const QString &name) {
 }
 
 void SystemMediaControls::setEnabled(bool enabled) {
-	_private->controls.IsEnabled(enabled);
+	WinRT::Try([&] { _private->controls.IsEnabled(enabled); });
 }
 
 void SystemMediaControls::setIsNextEnabled(bool value) {
-	_private->controls.IsNextEnabled(value);
+	WinRT::Try([&] { _private->controls.IsNextEnabled(value); });
 }
 
 void SystemMediaControls::setIsPreviousEnabled(bool value) {
-	_private->controls.IsPreviousEnabled(value);
+	WinRT::Try([&] { _private->controls.IsPreviousEnabled(value); });
 }
 
 void SystemMediaControls::setIsPlayPauseEnabled(bool value) {
-	_private->controls.IsPlayEnabled(value);
-	_private->controls.IsPauseEnabled(value);
+	WinRT::Try([&] {
+		_private->controls.IsPlayEnabled(value);
+		_private->controls.IsPauseEnabled(value);
+	});
 }
 
 void SystemMediaControls::setIsStopEnabled(bool value) {
-	_private->controls.IsStopEnabled(value);
+	WinRT::Try([&] { _private->controls.IsStopEnabled(value); });
 }
 
 void SystemMediaControls::setPlaybackStatus(
 		SystemMediaControls::PlaybackStatus status) {
-	_private->controls.PlaybackStatus(SmtcPlaybackStatus(status));
+	WinRT::Try([&] {
+		_private->controls.PlaybackStatus(SmtcPlaybackStatus(status));
+	});
 }
 
 void SystemMediaControls::setTitle(const QString &title) {
 	const auto htitle = winrt::to_hstring(title.toStdString());
-	_private->displayProperties.Title(htitle);
+	WinRT::Try([&] { _private->displayProperties.Title(htitle); });
 }
 
 void SystemMediaControls::setArtist(const QString &artist) {
 	const auto hartist = winrt::to_hstring(artist.toStdString());
-	_private->displayProperties.Artist(hartist);
+	WinRT::Try([&] { _private->displayProperties.Artist(hartist); });
 }
 
 void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
@@ -221,25 +230,28 @@ void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 		buffer.close();
 		return std::vector<unsigned char>(bytes.begin(), bytes.end());
 	}();
-	_private->iconDataWriter.WriteBytes(bitmapRawData);
 
-	using namespace winrt::Windows;
-	_private->iconDataWriter.StoreAsync().Completed([=,
-			thumbStream = std::move(thumbStream)](
-		Foundation::IAsyncOperation<uint32> asyncOperation,
-		Foundation::AsyncStatus status) {
+	WinRT::Try([&] {
+		_private->iconDataWriter.WriteBytes(bitmapRawData);
 
-		// Check the async operation completed successfully.
-		if ((status != Foundation::AsyncStatus::Completed)
-			|| FAILED(asyncOperation.ErrorCode())) {
-			return;
-		}
+		using namespace winrt::Windows;
+		_private->iconDataWriter.StoreAsync().Completed([=,
+				thumbStream = std::move(thumbStream)](
+			Foundation::IAsyncOperation<uint32> asyncOperation,
+			Foundation::AsyncStatus status) {
 
-		auto reference = _private->referenceStatics.CreateFromStream(
-			thumbStream);
+			// Check the async operation completed successfully.
+			if ((status != Foundation::AsyncStatus::Completed)
+				|| FAILED(asyncOperation.ErrorCode())) {
+				return;
+			}
 
-		_private->displayUpdater.Thumbnail(reference);
-		_private->displayUpdater.Update();
+			WinRT::Try([&] {
+				_private->displayUpdater.Thumbnail(
+					_private->referenceStatics.CreateFromStream(thumbStream));
+				_private->displayUpdater.Update();
+			});
+		});
 	});
 }
 
@@ -253,19 +265,25 @@ void SystemMediaControls::setVolume(float64 volume) {
 }
 
 void SystemMediaControls::clearThumbnail() {
-	_private->displayUpdater.Thumbnail(nullptr);
-	_private->displayUpdater.Update();
+	WinRT::Try([&] {
+		_private->displayUpdater.Thumbnail(nullptr);
+		_private->displayUpdater.Update();
+	});
 }
 
 void SystemMediaControls::clearMetadata() {
-	_private->displayUpdater.ClearAll();
-	_private->controls.IsEnabled(false);
+	WinRT::Try([&] {
+		_private->displayUpdater.ClearAll();
+		_private->controls.IsEnabled(false);
+	});
 }
 
 void SystemMediaControls::updateDisplay() {
-	_private->controls.IsEnabled(true);
-	_private->displayUpdater.Type(winrt::Media::MediaPlaybackType::Music);
-	_private->displayUpdater.Update();
+	WinRT::Try([&] {
+		_private->controls.IsEnabled(true);
+		_private->displayUpdater.Type(winrt::Media::MediaPlaybackType::Music);
+		_private->displayUpdater.Update();
+	});
 }
 
 auto SystemMediaControls::commandRequests() const
