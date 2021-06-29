@@ -11,6 +11,7 @@
 #include "base/debug_log.h"
 
 #include <QtCore/QFile>
+#include <QtCore/QEventLoop>
 #include <QtGui/QWindow>
 
 #include <private/qguiapplication_p.h>
@@ -52,7 +53,12 @@ constexpr auto kSnapcraftSettingsInterface = kSnapcraftSettingsService;
 }
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-void SnapDefaultHandler(const QString &protocol) {
+class SnapDefaultHandler : public QWindow {
+public:
+	SnapDefaultHandler(const QString &protocol);
+};
+
+SnapDefaultHandler::SnapDefaultHandler(const QString &protocol) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
 			Gio::DBus::BusType::BUS_TYPE_SESSION);
@@ -77,9 +83,7 @@ void SnapDefaultHandler(const QString &protocol) {
 			return;
 		}
 
-		const auto context = Glib::MainContext::create();
-		const auto loop = Glib::MainLoop::create(context);
-		g_main_context_push_thread_default(context->gobj());
+		QEventLoop loop;
 
 		connection->call(
 			std::string(kSnapcraftSettingsObjectPath),
@@ -98,15 +102,13 @@ void SnapDefaultHandler(const QString &protocol) {
 						.arg(QString::fromStdString(e.what())));
 				}
 
-				loop->quit();
+				loop.quit();
 			},
 			std::string(kSnapcraftSettingsService));
 
-		QWindow window;
-		QGuiApplicationPrivate::showModalWindow(&window);
-		loop->run();
-		g_main_context_pop_thread_default(context->gobj());
-		QGuiApplicationPrivate::hideModalWindow(&window);
+		QGuiApplicationPrivate::showModalWindow(this);
+		loop.exec();
+		QGuiApplicationPrivate::hideModalWindow(this);
 	} catch (const Glib::Error &e) {
 		LOG(("Snap Default Handler Error: %1")
 			.arg(QString::fromStdString(e.what())));

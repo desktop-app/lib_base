@@ -8,6 +8,8 @@
 
 #include "base/assertion.h" // SOURCE_FILE_BASENAME
 
+#include <QtCore/QString>
+
 namespace base {
 
 void LogWriteMain(const QString &message);

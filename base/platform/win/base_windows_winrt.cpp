@@ -11,7 +11,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-namespace base::Platform {
+namespace base::WinRT {
 namespace {
 
 int32_t(__stdcall *CoIncrementMTAUsage)(void** cookie);
@@ -40,8 +40,8 @@ bool ResolveOne(HINSTANCE library, Method &method, LPCSTR name) {
 
 bool Resolve() {
 #define RESOLVE_ONE(library, method) (ResolveOne(library, method, #method))
-	const auto ole32 = SafeLoadLibrary(u"ole32.dll"_q);
-	const auto combase = SafeLoadLibrary(u"combase.dll"_q);
+	const auto ole32 = Platform::SafeLoadLibrary(u"ole32.dll"_q);
+	const auto combase = Platform::SafeLoadLibrary(u"combase.dll"_q);
 	return RESOLVE_ONE(ole32, CoIncrementMTAUsage)
 		&& RESOLVE_ONE(combase, RoInitialize)
 		&& RESOLVE_ONE(combase, GetRestrictedErrorInfo)
@@ -61,14 +61,14 @@ bool Resolve() {
 
 } // namespace
 
-bool ResolveWinRT() {
+bool Supported() {
 	static const auto Result = Resolve();
 	return Result;
 }
 
-} // namespace base::Platform
+} // namespace base::WinRT
 
-namespace P = base::Platform;
+namespace P = base::WinRT;
 
 extern "C" {
 
