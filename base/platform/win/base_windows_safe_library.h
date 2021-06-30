@@ -10,7 +10,9 @@
 
 namespace base::Platform {
 
-HINSTANCE SafeLoadLibrary(const QString &name);
+void CheckDynamicLibraries();
+
+HINSTANCE SafeLoadLibrary(const QString &name, bool required = false);
 
 template <typename Function>
 bool LoadMethod(HINSTANCE library, LPCSTR name, Function &func, WORD id = 0) {
