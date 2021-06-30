@@ -167,7 +167,7 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 
 bool CloseProcesses(const QString &filename) {
 	static const auto loaded = [&] {
-		const auto LibRstrtMgr = SafeLoadLibrary(u"rstrtmgr.dll"_q);
+		const auto LibRstrtMgr = SafeLoadLibrary(L"rstrtmgr.dll");
 		return LOAD_SYMBOL(LibRstrtMgr, RmStartSession)
 			&& LOAD_SYMBOL(LibRstrtMgr, RmRegisterResources)
 			&& LOAD_SYMBOL(LibRstrtMgr, RmGetList)

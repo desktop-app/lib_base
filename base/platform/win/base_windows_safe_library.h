@@ -8,11 +8,13 @@
 
 #include "base/platform/win/base_windows_h.h"
 
+// We try to keep this module free of external dependencies.
+
 namespace base::Platform {
 
-void CheckDynamicLibraries();
+void InitDynamicLibraries();
 
-HINSTANCE SafeLoadLibrary(const QString &name, bool required = false);
+HINSTANCE SafeLoadLibrary(LPCWSTR name, bool required = false);
 
 template <typename Function>
 bool LoadMethod(HINSTANCE library, LPCSTR name, Function &func, WORD id = 0) {

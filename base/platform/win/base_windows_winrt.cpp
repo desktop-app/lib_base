@@ -40,8 +40,8 @@ bool ResolveOne(HINSTANCE library, Method &method, LPCSTR name) {
 
 bool Resolve() {
 #define RESOLVE_ONE(library, method) (ResolveOne(library, method, #method))
-	const auto ole32 = Platform::SafeLoadLibrary(u"ole32.dll"_q);
-	const auto combase = Platform::SafeLoadLibrary(u"combase.dll"_q);
+	const auto ole32 = Platform::SafeLoadLibrary(L"ole32.dll");
+	const auto combase = Platform::SafeLoadLibrary(L"combase.dll");
 	return RESOLVE_ONE(ole32, CoIncrementMTAUsage)
 		&& RESOLVE_ONE(combase, RoInitialize)
 		&& RESOLVE_ONE(combase, GetRestrictedErrorInfo)

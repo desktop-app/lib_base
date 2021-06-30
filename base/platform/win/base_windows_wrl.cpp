@@ -28,7 +28,7 @@ void InitWRL() {
 	if (!IsWindows8OrGreater()) {
 		return;
 	}
-	const auto combase = SafeLoadLibrary(u"combase.dll"_q);
+	const auto combase = SafeLoadLibrary(L"combase.dll");
 	LOAD_SYMBOL(combase, RoGetActivationFactory);
 	LOAD_SYMBOL(combase, RoActivateInstance);
 	LOAD_SYMBOL(combase, WindowsCreateStringReference);
