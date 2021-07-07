@@ -29,7 +29,6 @@ namespace {
 
 using namespace Gtk;
 
-constexpr auto kService = "org.desktop-app.GtkIntegration-%1"_cs;
 constexpr auto kObjectPath = "/org/desktop_app/GtkIntegration"_cs;
 constexpr auto kInterface = "org.desktop_app.GtkIntegration"_cs;
 constexpr auto kPropertiesInterface = "org.freedesktop.DBus.Properties"_cs;
@@ -66,6 +65,8 @@ constexpr auto kIntrospectionXML = R"INTROSPECTION(<node>
 		<property name='Loaded' type='b' access='read'/>
 	</interface>
 </node>)INTROSPECTION"_cs;
+
+Glib::ustring ServiceNameVar;
 
 void GtkMessageHandler(
 		const gchar *log_domain,
@@ -196,8 +197,7 @@ public:
 	}())
 	, interfaceVTable(
 		sigc::mem_fun(this, &Private::handleMethodCall),
-		sigc::mem_fun(this, &Private::handleGetProperty))
-	, serviceName(kService.utf16().arg(getpid()).toStdString()) {
+		sigc::mem_fun(this, &Private::handleGetProperty)) {
 	}
 
 	bool setupBase(QLibrary &lib, const QString &allowedBackends);
@@ -222,7 +222,6 @@ public:
 	const Glib::RefPtr<Gio::DBus::Connection> dbusConnection;
 	const Gio::DBus::InterfaceVTable interfaceVTable;
 	Glib::RefPtr<Gio::DBus::NodeInfo> introspectionData;
-	Glib::ustring serviceName;
 	Glib::ustring parentDBusName;
 	QStringList connectedSettings;
 	bool loaded = false;
@@ -465,7 +464,7 @@ void GtkIntegration::load(const QString &allowedBackends, bool force) {
 				MakeGlibVariant(std::tuple{
 					Glib::ustring(allowedBackends.toStdString()),
 				}),
-				_private->serviceName);
+				ServiceNameVar);
 		} catch (...) {
 		}
 
@@ -493,9 +492,8 @@ void GtkIntegration::load(const QString &allowedBackends, bool force) {
 	}
 }
 
-int GtkIntegration::exec(const QString &parentDBusName, int ppid) {
+int GtkIntegration::exec(const QString &parentDBusName) {
 	_private->remoting = false;
-	_private->serviceName = kService.utf16().arg(ppid).toStdString();
 	_private->parentDBusName = parentDBusName.toStdString();
 
 	_private->introspectionData = Gio::DBus::NodeInfo::create_for_xml(
@@ -506,7 +504,7 @@ int GtkIntegration::exec(const QString &parentDBusName, int ppid) {
 		_private->introspectionData->lookup_interface(),
 		_private->interfaceVTable);
 
-	const auto app = Gio::Application::create(_private->serviceName);
+	const auto app = Gio::Application::create(ServiceNameVar);
 	app->hold();
 	_private->parentServiceWatcherId = DBus::RegisterServiceWatcher(
 		_private->dbusConnection,
@@ -536,7 +534,7 @@ void GtkIntegration::initializeSettings() {
 
 bool GtkIntegration::loaded() const {
 	if (_private->remoting) {
-		if (!_private->dbusConnection) {
+		if (!_private->dbusConnection || ServiceNameVar.empty()) {
 			return false;
 		}
 
@@ -549,7 +547,7 @@ bool GtkIntegration::loaded() const {
 					Glib::ustring(std::string(kInterface)),
 					Glib::ustring("Loaded"),
 				}),
-				_private->serviceName);
+				ServiceNameVar);
 
 			return GlibVariantCast<bool>(
 				GlibVariantCast<Glib::VariantBase>(
@@ -563,8 +561,12 @@ bool GtkIntegration::loaded() const {
 	return _private->loaded;
 }
 
-QString GtkIntegration::serviceName() const {
-	return QString::fromStdString(_private->serviceName);
+QString GtkIntegration::ServiceName() {
+	return QString::fromStdString(ServiceNameVar);
+}
+
+void GtkIntegration::SetServiceName(const QString &serviceName) {
+	ServiceNameVar = serviceName.toStdString();
 }
 
 bool GtkIntegration::checkVersion(uint major, uint minor, uint micro) const {
@@ -583,7 +585,7 @@ bool GtkIntegration::checkVersion(uint major, uint minor, uint micro) const {
 					minor,
 					micro,
 				}),
-				_private->serviceName);
+				ServiceNameVar);
 
 			return GlibVariantCast<bool>(reply.get_child(0));
 		} catch (...) {
@@ -612,7 +614,7 @@ std::optional<bool> GtkIntegration::getBoolSetting(
 				MakeGlibVariant(std::tuple{
 					Glib::ustring(propertyName.toStdString()),
 				}),
-				_private->serviceName);
+				ServiceNameVar);
 
 			return GlibVariantCast<bool>(reply.get_child(0));
 		} catch (...) {
@@ -646,7 +648,7 @@ std::optional<int> GtkIntegration::getIntSetting(
 				MakeGlibVariant(std::tuple{
 					Glib::ustring(propertyName.toStdString()),
 				}),
-				_private->serviceName);
+				ServiceNameVar);
 
 			return GlibVariantCast<int>(reply.get_child(0));
 		} catch (...) {
@@ -679,7 +681,7 @@ std::optional<QString> GtkIntegration::getStringSetting(
 				MakeGlibVariant(std::tuple{
 					Glib::ustring(propertyName.toStdString()),
 				}),
-				_private->serviceName);
+				ServiceNameVar);
 
 			return QString::fromStdString(
 				GlibVariantCast<Glib::ustring>(reply.get_child(0)));
@@ -716,7 +718,7 @@ void GtkIntegration::connectToSetting(
 					Glib::ustring(propertyName.toStdString()),
 				}),
 				{},
-				_private->serviceName);
+				ServiceNameVar);
 
 			// doesn't emit subscriptions subscribed with
 			// crl::async otherwise for some reason...
@@ -742,7 +744,7 @@ void GtkIntegration::connectToSetting(
 						} catch (...) {
 						}
 					},
-					_private->serviceName,
+					ServiceNameVar,
 					std::string(kInterface),
 					"SettingChanged",
 					std::string(kObjectPath));
@@ -754,7 +756,7 @@ void GtkIntegration::connectToSetting(
 				if (!_private->connectedSettings.contains(propertyName)) {
 					DBus::RegisterServiceWatcher(
 						_private->dbusConnection,
-						_private->serviceName,
+						ServiceNameVar,
 						[=, connection = _private->dbusConnection](
 							const Glib::ustring &service,
 							const Glib::ustring &oldOwner,
