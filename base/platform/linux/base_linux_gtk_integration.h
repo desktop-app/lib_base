@@ -25,10 +25,12 @@ public:
 	}
 
 	void load(const QString &allowedBackends, bool force = false);
-	int exec(const QString &parentDBusName, int ppid);
+	int exec(const QString &parentDBusName);
 	void initializeSettings();
 	[[nodiscard]] bool loaded() const;
-	[[nodiscard]] QString serviceName() const;
+
+	[[nodiscard]] static QString ServiceName();
+	static void SetServiceName(const QString &serviceName);
 
 	[[nodiscard]] bool checkVersion(
 		uint major,

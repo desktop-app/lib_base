@@ -24,7 +24,7 @@ GtkIntegration *GtkIntegration::Instance() {
 void GtkIntegration::load(const QString &allowedBackends, bool force) {
 }
 
-int GtkIntegration::exec(const QString &parentDBusName, int ppid) {
+int GtkIntegration::exec(const QString &parentDBusName) {
 	return 1;
 }
 
@@ -35,8 +35,11 @@ bool GtkIntegration::loaded() const {
 	return false;
 }
 
-QString GtkIntegration::serviceName() const {
+QString GtkIntegration::ServiceName() {
 	return QString();
+}
+
+void GtkIntegration::SetServiceName(const QString &serviceName) {
 }
 
 bool GtkIntegration::checkVersion(uint major, uint minor, uint micro) const {
