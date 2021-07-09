@@ -214,6 +214,9 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 	return true;
 }
 
+void SystemMediaControls::setServiceName(const QString &name) {
+}
+
 void SystemMediaControls::setApplicationName(const QString &name) {
 }
 
