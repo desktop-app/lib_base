@@ -195,12 +195,12 @@ public:
 
 private:
 	const Gio::DBus::InterfaceVTable _interfaceVTable;
-	const std::string _objectPath;
+	const Glib::ustring _objectPath;
 	const Glib::ustring _playerInterface;
-	const std::string _propertiesInterface;
+	const Glib::ustring _propertiesInterface;
 
-	const std::string _signalPropertyChangedName;
-	const std::string _signalSeekedName;
+	const Glib::ustring _signalPropertyChangedName;
+	const Glib::ustring _signalSeekedName;
 
 	Glib::RefPtr<Gio::DBus::Connection> _dbusConnection;
 
