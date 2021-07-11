@@ -114,7 +114,7 @@ const VariantType& Variant<std::tuple<Types...>>::variant_type()
 
 	// expands the variadic template parameters
 	using swallow = int[]; // ensures left to right order
-	swallow{(expander(Variant<Types>::variant_type()))...};
+	(void)swallow{(expander(Variant<Types>::variant_type()))...};
 	static auto type = VariantType::create_tuple(types);
 
 	return type;
@@ -206,7 +206,7 @@ std::tuple<Types...> Variant<std::tuple<Types...>>::get() const
 		variants.push_back(variant);
 		return i++;
 	};
-	swallow{(expander(get_child_variant<Types>(i)))...};
+	(void)swallow{(expander(get_child_variant<Types>(i)))...};
 	detail::assign_tuple(variants, data, std::index_sequence_for<Types...>{});
 
 	return data;
