@@ -17,15 +17,6 @@
 namespace base {
 namespace {
 
-[[nodiscard]] QString Prefix() {
-#ifdef Q_OS_WIN
-	return "Global\\";
-#else // Q_OS_WIN
-	return QStandardPaths::writableLocation(
-		QStandardPaths::TempLocation) + '/';
-#endif // Q_OS_WIN
-}
-
 [[nodiscard]] QString NameForPath(
 		const QString &uniqueApplicationName,
 		const QString &path) {
