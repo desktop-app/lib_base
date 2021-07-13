@@ -22,7 +22,7 @@ std::optional<bool> NetworkAvailable() {
 		return std::nullopt;
 	}
 
-	static const auto Inited = [] {
+	[[maybe_unused]] static const auto Inited = [] {
 		g_signal_connect(
 			g_network_monitor_get_default(),
 			"notify::network-available",

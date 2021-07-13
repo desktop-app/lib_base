@@ -8,7 +8,7 @@
 
 namespace base::Platform {
 
-inline QString FileNameFromUserString(QString name) {
+[[nodiscard]] inline QString FileNameFromUserString(QString name) {
 	return name;
 }
 
