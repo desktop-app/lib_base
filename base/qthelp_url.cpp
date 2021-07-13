@@ -95,7 +95,7 @@ QString url_append_query_or_hash(const QString &url, const QString &add) {
 	}
 	const auto hash = url.lastIndexOf('#');
 	return url
-		+ (query >= 0 && query > url.lastIndexOf('#') ? '&' : '?')
+		+ (query >= 0 && query > hash ? '&' : '?')
 		+ add;
 }
 

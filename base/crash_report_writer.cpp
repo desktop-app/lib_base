@@ -77,8 +77,6 @@ int ReportFileNo = -1;
 std::atomic<Qt::HANDLE> ReportingThreadId = nullptr;
 bool SkipWriteReportHeader = false;
 bool ReportingHeaderWritten = false;
-std::array<char, 65536> ReportingHeaderData;
-int ReportingHeaderLength = 0;
 QMutex ReportingMutex;
 
 #ifdef Q_OS_WIN

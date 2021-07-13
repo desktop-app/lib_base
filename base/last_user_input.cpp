@@ -36,7 +36,7 @@ crl::time LastUserInputTime() {
 		}
 		return base::EventFilterResult::Continue;
 	};
-	static const auto watcher = base::install_event_filter(
+	[[maybe_unused]] static const auto watcher = base::install_event_filter(
 		QCoreApplication::instance(),
 		updateResult);
 	return result;
