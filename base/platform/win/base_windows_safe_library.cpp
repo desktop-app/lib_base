@@ -52,9 +52,10 @@ void CheckDynamicLibraries() {
 	const auto findHandle = FindFirstFile(search.c_str(), &findData);
 	if (findHandle == INVALID_HANDLE_VALUE) {
 		const auto error = GetLastError();
-		if (error != ERROR_FILE_NOT_FOUND) {
-			FatalError(L"Could not enumerate executable path!", error);
+		if (error == ERROR_FILE_NOT_FOUND) {
+			return;
 		}
+		FatalError(L"Could not enumerate executable path!", error);
 	}
 
 	do {
