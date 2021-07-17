@@ -284,6 +284,9 @@ public:
 		auto where = getUpperBound(value);
 		return impl().insert(where, std::move(value));
 	}
+	iterator insert(iterator itr, const Type &value) {
+		return impl().insert(itr, value);
+	}
 	template <typename... Args>
 	iterator emplace(Args&&... args) {
 		return insert(Type(std::forward<Args>(args)...));
