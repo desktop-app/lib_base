@@ -47,4 +47,29 @@ uint RegisterServiceWatcher(
 		const Glib::ustring &,
 		const Glib::ustring &)> callback);
 
+class ServiceWatcher {
+public:
+	ServiceWatcher(
+		const Glib::RefPtr<Gio::DBus::Connection> &connection,
+		const Glib::ustring &service,
+		Fn<void(
+			const Glib::ustring &,
+			const Glib::ustring &,
+			const Glib::ustring &)> callback)
+	: _connection(connection)
+	, _signalId(RegisterServiceWatcher(connection, service, callback)) {
+	}
+
+	~ServiceWatcher() {
+		if (!_connection || !_signalId) {
+			return;
+		}
+		_connection->signal_unsubscribe(_signalId);
+	}
+
+private:
+	Glib::RefPtr<Gio::DBus::Connection> _connection;
+	uint _signalId = 0;
+};
+
 } // namespace base::Platform::DBus
