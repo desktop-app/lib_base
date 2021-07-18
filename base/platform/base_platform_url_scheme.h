@@ -14,11 +14,6 @@ struct UrlSchemeDescriptor {
 	QString protocol; // 'myprotocol'
 	QString protocolName; // "My Protocol Link"
 	QString shortAppName; // "myapp"
-	QString desktopFileDir; // "$WorkingDir/mydata/"
-	QString desktopFileName; // "myapplication"
-	QString iconFileName; // "myapplication"
-	bool forceUpdateIcon = false;
-	bool skipDesktopFileRegistration = false;
 	QString longAppName; // "MyApplication"
 	QString displayAppName; // "My Application"
 	QString displayAppDescription; // "My Nice Application"
