@@ -11,6 +11,7 @@
 #include "base/debug_log.h"
 
 #include <QtCore/QFile>
+#include <QtCore/QProcess>
 #include <QtGui/QWindow>
 
 #include <private/qguiapplication_p.h>
@@ -121,9 +122,15 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		const auto handlerType = QString("x-scheme-handler/%1")
 			.arg(descriptor.protocol);
 
+		QByteArray escapedArguments;
+		for (const auto &arg : QProcess::splitCommand(descriptor.arguments)) {
+			escapedArguments += ' ' + EscapeShell(QFile::encodeName(arg));
+		}
+
 		const auto neededCommandline = QString("%1 -- %u")
 			.arg(QString(
-				EscapeShell(QFile::encodeName(descriptor.executable))));
+				EscapeShell(QFile::encodeName(descriptor.executable))
+					+ escapedArguments));
 
 		const auto currentAppInfo = Gio::AppInfo::get_default_for_type(
 			handlerType.toStdString(),
@@ -158,9 +165,15 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		const auto handlerType = QString("x-scheme-handler/%1")
 			.arg(descriptor.protocol);
 
+		QByteArray escapedArguments;
+		for (const auto &arg : QProcess::splitCommand(descriptor.arguments)) {
+			escapedArguments += ' ' + EscapeShell(QFile::encodeName(arg));
+		}
+
 		const auto commandlineForCreator = QString("%1 --")
 			.arg(QString(
-				EscapeShell(QFile::encodeName(descriptor.executable))));
+				EscapeShell(QFile::encodeName(descriptor.executable))
+					+ escapedArguments));
 
 		const auto newAppInfo = Gio::AppInfo::create_from_commandline(
 			commandlineForCreator.toStdString(),
@@ -179,8 +192,15 @@ void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	const auto handlerType = QString("x-scheme-handler/%1")
 		.arg(descriptor.protocol);
 
+	QByteArray escapedArguments;
+	for (const auto &arg : QProcess::splitCommand(descriptor.arguments)) {
+		escapedArguments += ' ' + EscapeShell(QFile::encodeName(arg));
+	}
+
 	const auto neededCommandline = QString("%1 -- %u")
-		.arg(QString(EscapeShell(QFile::encodeName(descriptor.executable))));
+		.arg(QString(
+			EscapeShell(QFile::encodeName(descriptor.executable))
+				+ escapedArguments));
 
 	auto registeredAppInfoList = g_app_info_get_recommended_for_type(
 		handlerType.toUtf8().constData());
