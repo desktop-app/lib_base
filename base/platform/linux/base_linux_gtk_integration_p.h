@@ -13,15 +13,7 @@ extern "C" {
 #include <gdk/gdk.h>
 } // extern "C"
 
-#if defined DESKTOP_APP_USE_PACKAGED && !defined DESKTOP_APP_USE_PACKAGED_LAZY
-#define LINK_TO_GTK
-#endif // DESKTOP_APP_USE_PACKAGED && !DESKTOP_APP_USE_PACKAGED_LAZY
-
-#ifdef LINK_TO_GTK
-#define LOAD_GTK_SYMBOL(lib, func) (func = ::func)
-#else // LINK_TO_GTK
 #define LOAD_GTK_SYMBOL LOAD_LIBRARY_SYMBOL
-#endif // !LINK_TO_GTK
 
 namespace base {
 namespace Platform {
@@ -31,11 +23,7 @@ inline bool LoadGtkLibrary(
 		QLibrary &lib,
 		const char *name,
 		std::optional<int> version = std::nullopt) {
-#ifdef LINK_TO_GTK
-	return true;
-#else // LINK_TO_GTK
 	return LoadLibrary(lib, name, version);
-#endif // LINK_TO_GTK
 }
 
 inline gboolean (*gtk_init_check)(int *argc, char ***argv) = nullptr;
