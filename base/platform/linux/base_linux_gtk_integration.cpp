@@ -275,6 +275,7 @@ void GtkIntegration::Private::handleMethodCall(
 			"Access denied.");
 
 		invocation->return_error(error);
+		return;
 	}
 
 	try {
