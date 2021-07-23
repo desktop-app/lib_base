@@ -38,7 +38,6 @@ enum class OutdateReason {
 [[nodiscard]] bool IsWindows10OrGreater();
 
 [[nodiscard]] constexpr bool IsMac();
-[[nodiscard]] constexpr bool IsOSXBuild();
 [[nodiscard]] constexpr bool IsMacStoreBuild();
 [[nodiscard]] bool IsMac10_6OrGreater();
 [[nodiscard]] bool IsMac10_7OrGreater();

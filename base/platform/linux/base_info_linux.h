@@ -41,7 +41,6 @@ inline bool IsWindows8OrGreater() { return false; }
 inline bool IsWindows8Point1OrGreater() { return false; }
 inline bool IsWindows10OrGreater() { return false; }
 inline constexpr bool IsMac() { return false; }
-inline constexpr bool IsOSXBuild() { return false; }
 inline constexpr bool IsMacStoreBuild() { return false; }
 inline bool IsMac10_6OrGreater() { return false; }
 inline bool IsMac10_7OrGreater() { return false; }

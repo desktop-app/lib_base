@@ -101,8 +101,6 @@ const char *PlatformString() {
 		return "Windows64Bit";
 	} else if (Platform::IsMacStoreBuild()) {
 		return "MacAppStore";
-	} else if (Platform::IsOSXBuild()) {
-		return "OSX";
 	} else if (Platform::IsMac()) {
 		return "MacOS";
 	} else if (Platform::IsLinux32Bit()) {

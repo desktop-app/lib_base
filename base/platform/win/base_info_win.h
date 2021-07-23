@@ -43,7 +43,6 @@ inline constexpr bool IsWindowsStoreBuild() {
 }
 
 inline constexpr bool IsMac() { return false; }
-inline constexpr bool IsOSXBuild() { return false; }
 inline constexpr bool IsMacStoreBuild() { return false; }
 inline bool IsMac10_6OrGreater() { return false; }
 inline bool IsMac10_7OrGreater() { return false; }
