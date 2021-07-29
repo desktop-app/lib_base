@@ -10,7 +10,11 @@ init_target(lib_base)
 
 add_library(lib_base_crash_report_writer STATIC)
 add_library(desktop-app::lib_base_crash_report_writer ALIAS lib_base_crash_report_writer)
-init_target(lib_base_crash_report_writer)
+if (LINUX)
+    init_target(lib_base_crash_report_writer cxx_std_17)
+else()
+    init_target(lib_base_crash_report_writer)
+endif()
 
 get_filename_component(src_loc . REALPATH)
 
