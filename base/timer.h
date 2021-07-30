@@ -24,7 +24,7 @@ public:
 	explicit Timer(Fn<void()> callback = nullptr);
 
 	static Qt::TimerType DefaultType(crl::time timeout) {
-		constexpr auto kThreshold = crl::time(1000);
+		constexpr auto kThreshold = crl::time(240);
 		return (timeout > kThreshold) ? Qt::CoarseTimer : Qt::PreciseTimer;
 	}
 
