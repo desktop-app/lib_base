@@ -16,7 +16,6 @@
 #include <QtCore/QDate>
 #include <QtGui/QGuiApplication>
 
-// this file is used on both Linux & BSD
 #ifdef Q_OS_LINUX
 #include <gnu/libc-version.h>
 #endif // Q_OS_LINUX
@@ -47,6 +46,7 @@ QString SystemVersionPretty() {
 	static const auto result = [&] {
 		QStringList resultList{};
 
+// this file is used on both Linux & BSD
 #ifdef Q_OS_LINUX
 		resultList << "Linux";
 #else // Q_OS_LINUX
