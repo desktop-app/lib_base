@@ -56,11 +56,9 @@ QString SystemVersionPretty() {
 		if (const auto desktopEnvironment = GetDesktopEnvironment();
 			!desktopEnvironment.isEmpty()) {
 			resultList << desktopEnvironment;
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 		} else if (const auto windowManager = GetWindowManager();
 			!windowManager.isEmpty()) {
 			resultList << windowManager;
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 		}
 
 		if (IsWayland()) {
@@ -188,7 +186,7 @@ QString GetWindowManager() {
 		: QString();
 #else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 	return QString();
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+#endif // DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 bool IsX11() {
