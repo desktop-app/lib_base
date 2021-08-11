@@ -30,8 +30,6 @@ enum class OutdateReason {
 [[nodiscard]] constexpr bool IsWindows32Bit();
 [[nodiscard]] constexpr bool IsWindows64Bit();
 [[nodiscard]] constexpr bool IsWindowsStoreBuild();
-[[nodiscard]] bool IsWindowsXPOrGreater();
-[[nodiscard]] bool IsWindowsVistaOrGreater();
 [[nodiscard]] bool IsWindows7OrGreater();
 [[nodiscard]] bool IsWindows8OrGreater();
 [[nodiscard]] bool IsWindows8Point1OrGreater();
@@ -39,12 +37,6 @@ enum class OutdateReason {
 
 [[nodiscard]] constexpr bool IsMac();
 [[nodiscard]] constexpr bool IsMacStoreBuild();
-[[nodiscard]] bool IsMac10_6OrGreater();
-[[nodiscard]] bool IsMac10_7OrGreater();
-[[nodiscard]] bool IsMac10_8OrGreater();
-[[nodiscard]] bool IsMac10_9OrGreater();
-[[nodiscard]] bool IsMac10_10OrGreater();
-[[nodiscard]] bool IsMac10_11OrGreater();
 [[nodiscard]] bool IsMac10_12OrGreater();
 [[nodiscard]] bool IsMac10_13OrGreater();
 [[nodiscard]] bool IsMac10_14OrGreater();
@@ -52,8 +44,6 @@ enum class OutdateReason {
 [[nodiscard]] bool IsMac11_0OrGreater();
 
 [[nodiscard]] constexpr bool IsLinux();
-[[nodiscard]] constexpr bool IsLinux32Bit();
-[[nodiscard]] constexpr bool IsLinux64Bit();
 [[nodiscard]] bool IsX11();
 [[nodiscard]] bool IsWayland();
 

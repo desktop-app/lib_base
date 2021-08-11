@@ -162,10 +162,6 @@ QString SystemVersionPretty() {
 		return "Windows 8";
 	} else if (IsWindows7OrGreater()) {
 		return "Windows 7";
-	} else if (IsWindowsVistaOrGreater()) {
-		return "Windows Vista";
-	} else if (IsWindowsXPOrGreater()) {
-		return "Windows XP";
 	} else {
 		return QSysInfo::prettyProductName();
 	}
@@ -225,16 +221,10 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
-	if (!IsWindows7OrGreater()) {
-		return QDate(2019, 9, 1);
-	}
 	return QDate();
 }
 
 int AutoUpdateVersion() {
-	if (!IsWindows7OrGreater()) {
-		return 1;
-	}
 	return 2;
 }
 
@@ -244,16 +234,6 @@ QString AutoUpdateKey() {
 	} else {
 		return "win";
 	}
-}
-
-bool IsWindowsXPOrGreater() {
-	static const auto result = ::IsWindowsXPOrGreater();
-	return result;
-}
-
-bool IsWindowsVistaOrGreater() {
-	static const auto result = ::IsWindowsVistaOrGreater();
-	return result;
 }
 
 bool IsWindows7OrGreater() {

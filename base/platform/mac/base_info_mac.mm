@@ -147,51 +147,15 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
-	if (!IsMac10_10OrGreater()) {
-		return QDate(2019, 9, 1);
-	} else if (!IsMac10_12OrGreater()) {
-		return QDate(2020, 9, 1);
-	}
 	return QDate();
 }
 
 int AutoUpdateVersion() {
-	if (!IsMac10_10OrGreater()) {
-		return 1;
-	}
 	return 2;
 }
 
 QString AutoUpdateKey() {
-	if (!IsMac10_12OrGreater()) {
-		return "osx";
-	} else {
-		return "mac";
-	}
-}
-
-bool IsMac10_6OrGreater() {
-	return IsMac10ThatOrGreater<6>();
-}
-
-bool IsMac10_7OrGreater() {
-	return IsMac10ThatOrGreater<7>();
-}
-
-bool IsMac10_8OrGreater() {
-	return IsMac10ThatOrGreater<8>();
-}
-
-bool IsMac10_9OrGreater() {
-	return IsMac10ThatOrGreater<9>();
-}
-
-bool IsMac10_10OrGreater() {
-	return IsMac10ThatOrGreater<10>();
-}
-
-bool IsMac10_11OrGreater() {
-	return IsMac10ThatOrGreater<11>();
+	return "mac";
 }
 
 bool IsMac10_12OrGreater() {
