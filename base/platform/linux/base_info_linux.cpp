@@ -99,15 +99,6 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
-	const auto libcName = GetLibcName();
-	const auto libcVersion = GetLibcVersion();
-
-	if (libcName == qstr("glibc") && !libcVersion.isEmpty()) {
-		if (QVersionNumber::fromString(libcVersion) < QVersionNumber(2, 23)) {
-			return QDate(2020, 9, 1); // Older than Ubuntu 16.04.
-		}
-	}
-
 	return QDate();
 }
 
