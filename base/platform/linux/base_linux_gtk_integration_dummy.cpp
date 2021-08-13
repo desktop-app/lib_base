@@ -28,9 +28,6 @@ int GtkIntegration::exec(const QString &parentDBusName) {
 	return 1;
 }
 
-void GtkIntegration::initializeSettings() {
-}
-
 bool GtkIntegration::loaded() const {
 	return false;
 }

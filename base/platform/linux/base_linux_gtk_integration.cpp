@@ -96,89 +96,6 @@ std::optional<T> GtkSetting(const QString &propertyName) {
 	return value;
 }
 
-bool IconThemeShouldBeSet() {
-	// change the icon theme only if
-	// it isn't already set by a platformtheme plugin
-	static const auto Result =
-		// QGenericUnixTheme
-		(QIcon::themeName() == qstr("hicolor")
-			&& QIcon::fallbackThemeName() == qstr("hicolor"))
-		// QGnomeTheme
-		|| (QIcon::themeName() == qstr("Adwaita")
-			&& QIcon::fallbackThemeName() == qstr("gnome"))
-		// qt5ct
-		|| (QIcon::themeName().isEmpty()
-			&& QIcon::fallbackThemeName().isEmpty());
-
-	return Result;
-}
-
-bool CursorSizeShouldBeSet() {
-	// change the cursor size only on Wayland and if it wasn't already set
-	static const auto Result = ::Platform::IsWayland()
-		&& qEnvironmentVariableIsEmpty("XCURSOR_SIZE");
-
-	return Result;
-}
-
-void SetIconTheme() {
-	static const auto setter = [] {
-		const auto integration = GtkIntegration::Instance();
-		if (!integration || !IconThemeShouldBeSet()) {
-			return;
-		}
-
-		const auto themeName = integration->getStringSetting(
-			"gtk-icon-theme-name");
-
-		const auto fallbackThemeName = integration->getStringSetting(
-			"gtk-fallback-icon-theme");
-
-		if (!themeName.has_value() || !fallbackThemeName.has_value()) {
-			return;
-		}
-
-		QIcon::setThemeName(*themeName);
-		QIcon::setFallbackThemeName(*fallbackThemeName);
-
-		LOG(("Setting GTK icon theme: %1").arg(QIcon::themeName()));
-
-		LOG(("Setting GTK fallback icon theme: %1")
-			.arg(QIcon::fallbackThemeName()));
-	};
-
-	if (QCoreApplication::instance()) {
-		Integration::Instance().enterFromEventLoop(setter);
-	} else {
-		setter();
-	}
-}
-
-void SetCursorSize() {
-	static const auto setter = [] {
-		const auto integration = GtkIntegration::Instance();
-		if (!integration || !CursorSizeShouldBeSet()) {
-			return;
-		}
-
-		const auto newCursorSize = integration->getIntSetting(
-			"gtk-cursor-theme-size");
-
-		if (!newCursorSize.has_value()) {
-			return;
-		}
-
-		qputenv("XCURSOR_SIZE", QByteArray::number(*newCursorSize));
-		LOG(("Setting GTK cursor size: %1").arg(*newCursorSize));
-	};
-
-	if (QCoreApplication::instance()) {
-		Integration::Instance().enterFromEventLoop(setter);
-	} else {
-		setter();
-	}
-}
-
 } // namespace
 
 class GtkIntegration::Private {
@@ -507,17 +424,6 @@ int GtkIntegration::exec(const QString &parentDBusName) {
 			app->quit();
 		});
 	return app->run(0, nullptr);
-}
-
-void GtkIntegration::initializeSettings() {
-	if (!loaded()) {
-		return;
-	}
-
-	SetIconTheme();
-	SetCursorSize();
-	connectToSetting("gtk-icon-theme-name", SetIconTheme);
-	connectToSetting("gtk-cursor-theme-size", SetCursorSize);
 }
 
 bool GtkIntegration::loaded() const {
