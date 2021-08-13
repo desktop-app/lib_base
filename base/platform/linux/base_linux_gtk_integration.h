@@ -26,7 +26,6 @@ public:
 
 	void load(const QString &allowedBackends, bool force = false);
 	int exec(const QString &parentDBusName);
-	void initializeSettings();
 	[[nodiscard]] bool loaded() const;
 
 	[[nodiscard]] static QString ServiceName();
