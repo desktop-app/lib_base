@@ -149,8 +149,7 @@ vector concatenate(Args &&...args) {
 	return result;
 }
 
-template <
-	typename SpanRange>
+template <typename SpanRange>
 vector concatenate(SpanRange args) {
 	auto size = std::size_t(0);
 	for (const auto &arg : args) {
@@ -166,7 +165,6 @@ vector concatenate(SpanRange args) {
 	return result;
 }
 
-// Implemented in base/openssl_help.h
 void set_random(span destination);
 
 } // namespace bytes

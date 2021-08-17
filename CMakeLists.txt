@@ -110,6 +110,7 @@ PRIVATE
     base/basic_types.h
     base/binary_guard.h
     base/build_config.h
+    base/bytes.cpp
     base/bytes.h
     base/call_delayed.cpp
     base/call_delayed.h

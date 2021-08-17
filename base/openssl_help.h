@@ -593,15 +593,3 @@ inline bytes::vector HmacSha256(
 }
 
 } // namespace openssl
-
-namespace bytes {
-
-inline void set_random(span destination) {
-	if (!destination.empty()) {
-		RAND_bytes(
-			reinterpret_cast<unsigned char*>(destination.data()),
-			destination.size());
-	}
-}
-
-} // namespace bytes
