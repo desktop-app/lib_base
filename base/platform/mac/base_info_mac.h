@@ -34,6 +34,7 @@ inline bool IsWindows7OrGreater() { return false; }
 inline bool IsWindows8OrGreater() { return false; }
 inline bool IsWindows8Point1OrGreater() { return false; }
 inline bool IsWindows10OrGreater() { return false; }
+inline bool IsWindows11OrGreater() { return false; }
 inline constexpr bool IsLinux() { return false; }
 inline bool IsX11() { return false; }
 inline bool IsWayland() { return false; }

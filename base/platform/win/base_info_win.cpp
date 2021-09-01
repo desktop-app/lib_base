@@ -9,6 +9,7 @@
 #include "base/platform/base_platform_info.h"
 #include "base/platform/win/base_windows_h.h"
 
+#include <QtCore/QOperatingSystemVersion>
 #include <QtCore/QJsonObject>
 #include <QtCore/QDate>
 
@@ -154,7 +155,9 @@ QString DeviceModelPretty() {
 }
 
 QString SystemVersionPretty() {
-	if (IsWindows10OrGreater()) {
+	if (IsWindows11OrGreater()) {
+		return "Windows 11";
+	} else if (IsWindows10OrGreater()) {
 		return "Windows 10";
 	} else if (IsWindows8Point1OrGreater()) {
 		return "Windows 8.1";
@@ -253,6 +256,18 @@ bool IsWindows8Point1OrGreater() {
 
 bool IsWindows10OrGreater() {
 	static const auto result = ::IsWindows10OrGreater();
+	return result;
+}
+
+bool IsWindows11OrGreater() {
+	static const auto result = [&] {
+		if (!IsWindows10OrGreater()) {
+			return false;
+		}
+		const auto version = QOperatingSystemVersion::current();
+		return (version.majorVersion() > 10)
+			|| (version.microVersion() >= 22000);
+	}();
 	return result;
 }
 

@@ -26,6 +26,7 @@ inline bool IsWindows7OrGreater() { return false; }
 inline bool IsWindows8OrGreater() { return false; }
 inline bool IsWindows8Point1OrGreater() { return false; }
 inline bool IsWindows10OrGreater() { return false; }
+inline bool IsWindows11OrGreater() { return false; }
 inline constexpr bool IsMac() { return false; }
 inline constexpr bool IsMacStoreBuild() { return false; }
 inline bool IsMac10_12OrGreater() { return false; }
