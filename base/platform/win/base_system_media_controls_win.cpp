@@ -128,10 +128,18 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 	const auto hwnd = static_cast<HWND>(native->nativeResourceForWindow(
 		QByteArrayLiteral("handle"),
 		window));
+	if (!hwnd) {
+		return false;
+	}
 
-	const auto interop = winrt::get_activation_factory
-		<winrt::Media::SystemMediaTransportControls,
-		ISystemMediaTransportControlsInterop>();
+	const auto interop = WinRT::Try([&] {
+		return winrt::get_activation_factory<
+			winrt::Media::SystemMediaTransportControls,
+			ISystemMediaTransportControlsInterop>();
+	}).value_or(nullptr);
+	if (!interop) {
+		return false;
+	}
 
 	winrt::com_ptr<winrt::Media::ISystemMediaTransportControls> icontrols;
 	auto hr = interop->GetForWindow(
