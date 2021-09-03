@@ -32,10 +32,6 @@ PRIVATE
     base/platform/linux/base_linux_dbus_utilities.cpp
     base/platform/linux/base_linux_dbus_utilities.h
     base/platform/linux/base_linux_glibmm_helper.h
-    base/platform/linux/base_linux_gtk_integration_p.h
-    base/platform/linux/base_linux_gtk_integration_dummy.cpp
-    base/platform/linux/base_linux_gtk_integration.cpp
-    base/platform/linux/base_linux_gtk_integration.h
     base/platform/linux/base_linux_library.cpp
     base/platform/linux/base_linux_library.h
     base/platform/linux/base_linux_xcb_utilities.cpp
@@ -208,17 +204,6 @@ if (DESKTOP_APP_DISABLE_X11_INTEGRATION)
     )
 endif()
 
-if (DESKTOP_APP_DISABLE_GTK_INTEGRATION)
-    remove_target_sources(lib_base ${src_loc}
-        base/platform/linux/base_linux_gtk_integration_p.h
-        base/platform/linux/base_linux_gtk_integration.cpp
-    )
-else()
-    remove_target_sources(lib_base ${src_loc}
-        base/platform/linux/base_linux_gtk_integration_dummy.cpp
-    )
-endif()
-
 target_include_directories(lib_base
 PUBLIC
     ${src_loc}
@@ -253,13 +238,6 @@ elseif (LINUX)
             desktop-app::external_xcb_screensaver
             desktop-app::external_xcb
         )
-    endif()
-
-    if (NOT DESKTOP_APP_DISABLE_GTK_INTEGRATION)
-        find_package(PkgConfig REQUIRED)
-
-        pkg_check_modules(GTK REQUIRED gtk+-3.0)
-        target_include_directories(lib_base SYSTEM PUBLIC ${GTK_INCLUDE_DIRS})
     endif()
 endif()
 
