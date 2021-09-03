@@ -42,6 +42,8 @@ PRIVATE
     base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_linux_xdp_utilities.cpp
     base/platform/linux/base_linux_xdp_utilities.h
+    base/platform/linux/base_linux_xsettings.cpp
+    base/platform/linux/base_linux_xsettings.h
     base/platform/linux/base_network_reachability_linux.cpp
     base/platform/linux/base_network_reachability_linux.h
     base/platform/linux/base_process_linux.cpp
@@ -201,6 +203,8 @@ if (DESKTOP_APP_DISABLE_X11_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_xcb_utilities.cpp
         base/platform/linux/base_linux_xcb_utilities.h
+        base/platform/linux/base_linux_xsettings.cpp
+        base/platform/linux/base_linux_xsettings.h
     )
 endif()
 
