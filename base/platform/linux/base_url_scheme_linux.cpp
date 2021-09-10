@@ -6,22 +6,29 @@
 //
 #include "base/platform/linux/base_url_scheme_linux.h"
 
-#include "base/platform/linux/base_linux_glibmm_helper.h"
 #include "base/const_string.h"
 #include "base/debug_log.h"
+
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#include "base/platform/linux/base_linux_glibmm_helper.h"
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <QtCore/QFile>
 #include <QtCore/QProcess>
 #include <QtGui/QWindow>
 
 #include <private/qguiapplication_p.h>
+
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <gio/gio.h>
 #include <glibmm.h>
 #include <giomm.h>
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 namespace base::Platform {
 namespace {
 
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 constexpr auto kSnapcraftSettingsService = "io.snapcraft.Settings"_cs;
 constexpr auto kSnapcraftSettingsObjectPath = "/io/snapcraft/Settings"_cs;
 constexpr auto kSnapcraftSettingsInterface = kSnapcraftSettingsService;
@@ -52,7 +59,6 @@ constexpr auto kSnapcraftSettingsInterface = kSnapcraftSettingsService;
 	return result;
 }
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 void SnapDefaultHandler(const QString &protocol) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
@@ -118,6 +124,7 @@ void SnapDefaultHandler(const QString &protocol) {
 } // namespace
 
 bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	try {
 		const auto handlerType = QString("x-scheme-handler/%1")
 			.arg(descriptor.protocol);
@@ -144,18 +151,18 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		}
 	} catch (...) {
 	}
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 	return false;
 }
 
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
-	try {
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+	try {
 		if (qEnvironmentVariableIsSet("SNAP")) {
 			SnapDefaultHandler(descriptor.protocol);
 			return;
 		}
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 		if (CheckUrlScheme(descriptor)) {
 			return;
@@ -186,9 +193,11 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	} catch (const Glib::Error &e) {
 		LOG(("Register Url Scheme Error: %1").arg(QString::fromStdString(e.what())));
 	}
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 }
 
 void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	const auto handlerType = QString("x-scheme-handler/%1")
 		.arg(descriptor.protocol);
 
@@ -224,6 +233,7 @@ void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	if (registeredAppInfoList) {
 		g_list_free_full(registeredAppInfoList, g_object_unref);
 	}
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 }
 
 } // namespace base::Platform

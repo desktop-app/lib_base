@@ -15,8 +15,10 @@
 #include <QtCore/QDir>
 #include <QtGui/QDesktopServices>
 
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <glibmm.h>
 #include <giomm.h>
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -92,7 +94,6 @@ bool DBusShowInFolder(const QString &filepath) {
 
 	return false;
 }
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 bool ProcessShowInFolder(const QString &filepath) {
 	const auto fileManager = [] {
@@ -137,6 +138,7 @@ bool ProcessShowInFolder(const QString &filepath) {
 
 	return false;
 }
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 } // namespace
 
@@ -149,27 +151,29 @@ bool ShowInFolder(const QString &filepath) {
 	if (PortalShowInFolder(filepath)) {
 		return true;
 	}
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 	if (ProcessShowInFolder(filepath)) {
 		return true;
 	}
 
-	const auto folder = QFileInfo(filepath).absolutePath();
 	try {
 		if (Gio::AppInfo::launch_default_for_uri(
-			Glib::filename_to_uri(folder.toStdString()))) {
+			Glib::filename_to_uri(
+				Glib::path_get_dirname(filepath.toStdString())))) {
 			return true;
 		}
 	} catch (...) {
 	}
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
-	const auto qUrlFolder = QUrl::fromLocalFile(folder);
-	if (QDesktopServices::openUrl(qUrlFolder)) {
+	const auto folder = QUrl::fromLocalFile(
+		QFileInfo(filepath).absolutePath());
+
+	if (QDesktopServices::openUrl(folder)) {
 		return true;
 	}
 
-	if (QProcess::startDetached("xdg-open", { qUrlFolder.toEncoded() })) {
+	if (QProcess::startDetached("xdg-open", { folder.toEncoded() })) {
 		return true;
 	}
 

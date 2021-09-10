@@ -185,6 +185,7 @@ if (DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_dbus_utilities.cpp
         base/platform/linux/base_linux_dbus_utilities.h
+        base/platform/linux/base_linux_glibmm_helper.h
         base/platform/linux/base_linux_xdp_utilities.cpp
         base/platform/linux/base_linux_xdp_utilities.h
         base/platform/linux/base_system_media_controls_linux.cpp
@@ -224,11 +225,13 @@ PUBLIC
 if (WIN32)
     nuget_add_winrt(lib_base)
 elseif (LINUX)
-    target_link_libraries(lib_base
-    PUBLIC
-        desktop-app::external_glibmm
-        desktop-app::external_glib
-    )
+    if (NOT DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
+        target_link_libraries(lib_base
+        PUBLIC
+            desktop-app::external_glibmm
+            desktop-app::external_glib
+        )
+    endif()
 
     if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
         target_link_libraries(lib_base
