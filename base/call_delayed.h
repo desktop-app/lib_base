@@ -8,7 +8,7 @@
 
 namespace base {
 
-	void call_delayed(crl::time delay, FnMut<void()> &&callable);
+void call_delayed(crl::time delay, FnMut<void()> &&callable);
 
 template <
 	typename Guard,

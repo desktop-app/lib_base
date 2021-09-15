@@ -6,15 +6,13 @@
 //
 #include "base/bytes.h"
 
-#include "base/openssl_help.h"
+#include "base/random.h"
 
 namespace bytes {
 
 void set_random(span destination) {
 	if (!destination.empty()) {
-		RAND_bytes(
-			reinterpret_cast<unsigned char*>(destination.data()),
-			destination.size());
+		base::RandomFill(destination.data(), destination.size());
 	}
 }
 
