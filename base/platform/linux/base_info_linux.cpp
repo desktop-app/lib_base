@@ -64,7 +64,11 @@ QString SystemVersionPretty() {
 		if (IsWayland()) {
 			resultList << "Wayland";
 		} else if (IsX11()) {
-			resultList << "X11";
+			if (qEnvironmentVariableIsSet("WAYLAND_DISPLAY")) {
+				resultList << "XWayland";
+			} else {
+				resultList << "X11";
+			}
 		}
 
 		const auto libcName = GetLibcName();
