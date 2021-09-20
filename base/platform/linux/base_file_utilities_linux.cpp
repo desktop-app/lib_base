@@ -181,6 +181,21 @@ bool ShowInFolder(const QString &filepath) {
 }
 
 QString CurrentExecutablePath(int argc, char *argv[]) {
+	if (qEnvironmentVariableIsSet("APPIMAGE")) {
+		const auto appimagePath = qEnvironmentVariable("APPIMAGE");
+		const auto appimagePathList = appimagePath.split('/');
+
+		if (qEnvironmentVariableIsSet("ARGV0")
+			&& appimagePathList.size() >= 5
+			&& appimagePathList[1] == qstr("run")
+			&& appimagePathList[2] == qstr("user")
+			&& appimagePathList[4] == qstr("appimagelauncherfs")) {
+			return qEnvironmentVariable("ARGV0");
+		}
+
+		return appimagePath;
+	}
+
 	constexpr auto kMaxPath = 1024;
 	char result[kMaxPath] = { 0 };
 	auto count = readlink("/proc/self/exe", result, kMaxPath);
