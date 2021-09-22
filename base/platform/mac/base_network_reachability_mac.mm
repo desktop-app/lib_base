@@ -4,13 +4,11 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#pragma once
-
 #include "base/platform/base_platform_network_reachability.h"
 
 namespace base::Platform {
 
-inline std::optional<bool> NetworkAvailable() {
+std::optional<bool> NetworkAvailable() {
 	return std::nullopt;
 }
 

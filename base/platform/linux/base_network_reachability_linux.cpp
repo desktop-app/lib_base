@@ -4,7 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
-#include "base/platform/linux/base_network_reachability_linux.h"
+#include "base/platform/base_platform_network_reachability.h"
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <gio/gio.h>

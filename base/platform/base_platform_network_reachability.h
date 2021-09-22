@@ -16,11 +16,3 @@ void NotifyNetworkAvailableChanged();
 }
 
 } // namespace base::Platform
-
-#ifdef Q_OS_MAC
-#include "base/platform/mac/base_network_reachability_mac.h"
-#elif defined Q_OS_UNIX // Q_OS_MAC
-#include "base/platform/linux/base_network_reachability_linux.h"
-#elif defined Q_OS_WIN // Q_OS_MAC || Q_OS_UNIX
-#include "base/platform/win/base_network_reachability_win.h"
-#endif // Q_OS_MAC || Q_OS_UNIX || Q_OS_WIN
