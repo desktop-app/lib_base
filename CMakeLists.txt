@@ -41,7 +41,6 @@ PRIVATE
     base/platform/linux/base_linux_xsettings.cpp
     base/platform/linux/base_linux_xsettings.h
     base/platform/linux/base_network_reachability_linux.cpp
-    base/platform/linux/base_network_reachability_linux.h
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
     base/platform/linux/base_system_media_controls_linux_dummy.cpp
@@ -58,7 +57,7 @@ PRIVATE
     base/platform/mac/base_last_input_mac.mm
     base/platform/mac/base_layout_switch_mac.h
     base/platform/mac/base_layout_switch_mac.mm
-    base/platform/mac/base_network_reachability_mac.h
+    base/platform/mac/base_network_reachability_mac.mm
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
     base/platform/mac/base_system_media_controls_mac.mm
@@ -76,7 +75,7 @@ PRIVATE
     base/platform/win/base_last_input_win.h
     base/platform/win/base_layout_switch_win.cpp
     base/platform/win/base_layout_switch_win.h
-    base/platform/win/base_network_reachability_win.h
+    base/platform/win/base_network_reachability_win.cpp
     base/platform/win/base_process_win.cpp
     base/platform/win/base_process_win.h
     base/platform/win/base_system_media_controls_win.cpp
