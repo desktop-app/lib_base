@@ -56,4 +56,14 @@ inline details::TryResult<Method> Try(Method &&method) noexcept {
 	}
 }
 
+template <typename Interface>
+auto TryCreateInstance(
+		const winrt::guid &clsid,
+		uint32_t context = 0x1 /*CLSCTX_INPROC_SERVER*/,
+		void *outer = nullptr) {
+	return Try([&] {
+		return winrt::create_instance<Interface>(clsid, context, outer);
+	}).value_or(winrt::com_ptr<Interface>());
+}
+
 } // namespace base::WinRT
