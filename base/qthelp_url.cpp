@@ -27,6 +27,11 @@ QString ExpressionDomainExplicit() {
 	return QString::fromUtf8("(?<![\\w\\$\\-\\_%=\\.])(?:([a-zA-Z]+)://)((?:[A-Za-z" "\xD0\x90-\xD0\xAF\xD0\x81" "\xD0\xB0-\xD1\x8F\xD1\x91" "0-9\\-\\_]+\\.){0,10}([A-Za-z" "\xD1\x80\xD1\x84" "\\-\\d]{2,22})(\\:\\d+)?)");
 }
 
+QString ExpressionIpExplicit() {
+	//Matches any ip, containing a protocol, including "test://127.0.0.1:1234"	
+	return QString::fromUtf8("(?<![\\w\\$\\-\\_%=\\.])(?:([a-zA-Z]+)://)(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\:\\d+)?)");
+}
+
 bool IsGoodProtocol(const QString &protocol) {
 	const auto equals = [&](QLatin1String string) {
 		return protocol.compare(string, Qt::CaseInsensitive) == 0;
@@ -45,6 +50,11 @@ const QRegularExpression &RegExpDomain() {
 
 const QRegularExpression &RegExpDomainExplicit() {
 	static const auto result = CreateRegExp(ExpressionDomainExplicit());
+	return result;
+}
+
+const QRegularExpression &RegExpIpExplicit() {
+	static const auto result = CreateRegExp(ExpressionIpExplicit());
 	return result;
 }
 
@@ -104,14 +114,15 @@ QString validate_url(const QString &value) {
 	if (trimmed.isEmpty()) {
 		return QString();
 	}
-	const auto match = RegExpDomainExplicit().match(trimmed);
-	if (!match.hasMatch()) {
+	const auto domainMatch = RegExpDomainExplicit().match(trimmed);
+	const auto ipMatch = RegExpIpExplicit().match(trimmed);
+	if (!domainMatch.hasMatch() && !ipMatch.hasMatch()) {
 		const auto domain = RegExpDomain().match(trimmed);
 		if (!domain.hasMatch() || domain.capturedStart() != 0) {
 			return QString();
 		}
 		return qstr("http://") + trimmed;
-	} else if (match.capturedStart() != 0) {
+	} else if (domainMatch.capturedStart() != 0 && ipMatch.capturedStart() != 0) {
 		return QString();
 	}
 	const auto protocolMatch = RegExpProtocol().match(trimmed);
