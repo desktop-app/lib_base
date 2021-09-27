@@ -99,6 +99,7 @@ PRIVATE
     base/platform/base_platform_process.h
     base/platform/base_platform_url_scheme.h
     base/platform/base_platform_system_media_controls.h
+    base/algorithm.cpp
     base/algorithm.h
     base/assertion.cpp
     base/assertion.h
