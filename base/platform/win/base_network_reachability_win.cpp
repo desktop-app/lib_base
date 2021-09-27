@@ -37,8 +37,11 @@ bool QueryInterfaceImpl(IUnknown *from, REFIID riid, void **ppvObject) {
 
 class NetworkListManagerEvents : public INetworkListManagerEvents {
 public:
-	NetworkListManagerEvents();
-	virtual ~NetworkListManagerEvents();
+	NetworkListManagerEvents() = default;
+	virtual ~NetworkListManagerEvents() = default;
+
+	void start();
+	void finish();
 
 	HRESULT STDMETHODCALLTYPE QueryInterface(
 		REFIID riid,
@@ -62,9 +65,10 @@ private:
 
 	std::atomic<ULONG> _ref = 0;
 	DWORD _cookie = 0;
+
 };
 
-NetworkListManagerEvents::NetworkListManagerEvents() {
+void NetworkListManagerEvents::start() {
 	auto hr = CoCreateInstance(
 		CLSID_NetworkListManager,
 		nullptr,
@@ -113,7 +117,7 @@ NetworkListManagerEvents::NetworkListManagerEvents() {
 	Available = connectivity != NLM_CONNECTIVITY_DISCONNECTED;
 }
 
-NetworkListManagerEvents::~NetworkListManagerEvents() {
+void NetworkListManagerEvents::finish() {
 	if (_connectionPoint) {
 		auto hr = _connectionPoint->Unadvise(_cookie);
 		if (FAILED(hr)) {
@@ -125,7 +129,6 @@ NetworkListManagerEvents::~NetworkListManagerEvents() {
 			_cookie = 0;
 		}
 	}
-	Assert(_ref == 0);
 }
 
 HRESULT STDMETHODCALLTYPE NetworkListManagerEvents::QueryInterface(
@@ -166,11 +169,13 @@ public:
 		}
 
 		_managerEvents = new NetworkListManagerEvents();
+		_managerEvents->start();
 	}
 
 	~NetworkListManagerEventsInitializer() {
 		if (!_comInitFailed) {
-			_managerEvents.Reset();
+			_managerEvents->finish();
+			_managerEvents = nullptr;
 			CoUninitialize();
 		}
 	}
@@ -178,6 +183,7 @@ public:
 private:
 	ComPtr<NetworkListManagerEvents> _managerEvents = nullptr;
 	bool _comInitFailed = false;
+
 };
 
 } // namespace
