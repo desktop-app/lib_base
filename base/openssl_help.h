@@ -402,7 +402,7 @@ public:
 	[[nodiscard]] static int Compare(const BigNum &a, const BigNum &b) {
 		return a.failed() ? -1 : b.failed() ? 1 : BN_cmp(a.raw(), b.raw());
 	}
-	[[nodiscard]] static void Div(
+	static void Div(
 			BigNum *dv,
 			BigNum *rem,
 			const BigNum &a,
