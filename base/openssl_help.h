@@ -237,6 +237,23 @@ public:
 		}
 		return *this;
 	}
+	BigNum &setGcd(
+			const BigNum &a,
+			const BigNum &b,
+			const Context &context = Context()) {
+		if (a.failed() || b.failed()) {
+			_failed = true;
+		} else if (a.isNegative() || b.isNegative()) {
+			_failed = true;
+		} else if (!BN_gcd(raw(), a.raw(), b.raw(), context.raw())) {
+			_failed = true;
+		} else if (isNegative()) {
+			_failed = true;
+		} else {
+			_failed = false;
+		}
+		return *this;
+	}
 
 	[[nodiscard]] bool isZero() const {
 		return !failed() && (!_data || BN_is_zero(raw()));
@@ -381,6 +398,40 @@ public:
 			const BigNum &mod,
 			const Context &context = Context()) {
 		return BigNum().setModExp(base, power, mod, context);
+	}
+	[[nodiscard]] static int Compare(const BigNum &a, const BigNum &b) {
+		return a.failed() ? -1 : b.failed() ? 1 : BN_cmp(a.raw(), b.raw());
+	}
+	[[nodiscard]] static void Div(
+			BigNum *dv,
+			BigNum *rem,
+			const BigNum &a,
+			const BigNum &b,
+			const Context &context = Context()) {
+		if (!dv && !rem) {
+			return;
+		} else if (a.failed()
+			|| b.failed()
+			|| !BN_div(
+				dv ? dv->raw() : nullptr,
+				rem ? rem->raw() : nullptr,
+				a.raw(),
+				b.raw(),
+				context.raw())) {
+			if (dv) {
+				dv->_failed = true;
+			}
+			if (rem) {
+				rem->_failed = true;
+			}
+		} else {
+			if (dv) {
+				dv->_failed = false;
+			}
+			if (rem) {
+				rem->_failed = false;
+			}
+		}
 	}
 	[[nodiscard]] static BigNum Failed() {
 		auto result = BigNum();
