@@ -81,6 +81,7 @@ PRIVATE
     base/platform/win/base_system_media_controls_win.cpp
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
+    base/platform/win/base_windows_co_task_mem.h
     base/platform/win/base_windows_h.h
     base/platform/win/base_windows_safe_library.cpp
     base/platform/win/base_windows_safe_library.h
