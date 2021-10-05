@@ -8,7 +8,10 @@
 
 #include "base/platform/win/base_windows_h.h"
 
+#define _ROAPI_ // we don't want them from .dll
 #include <roapi.h>
+#undef _ROAPI_
+
 #include <wrl/client.h>
 #include <strsafe.h>
 #include <intsafe.h>
@@ -26,6 +29,20 @@ inline HRESULT(__stdcall *RoActivateInstance)(
 	_In_ HSTRING activatableClassId,
 	_COM_Outptr_ IInspectable** instance);
 
+inline HRESULT(__stdcall *RoRegisterActivationFactories)(
+	_In_reads_(count) HSTRING* activatableClassIds,
+	_In_reads_(count) PFNGETACTIVATIONFACTORY* activationFactoryCallbacks,
+	_In_ UINT32 count,
+	_Out_ RO_REGISTRATION_COOKIE* cookie);
+
+inline void(__stdcall *RoRevokeActivationFactories)(
+	_In_ RO_REGISTRATION_COOKIE cookie);
+
+inline HRESULT(__stdcall *WindowsCreateString)(
+	_In_reads_opt_(length) PCNZWCH sourceString,
+	UINT32 length,
+	_Outptr_result_maybenull_ _Result_nullonfailure_ HSTRING* string);
+
 inline HRESULT(__stdcall *WindowsCreateStringReference)(
 	_In_reads_opt_(length + 1) PCWSTR sourceString,
 	UINT32 length,
@@ -35,9 +52,32 @@ inline HRESULT(__stdcall *WindowsCreateStringReference)(
 inline HRESULT(__stdcall *WindowsDeleteString)(
 	_In_opt_ HSTRING string);
 
+inline PCWSTR(__stdcall *WindowsGetStringRawBuffer)(
+	_In_opt_ HSTRING string,
+	_Out_opt_ UINT32* length);
+
+inline BOOL(__stdcall *WindowsIsStringEmpty)(
+	_In_opt_ HSTRING string);
+
+inline HRESULT(__stdcall *WindowsStringHasEmbeddedNull)(
+	_In_opt_ HSTRING string,
+	_Out_ BOOL* hasEmbedNull);
+
+inline BOOL(__stdcall *RoOriginateErrorW)(
+	_In_ HRESULT error,
+	_In_ UINT cchMax,
+	_When_(cchMax == 0, _In_reads_or_z_opt_(MAX_ERROR_MESSAGE_CHARS))
+	_When_(cchMax > 0 && cchMax < MAX_ERROR_MESSAGE_CHARS, _In_reads_or_z_(cchMax))
+	_When_(cchMax >= MAX_ERROR_MESSAGE_CHARS, _In_reads_or_z_(MAX_ERROR_MESSAGE_CHARS)) PCWSTR message);
+
+inline BOOL(__stdcall *RoOriginateError)(
+	_In_ HRESULT error,
+	_In_opt_ HSTRING message);
+
 [[nodiscard]] inline bool SupportsWRL() {
 	InitWRL();
 	return (RoGetActivationFactory != nullptr)
+		&& (WindowsCreateString != nullptr)
 		&& (WindowsCreateStringReference != nullptr)
 		&& (WindowsDeleteString != nullptr);
 }
