@@ -90,6 +90,7 @@ PRIVATE
     base/platform/win/base_windows_wrl.cpp
     base/platform/win/base_windows_wrl.h
     base/platform/win/wrl/wrl_implements_h.h
+    base/platform/win/wrl/wrl_module_h.h
     base/platform/base_platform_global_shortcuts.h
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
