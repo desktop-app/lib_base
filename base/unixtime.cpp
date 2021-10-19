@@ -155,12 +155,12 @@ rpl::producer<> updates() {
 
 QDateTime parse(TimeId value) {
 	return (value > 0)
-		? QDateTime::fromTime_t(value - ValueShift)
+		? QDateTime::fromSecsSinceEpoch(value - ValueShift)
 		: QDateTime();
 }
 
 TimeId serialize(const QDateTime &date) {
-	return date.isNull() ? TimeId(0) : date.toTime_t() + ValueShift;
+	return date.isNull() ? TimeId(0) : date.toSecsSinceEpoch() + ValueShift;
 }
 
 bool http_valid() {

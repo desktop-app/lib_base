@@ -64,9 +64,9 @@ inline RegularExpressionMatch regex_match(const QString &string, const QString &
 	return RegularExpressionMatch(QRegularExpression(string, qtOptions).match(subject));
 }
 
-inline RegularExpressionMatch regex_match(const QString &string, const QStringRef &subjectRef, RegExOptions options = 0) {
+inline RegularExpressionMatch regex_match(const QString &string, QStringView subjectView, RegExOptions options = 0) {
 	auto qtOptions = QRegularExpression::PatternOptions(static_cast<int>(options));
-	return RegularExpressionMatch(QRegularExpression(string, qtOptions).match(subjectRef));
+	return RegularExpressionMatch(QRegularExpression(string, qtOptions).match(subjectView));
 }
 
 } // namespace qthelp
