@@ -8,7 +8,11 @@
 
 #include "base/platform/base_platform_network_reachability.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QtNetwork/QNetworkInformation>
+#else // Qt >= 6.0.0
 #include <QtNetwork/QNetworkConfigurationManager>
+#endif // Qt < 6.0.0
 
 namespace base {
 namespace {
@@ -29,9 +33,12 @@ std::weak_ptr<NetworkReachability> GlobalNetworkReachability;
 #endif // __GNUC__ || __clang__ || _MSC_VER
 
 struct NetworkReachability::Private {
-	rpl::variable<bool> available;
-	//QObject qObject;
+	rpl::variable<bool> available = true;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	QObject qObject;
+#else // Qt >= 6.0.0
 	QNetworkConfigurationManager configurationManager;
+#endif // Qt < 6.0.0
 	rpl::lifetime lifetime;
 };
 
@@ -43,8 +50,9 @@ NetworkReachability::NetworkReachability()
 		) | rpl::start_with_next([=] {
 			_private->available = *Platform::NetworkAvailable();
 		}, _private->lifetime);
-	/* Qt 6
-	} else if (QNetworkInformation::load()) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	} else if (QNetworkInformation::load(
+		QNetworkInformation::Feature::Reachability)) {
 		_private->available = QNetworkInformation::instance()->reachability()
 			!= QNetworkInformation::Reachability::Disconnected;
 		QObject::connect(
@@ -55,7 +63,7 @@ NetworkReachability::NetworkReachability()
 				_private->available = newReachability
 					!= QNetworkInformation::Reachability::Disconnected;
 			});
-	*/
+#else // Qt >= 6.0.0
 	} else {
 		_private->available = _private->configurationManager.isOnline();
 		QObject::connect(
@@ -64,6 +72,7 @@ NetworkReachability::NetworkReachability()
 			[=](bool isOnline) {
 				_private->available = isOnline;
 			});
+#endif // Qt < 6.0.0
 	}
 }
 
