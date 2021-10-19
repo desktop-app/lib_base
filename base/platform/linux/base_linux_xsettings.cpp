@@ -287,7 +287,7 @@ void XSettings::handlePropertyNotifyEvent(
 bool XSettings::nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
-		long *result) {
+		NativeEventResult *result) {
 	const auto event = static_cast<xcb_generic_event_t*>(message);
 	const auto response_type = event->response_type & ~0x80;
 	switch (response_type) {
