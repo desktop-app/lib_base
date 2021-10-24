@@ -16,6 +16,8 @@
 #include <QtCore/QDate>
 #include <QtGui/QGuiApplication>
 
+#include <sys/utsname.h>
+
 #ifdef Q_OS_LINUX
 #include <gnu/libc-version.h>
 #endif // Q_OS_LINUX
@@ -46,12 +48,12 @@ QString SystemVersionPretty() {
 	static const auto result = [&] {
 		QStringList resultList{};
 
-// this file is used on both Linux & BSD
-#ifdef Q_OS_LINUX
-		resultList << "Linux";
-#else // Q_OS_LINUX
-		resultList << QSysInfo::kernelType();
-#endif // !Q_OS_LINUX
+		struct utsname u;
+		if (uname(&u) == 0) {
+			resultList << u.sysname;
+		} else {
+			resultList << "Unknown";
+		}
 
 		if (const auto desktopEnvironment = GetDesktopEnvironment();
 			!desktopEnvironment.isEmpty()) {
