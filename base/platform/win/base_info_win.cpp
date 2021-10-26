@@ -12,6 +12,7 @@
 #include <QtCore/QOperatingSystemVersion>
 #include <QtCore/QJsonObject>
 #include <QtCore/QDate>
+#include <QtCore/QSettings>
 
 #include <VersionHelpers.h>
 
@@ -142,16 +143,39 @@ QString GetLangCodeById(unsigned int lngId) {
 } // namespace
 
 QString DeviceModelPretty() {
-#ifdef Q_PROCESSOR_X86_64
-	return "PC 64bit";
-#elif defined Q_PROCESSOR_X86_32 // Q_PROCESSOR_X86_64
-	auto bIsWow64 = BOOL(FALSE);
-	return (IsWow64Process(GetCurrentProcess(), &bIsWow64) && bIsWow64)
-		? "PC 64bit"
-		: "PC 32bit";
-#else // Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
-	return "PC " + QSysInfo::buildCpuArchitecture();
-#endif // else for Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
+	static const auto result = [&] {
+		constexpr auto kMaxDeviceModelLength = 15;
+
+		QSettings bios(
+			"HKEY_CURRENT_USER\\HARDWARE\\DESCRIPTION\\System\\BIOS",
+			QSettings::NativeFormat);
+
+		const auto systemProductName = bios.value("SystemProductName").toString();
+		if (!systemProductName.isEmpty()
+			&& systemProductName.size() <= kMaxDeviceModelLength) {
+			return systemProductName;
+		}
+
+		const auto systemFamily = bios.value("SystemFamily").toString();
+		const auto baseBoardProduct = bios.value("BaseBoardProduct").toString();
+		const auto familyBoard = (
+			systemFamily + ' ' + baseBoardProduct).simplified();
+
+		if (!familyBoard.isEmpty()
+			&& familyBoard.size() <= kMaxDeviceModelLength) {
+			return familyBoard;
+		} else if (!baseBoardProduct.isEmpty()
+			&& baseBoardProduct.size() <= kMaxDeviceModelLength) {
+			return baseBoardProduct;
+		} else if (!systemFamily.isEmpty()
+			&& systemFamily.size() <= kMaxDeviceModelLength) {
+			return systemFamily;
+		}
+
+		return u"Unknown"_q;
+	}();
+
+	return result;
 }
 
 QString SystemVersionPretty() {
