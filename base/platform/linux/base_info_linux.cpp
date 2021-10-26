@@ -14,6 +14,7 @@
 #include <QtCore/QLocale>
 #include <QtCore/QVersionNumber>
 #include <QtCore/QDate>
+#include <QtCore/QFile>
 #include <QtGui/QGuiApplication>
 
 #include <sys/utsname.h>
@@ -32,16 +33,96 @@ QString GetDesktopEnvironment() {
 		: value;
 }
 
+QString ChassisTypeToString(uint type) {
+	switch (type) {
+	case 0x3: /* Desktop */
+	case 0x4: /* Low Profile Desktop */
+	case 0x6: /* Mini Tower */
+	case 0x7: /* Tower */
+	case 0xD: /* All in one (i.e. PC built into monitor) */
+		return "Desktop";
+	case 0x8: /* Portable */
+	case 0x9: /* Laptop */
+	case 0xA: /* Notebook */
+	case 0xE: /* Sub Notebook */
+		return "Laptop";
+	case 0xB: /* Hand Held */
+		return "Handset";
+	case 0x11: /* Main Server Chassis */
+	case 0x1C: /* Blade */
+	case 0x1D: /* Blade Enclosure */
+		return "Server";
+	case 0x1E: /* Tablet */
+		return "Tablet";
+	case 0x1F: /* Convertible */
+	case 0x20: /* Detachable */
+		return "Convertible";
+	default:
+		return "Unknown";
+	}
+}
+
 } // namespace
 
 QString DeviceModelPretty() {
-#ifdef Q_PROCESSOR_X86_64
-	return "PC 64bit";
-#elif defined Q_PROCESSOR_X86_32 // Q_PROCESSOR_X86_64
-	return "PC 32bit";
-#else // Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
-	return "PC " + QSysInfo::buildCpuArchitecture();
-#endif // else for Q_PROCESSOR_X86_64 || Q_PROCESSOR_X86_32
+	static const auto result = [&] {
+		constexpr auto kMaxDeviceModelLength = 15;
+
+		const auto productName = [] {
+			QFile file("/sys/class/dmi/id/product_name");
+			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+				return QString(file.readAll()).simplified();
+			}
+			return QString();
+		}();
+
+		if (!productName.isEmpty()
+			&& productName.size() <= kMaxDeviceModelLength) {
+			return productName;
+		}
+
+		const auto productFamily = [] {
+			QFile file("/sys/class/dmi/id/product_family");
+			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+				return QString(file.readAll()).simplified();
+			}
+			return QString();
+		}();
+
+		const auto boardName = [] {
+			QFile file("/sys/class/dmi/id/board_name");
+			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+				return QString(file.readAll()).simplified();
+			}
+			return QString();
+		}();
+
+		const auto familyName = (
+			productFamily + ' ' + boardName).simplified();
+
+		if (!familyName.isEmpty()
+			&& familyName.size() <= kMaxDeviceModelLength) {
+			return familyName;
+		} else if (!boardName.isEmpty()
+			&& boardName.size() <= kMaxDeviceModelLength) {
+			return boardName;
+		} else if (!productFamily.isEmpty()
+			&& productFamily.size() <= kMaxDeviceModelLength) {
+			return productFamily;
+		}
+
+		const auto chassisType = [] {
+			QFile file("/sys/class/dmi/id/chassis_type");
+			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+				return ChassisTypeToString(file.readAll().toUInt());
+			}
+			return ChassisTypeToString(0);
+		}();
+
+		return chassisType;
+	}();
+
+	return result;
 }
 
 QString SystemVersionPretty() {
