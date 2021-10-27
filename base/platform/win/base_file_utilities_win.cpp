@@ -142,6 +142,10 @@ bool DeleteDirectory(QString path) {
 void RemoveQuarantine(const QString &path) {
 }
 
+QString BundledResourcesPath() {
+	Unexpected("BundledResourcesPath not implemented.");
+}
+
 QString CurrentExecutablePath(int argc, char *argv[]) {
 	auto result = std::array<WCHAR, MAX_PATH + 1>{ 0 };
 	const auto count = GetModuleFileName(

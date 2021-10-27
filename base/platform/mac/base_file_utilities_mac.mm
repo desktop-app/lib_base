@@ -37,6 +37,25 @@ void RemoveQuarantine(const QString &path) {
 	removexattr(local.data(), kQuarantineAttribute, 0);
 }
 
+QString BundledResourcesPath() {
+	@autoreleasepool {
+
+	NSString *path = @"";
+	@try {
+		path = [[NSBundle mainBundle] bundlePath];
+		if (!path) {
+			Unexpected("Could not get bundled path!");
+		}
+		path = [path stringByAppendingString:@"/Contents/Resources"];
+		return QFile::decodeName([path fileSystemRepresentation]);
+	}
+	@catch (NSException *exception) {
+		Unexpected("Exception in resource registering.");
+	}
+
+	}
+}
+
 bool DeleteDirectory(QString path) {
 	if (path.endsWith('/')) {
 		path.chop(1);

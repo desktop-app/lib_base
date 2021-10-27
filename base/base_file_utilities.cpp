@@ -8,6 +8,8 @@
 
 #include "base/platform/base_platform_file_utilities.h"
 
+#include <QtCore/QResource>
+
 namespace base {
 
 QString FileNameFromUserString(QString name) {
@@ -33,6 +35,15 @@ QString FileNameFromUserString(QString name) {
 		name.append('_');
 	}
 	return Platform::FileNameFromUserString(std::move(name));
+}
+
+void RegisterBundledResources(const QString &name) {
+	const auto location = Platform::BundledResourcesPath();
+	const auto utf = location.toUtf8();
+	const auto cd = utf.constData();
+	if (!QResource::registerResource(location + '/' + name)) {
+		Unexpected("Packed resources not found.");
+	}
 }
 
 } // namespace base

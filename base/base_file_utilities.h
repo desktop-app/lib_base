@@ -10,4 +10,6 @@ namespace base {
 
 [[nodiscard]] QString FileNameFromUserString(QString name);
 
+void RegisterBundledResources(const QString &name);
+
 } // namespace base

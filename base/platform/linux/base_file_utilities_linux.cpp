@@ -216,6 +216,10 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 void RemoveQuarantine(const QString &path) {
 }
 
+QString BundledResourcesPath() {
+	Unexpected("BundledResourcesPath not implemented.");
+}
+
 // From http://stackoverflow.com/questions/2256945/removing-a-non-empty-directory-programmatically-in-c-or-c
 bool DeleteDirectory(QString path) {
 	if (path.endsWith('/')) {
