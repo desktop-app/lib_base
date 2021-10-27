@@ -51,6 +51,9 @@ QString SystemVersionPretty() {
 		struct utsname u;
 		if (uname(&u) == 0) {
 			resultList << u.sysname;
+#ifndef Q_OS_LINUX
+			resultList << u.release;
+#endif // !Q_OS_LINUX
 		} else {
 			resultList << "Unknown";
 		}
