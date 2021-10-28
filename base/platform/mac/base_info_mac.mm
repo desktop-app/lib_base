@@ -98,6 +98,13 @@ NSURL *PrivacySettingsUrl(const QString &section) {
 	return [NSURL URLWithString:url];
 }
 
+[[nodiscard]] bool RunningThroughRosetta() {
+	 auto result = int(0);
+	 auto size = sizeof(result);
+	 sysctlbyname("sysctl.proc_translated", &result, &size, nullptr, 0);
+	 return (result == 1);
+}
+
 } // namespace
 
 QString DeviceModelPretty() {
@@ -155,7 +162,12 @@ int AutoUpdateVersion() {
 }
 
 QString AutoUpdateKey() {
-	return "mac";
+	if (QSysInfo::currentCpuArchitecture().startsWith("arm")
+		|| RunningThroughRosetta()) {
+		return "armac";
+	} else {
+		return "mac";
+	}
 }
 
 bool IsMac10_12OrGreater() {
