@@ -172,7 +172,7 @@ QString DeviceModelPretty() {
 			return systemFamily;
 		}
 
-		return u"Unknown"_q;
+		return u"PC"_q;
 	}();
 
 	return result;
