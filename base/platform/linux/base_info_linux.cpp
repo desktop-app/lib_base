@@ -58,7 +58,7 @@ QString ChassisTypeToString(uint type) {
 	case 0x20: /* Detachable */
 		return "Convertible";
 	default:
-		return "Unknown";
+		return "";
 	}
 }
 
@@ -119,7 +119,11 @@ QString DeviceModelPretty() {
 			return ChassisTypeToString(0);
 		}();
 
-		return chassisType;
+		if (!chassisType.isEmpty()) {
+			return chassisType;
+		}
+
+		return u"PC"_q;
 	}();
 
 	return result;
