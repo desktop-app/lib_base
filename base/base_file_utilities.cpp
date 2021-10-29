@@ -39,8 +39,6 @@ QString FileNameFromUserString(QString name) {
 
 void RegisterBundledResources(const QString &name) {
 	const auto location = Platform::BundledResourcesPath();
-	const auto utf = location.toUtf8();
-	const auto cd = utf.constData();
 	if (!QResource::registerResource(location + '/' + name)) {
 		Unexpected("Packed resources not found.");
 	}
