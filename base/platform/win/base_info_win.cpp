@@ -19,6 +19,8 @@
 namespace Platform {
 namespace {
 
+constexpr auto kMaxDeviceModelLength = 15;
+
 #define qsl(S) QStringLiteral(S)
 
 QString GetLangCodeById(unsigned int lngId) {
@@ -140,26 +142,31 @@ QString GetLangCodeById(unsigned int lngId) {
 	return QString();
 }
 
+[[nodiscard]] QString SimplifyDeviceModel(QString model) {
+	return model.replace(QChar('_'), QString()).simplified();
+}
+
 } // namespace
 
 QString DeviceModelPretty() {
 	static const auto result = [&] {
-		constexpr auto kMaxDeviceModelLength = 15;
-
-		QSettings bios(
-			"HKEY_CURRENT_USER\\HARDWARE\\DESCRIPTION\\System\\BIOS",
+		const auto bios = QSettings(
+			"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\BIOS",
 			QSettings::NativeFormat);
+		const auto value = [&](const char *key) {
+			return SimplifyDeviceModel(bios.value(key).toString());
+		};
 
-		const auto systemProductName = bios.value("SystemProductName").toString();
+		const auto systemProductName = value("SystemProductName");
 		if (!systemProductName.isEmpty()
 			&& systemProductName.size() <= kMaxDeviceModelLength) {
 			return systemProductName;
 		}
 
-		const auto systemFamily = bios.value("SystemFamily").toString();
-		const auto baseBoardProduct = bios.value("BaseBoardProduct").toString();
-		const auto familyBoard = (
-			systemFamily + ' ' + baseBoardProduct).simplified();
+		const auto systemFamily = value("SystemFamily");
+		const auto baseBoardProduct = value("BaseBoardProduct");
+		const auto familyBoard = SimplifyDeviceModel(
+			systemFamily + ' ' + baseBoardProduct);
 
 		if (!familyBoard.isEmpty()
 			&& familyBoard.size() <= kMaxDeviceModelLength) {
@@ -172,7 +179,7 @@ QString DeviceModelPretty() {
 			return systemFamily;
 		}
 
-		return u"PC"_q;
+		return u"Desktop"_q;
 	}();
 
 	return result;
