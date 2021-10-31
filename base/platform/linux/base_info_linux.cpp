@@ -26,14 +26,16 @@
 namespace Platform {
 namespace {
 
-QString GetDesktopEnvironment() {
+constexpr auto kMaxDeviceModelLength = 15;
+
+[[nodiscard]] QString GetDesktopEnvironment() {
 	const auto value = qEnvironmentVariable("XDG_CURRENT_DESKTOP");
 	return value.contains(':')
 		? value.left(value.indexOf(':'))
 		: value;
 }
 
-QString ChassisTypeToString(uint type) {
+[[nodiscard]] QString ChassisTypeToString(uint type) {
 	switch (type) {
 	case 0x3: /* Desktop */
 	case 0x4: /* Low Profile Desktop */
@@ -62,43 +64,30 @@ QString ChassisTypeToString(uint type) {
 	}
 }
 
+[[nodiscard]] QString SimplifyDeviceModel(QString model) {
+	return model.replace(QChar('_'), QString()).simplified();
+}
+
 } // namespace
 
 QString DeviceModelPretty() {
 	static const auto result = [&] {
-		constexpr auto kMaxDeviceModelLength = 15;
-
-		const auto productName = [] {
-			QFile file("/sys/class/dmi/id/product_name");
-			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-				return QString(file.readAll()).simplified();
-			}
-			return QString();
-		}();
-
+		const auto value = [](const char *key) {
+			auto file = QFile(u"/sys/class/dmi/id/"_q + key);
+			return (file.open(QIODevice::ReadOnly | QIODevice::Text))
+				? SimplifyDeviceModel(QString(file.readAll()))
+				: QString();
+		};
+		const auto productName = value("product_name");
 		if (!productName.isEmpty()
 			&& productName.size() <= kMaxDeviceModelLength) {
 			return productName;
 		}
 
-		const auto productFamily = [] {
-			QFile file("/sys/class/dmi/id/product_family");
-			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-				return QString(file.readAll()).simplified();
-			}
-			return QString();
-		}();
-
-		const auto boardName = [] {
-			QFile file("/sys/class/dmi/id/board_name");
-			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-				return QString(file.readAll()).simplified();
-			}
-			return QString();
-		}();
-
-		const auto familyName = (
-			productFamily + ' ' + boardName).simplified();
+		const auto productFamily = value("product_family");
+		const auto boardName = value("board_name");
+		const auto familyName = SimplifyDeviceModel(
+			productFamily + ' ' + boardName);
 
 		if (!familyName.isEmpty()
 			&& familyName.size() <= kMaxDeviceModelLength) {
@@ -111,14 +100,8 @@ QString DeviceModelPretty() {
 			return productFamily;
 		}
 
-		const auto chassisType = [] {
-			QFile file("/sys/class/dmi/id/chassis_type");
-			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-				return ChassisTypeToString(file.readAll().toUInt());
-			}
-			return ChassisTypeToString(0);
-		}();
-
+		const auto chassisType = ChassisTypeToString(
+			value("chassis_type").toUInt());
 		if (!chassisType.isEmpty()) {
 			return chassisType;
 		}
