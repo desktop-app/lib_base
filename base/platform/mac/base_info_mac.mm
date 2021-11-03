@@ -71,14 +71,19 @@ QString FromIdentifier(const QString &model) {
 	return result;
 }
 
-int MajorVersion() {
+[[nodiscard]] int MajorVersion() {
 	static const auto current = QOperatingSystemVersion::current();
 	return current.majorVersion();
 }
 
-int MinorVersion() {
+[[nodiscard]] int MinorVersion() {
 	static const auto current = QOperatingSystemVersion::current();
 	return current.minorVersion();
+}
+
+[[nodiscard]] int PatchVersion() {
+	static const auto current = QOperatingSystemVersion::current();
+	return current.microVersion();
 }
 
 template <int Major, int Minor>
@@ -89,12 +94,14 @@ bool IsMacThatOrGreater() {
 }
 
 template <int Minor>
-bool IsMac10ThatOrGreater() {
+[[nodiscard]] bool IsMac10ThatOrGreater() {
 	return IsMacThatOrGreater<10, Minor>();
 }
 
-NSURL *PrivacySettingsUrl(const QString &section) {
-	NSString *url = Q2NSString("x-apple.systempreferences:com.apple.preference.security?" + section);
+[[nodiscard]] NSURL *PrivacySettingsUrl(const QString &section) {
+	NSString *url = Q2NSString(
+		"x-apple.systempreferences:com.apple.preference.security?" + section
+	);
 	return [NSURL URLWithString:url];
 }
 
@@ -124,12 +131,14 @@ QString DeviceModelPretty() {
 QString SystemVersionPretty() {
 	const auto major = MajorVersion();
 	const auto minor = MinorVersion();
+	const auto patch = PatchVersion();
+	const auto addAsPatch = (patch > 0) ? u".%1"_q.arg(patch) : QString();
 	if (major < 10) {
 		return "OS X";
 	} else if (major == 10 && minor < 12) {
-		return QString("OS X 10.%1").arg(minor);
+		return QString("OS X 10.%1").arg(minor) + addAsPatch;
 	}
-	return QString("macOS %1.%2").arg(major).arg(minor);
+	return QString("macOS %1.%2").arg(major).arg(minor) + addAsPatch;
 }
 
 QString SystemCountry() {
