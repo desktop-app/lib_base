@@ -106,7 +106,7 @@ QString DeviceModelPretty() {
 			return chassisType;
 		}
 
-		return u"PC"_q;
+		return u"Desktop"_q;
 	}();
 
 	return result;
