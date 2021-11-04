@@ -15,6 +15,7 @@
 #include <QtCore/QVersionNumber>
 #include <QtCore/QDate>
 #include <QtCore/QFile>
+#include <QtCore/QProcess>
 #include <QtGui/QGuiApplication>
 
 #include <sys/utsname.h>
@@ -98,6 +99,17 @@ QString DeviceModelPretty() {
 		} else if (!productFamily.isEmpty()
 			&& productFamily.size() <= kMaxDeviceModelLength) {
 			return productFamily;
+		}
+
+		const auto virtualization = []() -> QString {
+			QProcess process;
+			process.start("systemd-detect-virt");
+			process.waitForFinished();
+			return process.readAll().simplified().toUpper();
+		}();
+
+		if (!virtualization.isEmpty() && virtualization != qstr("NONE")) {
+			return virtualization;
 		}
 
 		const auto chassisType = ChassisTypeToString(
