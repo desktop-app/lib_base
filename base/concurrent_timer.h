@@ -130,8 +130,8 @@ private:
 	int _timeout = 0;
 
 	Qt::TimerType _type : 2;
-	bool _adjusted : 1;
-	unsigned _repeat : 1;
+	bool _adjusted : 1 = false;
+	unsigned _repeat : 1 = 0;
 
 };
 

@@ -39,8 +39,7 @@ Timer::Timer(
 Timer::Timer(Fn<void()> callback)
 : QObject(nullptr)
 , _callback(std::move(callback))
-, _type(Qt::PreciseTimer)
-, _adjusted(false) {
+, _type(Qt::PreciseTimer) {
 	setRepeat(Repeat::Interval);
 	connect(
 		TimersAdjuster(),

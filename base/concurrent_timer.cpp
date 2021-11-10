@@ -263,8 +263,7 @@ ConcurrentTimer::ConcurrentTimer(
 : _runner(std::move(runner))
 , _object(createAdjuster())
 , _callback(std::move(callback))
-, _type(Qt::PreciseTimer)
-, _adjusted(false) {
+, _type(Qt::PreciseTimer) {
 	setRepeat(Repeat::Interval);
 }
 
