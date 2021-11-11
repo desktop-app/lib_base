@@ -10,16 +10,16 @@ namespace base {
 
 template <typename T>
 struct required {
-	constexpr required(T &&value) noexcept : _value(std::move(value)) {
+	template <
+		typename U,
+		typename = std::enable_if_t<std::is_constructible_v<T, U&&>>>
+	constexpr required(U &&value) noexcept : _value(std::forward<U>(value)) {
 	}
-	constexpr required(const T &value) noexcept : _value(value) {
-	}
-	constexpr required &operator=(T &&value) noexcept {
-		_value = std::move(value);
-		return *this;
-	}
-	constexpr required &operator=(const T &value) noexcept {
-		_value = value;
+	template <
+		typename U,
+		typename = std::enable_if_t<std::is_assignable_v<T, U&&>>>
+	constexpr required &operator=(U &&value) noexcept {
+		_value = std::forward<U>(value);
 		return *this;
 	}
 	constexpr required(required &&) = default;
