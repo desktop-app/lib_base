@@ -32,4 +32,13 @@ namespace base {
 	Unexpected("NAN after third std::round.");
 }
 
+QString CleanAndSimplify(QString text) {
+	for (auto &ch : text) {
+		if (ch.unicode() < 32) {
+			ch = QChar(' ');
+		}
+	}
+	return text.simplified();
+}
+
 } // namespace base

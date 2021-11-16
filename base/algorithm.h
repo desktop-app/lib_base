@@ -117,6 +117,8 @@ inline QString FromUtf8Safe(const QByteArray &string) {
 
 [[nodiscard]] double SafeRound(double value);
 
+[[nodiscard]] QString CleanAndSimplify(QString text);
+
 } // namespace base
 
 template <typename T>

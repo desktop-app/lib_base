@@ -7,6 +7,7 @@
 #include "base/platform/mac/base_info_mac.h"
 
 #include "base/timer.h"
+#include "base/algorithm.h"
 #include "base/platform/base_platform_info.h"
 #include "base/platform/mac/base_utilities_mac.h"
 
@@ -120,7 +121,8 @@ QString DeviceModelPretty() {
 	if (length > 0) {
 		QByteArray bytes(length, Qt::Uninitialized);
 		sysctlbyname("hw.model", bytes.data(), &length, nullptr, 0);
-		const QString parsed = FromIdentifier(QString::fromUtf8(bytes));
+		const auto parsed = base::CleanAndSimplify(
+			FromIdentifier(QString::fromUtf8(bytes)));
 		if (!parsed.isEmpty()) {
 			return parsed;
 		}

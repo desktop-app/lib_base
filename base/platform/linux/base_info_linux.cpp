@@ -6,6 +6,8 @@
 //
 #include "base/platform/linux/base_info_linux.h"
 
+#include "base/algorithm.h"
+
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -66,7 +68,7 @@ constexpr auto kMaxDeviceModelLength = 15;
 }
 
 [[nodiscard]] QString SimplifyDeviceModel(QString model) {
-	return model.replace(QChar('_'), QString()).simplified();
+	return base::CleanAndSimplify(model.replace(QChar('_'), QString()));
 }
 
 } // namespace

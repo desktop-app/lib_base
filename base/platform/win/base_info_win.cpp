@@ -6,6 +6,7 @@
 //
 #include "base/platform/win/base_info_win.h"
 
+#include "base/algorithm.h"
 #include "base/platform/base_platform_info.h"
 #include "base/platform/win/base_windows_h.h"
 
@@ -143,7 +144,7 @@ QString GetLangCodeById(unsigned int lngId) {
 }
 
 [[nodiscard]] QString SimplifyDeviceModel(QString model) {
-	return model.replace(QChar('_'), QString()).simplified();
+	return base::CleanAndSimplify(model.replace(QChar('_'), QString()));
 }
 
 } // namespace
