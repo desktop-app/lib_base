@@ -21,6 +21,7 @@ namespace Platform {
 namespace {
 
 constexpr auto kMaxDeviceModelLength = 15;
+constexpr auto kMaxGoodDeviceModelLength = 32;
 
 #define qsl(S) QStringLiteral(S)
 
@@ -147,6 +148,26 @@ QString GetLangCodeById(unsigned int lngId) {
 	return base::CleanAndSimplify(model.replace(QChar('_'), QString()));
 }
 
+[[nodiscard]] QString SimplifyGoodDeviceModel(
+		QString model,
+		int limit,
+		std::vector<QString> remove) {
+	const auto words = model.split(QChar(' '));
+	auto result = QString();
+	for (const auto &word : model.split(QChar(' '))) {
+		if (ranges::contains(remove, word.toLower())) {
+			continue;
+		} else if (result.isEmpty()) {
+			result = word;
+		} else if (result.size() + word.size() + 1 > limit) {
+			return result;
+		} else {
+			result += ' ' + word;
+		}
+	}
+	return result;
+}
+
 } // namespace
 
 QString DeviceModelPretty() {
@@ -159,7 +180,13 @@ QString DeviceModelPretty() {
 		};
 
 		const auto systemProductName = value("SystemProductName");
-		if (!systemProductName.isEmpty()
+		if (systemProductName.startsWith("HP ")) {
+			// Some special cases for good strings, like HP laptops.
+			return SimplifyGoodDeviceModel(
+				systemProductName,
+				kMaxGoodDeviceModelLength,
+				{ "notebook", "desktop", "mobile", "workstation", "pc" });
+		} else if (!systemProductName.isEmpty()
 			&& systemProductName.size() <= kMaxDeviceModelLength) {
 			return systemProductName;
 		}
