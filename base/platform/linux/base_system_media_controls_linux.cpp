@@ -604,9 +604,12 @@ void SystemMediaControls::clearThumbnail() {
 void SystemMediaControls::clearMetadata() {
 	_private->player().metadata.clear();
 
-	const auto path = kFakeTrackPath.utf8().constData();
-	_private->player().metadata["mpris:trackid"] =
-		Glib::wrap(g_variant_new_object_path(path));
+	Glib::VariantStringBase path;
+	Glib::VariantStringBase::create_object_path(
+		path,
+		std::string(kFakeTrackPath));
+
+	_private->player().metadata["mpris:trackid"] = path;
 }
 
 void SystemMediaControls::updateDisplay() {
