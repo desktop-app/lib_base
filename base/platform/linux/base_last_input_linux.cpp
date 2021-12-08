@@ -38,7 +38,7 @@ std::optional<crl::time> XCBLastUserInputTime() {
 		return std::nullopt;
 	}
 
-	const auto root = XCB::GetRootWindowFromQt();
+	const auto root = XCB::GetRootWindow(connection);
 	if (!root.has_value()) {
 		return std::nullopt;
 	}
