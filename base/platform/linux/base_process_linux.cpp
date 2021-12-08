@@ -24,7 +24,7 @@ void XCBActivateWindow(WId window) {
 		return;
 	}
 
-	const auto root = XCB::GetRootWindow(connectio);
+	const auto root = XCB::GetRootWindow(connection);
 	if (!root.has_value()) {
 		return;
 	}
