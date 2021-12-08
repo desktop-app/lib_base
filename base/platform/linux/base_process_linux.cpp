@@ -24,7 +24,7 @@ void XCBActivateWindow(WId window) {
 		return;
 	}
 
-	const auto root = XCB::GetRootWindowFromQt();
+	const auto root = XCB::GetRootWindow(connectio);
 	if (!root.has_value()) {
 		return;
 	}

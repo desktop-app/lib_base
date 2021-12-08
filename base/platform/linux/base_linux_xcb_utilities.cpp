@@ -21,16 +21,6 @@ xcb_connection_t *GetConnectionFromQt() {
 		native->nativeResourceForIntegration(QByteArray("connection")));
 }
 
-std::optional<xcb_window_t> GetRootWindowFromQt() {
-	const auto native = QGuiApplication::platformNativeInterface();
-	if (!native) {
-		return std::nullopt;
-	}
-
-	return static_cast<xcb_window_t>(reinterpret_cast<quintptr>(
-		native->nativeResourceForIntegration(QByteArray("rootwindow"))));
-}
-
 std::optional<xcb_timestamp_t> GetAppTimeFromQt() {
 	const auto native = QGuiApplication::platformNativeInterface();
 	if (!native) {
