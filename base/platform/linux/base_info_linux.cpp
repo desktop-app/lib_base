@@ -105,7 +105,7 @@ QString DeviceModelPretty() {
 
 		const auto virtualization = []() -> QString {
 			QProcess process;
-			process.start("systemd-detect-virt", {});
+			process.start("systemd-detect-virt", QStringList());
 			process.waitForFinished();
 			return process.readAll().simplified().toUpper();
 		}();
