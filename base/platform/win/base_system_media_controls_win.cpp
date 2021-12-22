@@ -121,7 +121,7 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 	}
 
 	// Should be moved to separated file.
-	const auto hwnd = static_cast<HWND>(window->winId());
+	const auto hwnd = reinterpret_cast<HWND>(window->winId());
 	if (!hwnd) {
 		return false;
 	}
