@@ -20,6 +20,7 @@
 
 #include <QtCore/QBuffer>
 #include <QtGui/QImage>
+#include <QtGui/QWindow>
 #include <QtWidgets/QWidget>
 
 namespace winrt {
