@@ -255,6 +255,12 @@ void SystemMediaControls::setPlaybackStatus(
 		ConvertPlaybackStatus(status);
 }
 
+void SystemMediaControls::setLoopStatus(LoopStatus status) {
+}
+
+void SystemMediaControls::setShuffle(bool value) {
+}
+
 void SystemMediaControls::setTitle(const QString &title) {
 	[_private->info
 		setObject:Q2NSString(title)

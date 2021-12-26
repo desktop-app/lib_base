@@ -214,6 +214,12 @@ void SystemMediaControls::setPlaybackStatus(
 	});
 }
 
+void SystemMediaControls::setLoopStatus(LoopStatus status) {
+}
+
+void SystemMediaControls::setShuffle(bool value) {
+}
+
 void SystemMediaControls::setTitle(const QString &title) {
 	const auto htitle = winrt::to_hstring(title.toStdString());
 	WinRT::Try([&] { _private->displayProperties.Title(htitle); });

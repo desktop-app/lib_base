@@ -21,6 +21,10 @@ public:
 		Stop,
 		Quit,
 		Raise,
+		LoopNone,
+		LoopTrack,
+		LoopPlaylist,
+		Shuffle,
 		None,
 	};
 
@@ -28,6 +32,12 @@ public:
 		Playing,
 		Paused,
 		Stopped,
+	};
+
+	enum class LoopStatus {
+		None,
+		Track,
+		Playlist,
 	};
 
 	SystemMediaControls();
@@ -47,6 +57,8 @@ public:
 	void setIsPlayPauseEnabled(bool value);
 	void setIsStopEnabled(bool value);
 	void setPlaybackStatus(PlaybackStatus status);
+	void setLoopStatus(LoopStatus status);
+	void setShuffle(bool value);
 	void setTitle(const QString &title);
 	void setArtist(const QString &artist);
 	void setThumbnail(const QImage &thumbnail);
