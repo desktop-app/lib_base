@@ -46,6 +46,12 @@ void SystemMediaControls::setIsStopEnabled(bool value) {
 void SystemMediaControls::setPlaybackStatus(PlaybackStatus status) {
 }
 
+void SystemMediaControls::setLoopStatus(LoopStatus status) {
+}
+
+void SystemMediaControls::setShuffle(bool value) {
+}
+
 void SystemMediaControls::setTitle(const QString &title) {
 }
 
