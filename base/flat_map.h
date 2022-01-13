@@ -69,6 +69,30 @@ struct flat_multi_map_pair_type {
 		return *this;
 	}
 
+	friend inline bool operator<(const flat_multi_map_pair_type &a, const flat_multi_map_pair_type &b) {
+		if (a.first < b.first) {
+			return true;
+		} else if (a.first > b.first) {
+			return false;
+		}
+		return (a.second < b.second);
+	}
+	friend inline bool operator>(const flat_multi_map_pair_type &a, const flat_multi_map_pair_type &b) {
+		return b < a;
+	}
+	friend inline bool operator<=(const flat_multi_map_pair_type &a, const flat_multi_map_pair_type &b) {
+		return !(b < a);
+	}
+	friend inline bool operator>=(const flat_multi_map_pair_type &a, const flat_multi_map_pair_type &b) {
+		return !(a < b);
+	}
+	friend inline bool operator==(const flat_multi_map_pair_type &a, const flat_multi_map_pair_type &b) {
+		return (a.first == b.first) && (a.second == b.second);
+	}
+	friend inline bool operator!=(const flat_multi_map_pair_type &a, const flat_multi_map_pair_type &b) {
+		return !(a == b);
+	}
+
 	void swap(flat_multi_map_pair_type &other) noexcept {
 		using std::swap;
 
@@ -322,6 +346,25 @@ public:
 		return (*this = std::move(copy));
 	}
 	flat_multi_map &operator=(flat_multi_map &&other) = default;
+
+	friend inline bool operator<(const flat_multi_map &a, const flat_multi_map &b) {
+		return a.impl() < b.impl();
+	}
+	friend inline bool operator>(const flat_multi_map &a, const flat_multi_map &b) {
+		return a.impl() > b.impl();
+	}
+	friend inline bool operator<=(const flat_multi_map &a, const flat_multi_map &b) {
+		return a.impl() <= b.impl();
+	}
+	friend inline bool operator>=(const flat_multi_map &a, const flat_multi_map &b) {
+		return a.impl() >= b.impl();
+	}
+	friend inline bool operator==(const flat_multi_map &a, const flat_multi_map &b) {
+		return a.impl() == b.impl();
+	}
+	friend inline bool operator!=(const flat_multi_map &a, const flat_multi_map &b) {
+		return a.impl() != b.impl();
+	}
 
 	template <
 		typename Iterator,
@@ -836,6 +879,25 @@ public:
 		auto result = std::move(it->second);
 		this->erase(it);
 		return result;
+	}
+
+	friend inline bool operator<(const flat_map &a, const flat_map &b) {
+		return static_cast<const parent&>(a) < static_cast<const parent&>(b);
+	}
+	friend inline bool operator>(const flat_map &a, const flat_map &b) {
+		return static_cast<const parent&>(a) > static_cast<const parent&>(b);
+	}
+	friend inline bool operator<=(const flat_map &a, const flat_map &b) {
+		return static_cast<const parent&>(a) <= static_cast<const parent&>(b);
+	}
+	friend inline bool operator>=(const flat_map &a, const flat_map &b) {
+		return static_cast<const parent&>(a) >= static_cast<const parent&>(b);
+	}
+	friend inline bool operator==(const flat_map &a, const flat_map &b) {
+		return static_cast<const parent&>(a) == static_cast<const parent&>(b);
+	}
+	friend inline bool operator!=(const flat_map &a, const flat_map &b) {
+		return static_cast<const parent&>(a) != static_cast<const parent&>(b);
 	}
 
 private:
