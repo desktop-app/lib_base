@@ -29,39 +29,30 @@ int32_t(__stdcall *WindowsDeleteStringBuffer)(void* bufferHandle);
 int32_t(__stdcall *WindowsPromoteStringBuffer)(void* bufferHandle, void** string);
 wchar_t const*(__stdcall *WindowsGetStringRawBuffer)(void* string, uint32_t* length);
 
-template <typename Method>
-bool ResolveOne(HINSTANCE library, Method &method, LPCSTR name) {
-	if (!library) {
-		return false;
-	}
-	method = reinterpret_cast<Method>(GetProcAddress(library, name));
-	return (method != nullptr);
-}
-
-bool Resolve() {
-#define RESOLVE_ONE(library, method) (ResolveOne(library, method, #method))
+[[nodiscard]] bool Resolve() {
+#define LOAD_SYMBOL(lib, name) Platform::LoadMethod(lib, #name, name)
 	const auto ole32 = Platform::SafeLoadLibrary(L"ole32.dll");
 	const auto combase = Platform::SafeLoadLibrary(L"combase.dll");
-	return RESOLVE_ONE(ole32, CoIncrementMTAUsage)
-		&& RESOLVE_ONE(combase, RoInitialize)
-		&& RESOLVE_ONE(combase, GetRestrictedErrorInfo)
-		&& RESOLVE_ONE(combase, RoGetActivationFactory)
-		&& RESOLVE_ONE(combase, RoOriginateLanguageException)
-		&& RESOLVE_ONE(combase, SetRestrictedErrorInfo)
-		&& RESOLVE_ONE(combase, WindowsCreateString)
-		&& RESOLVE_ONE(combase, WindowsCreateStringReference)
-		&& RESOLVE_ONE(combase, WindowsDuplicateString)
-		&& RESOLVE_ONE(combase, WindowsDeleteString)
-		&& RESOLVE_ONE(combase, WindowsPreallocateStringBuffer)
-		&& RESOLVE_ONE(combase, WindowsDeleteStringBuffer)
-		&& RESOLVE_ONE(combase, WindowsPromoteStringBuffer)
-		&& RESOLVE_ONE(combase, WindowsGetStringRawBuffer);
-#undef RESOLVE_ONE
+	return LOAD_SYMBOL(ole32, CoIncrementMTAUsage)
+		&& LOAD_SYMBOL(combase, RoInitialize)
+		&& LOAD_SYMBOL(combase, GetRestrictedErrorInfo)
+		&& LOAD_SYMBOL(combase, RoGetActivationFactory)
+		&& LOAD_SYMBOL(combase, RoOriginateLanguageException)
+		&& LOAD_SYMBOL(combase, SetRestrictedErrorInfo)
+		&& LOAD_SYMBOL(combase, WindowsCreateString)
+		&& LOAD_SYMBOL(combase, WindowsCreateStringReference)
+		&& LOAD_SYMBOL(combase, WindowsDuplicateString)
+		&& LOAD_SYMBOL(combase, WindowsDeleteString)
+		&& LOAD_SYMBOL(combase, WindowsPreallocateStringBuffer)
+		&& LOAD_SYMBOL(combase, WindowsDeleteStringBuffer)
+		&& LOAD_SYMBOL(combase, WindowsPromoteStringBuffer)
+		&& LOAD_SYMBOL(combase, WindowsGetStringRawBuffer);
+#undef LOAD_SYMBOL
 }
 
 } // namespace
 
-bool Supported() {
+[[nodiscard]] bool Supported() {
 	static const auto Result = Resolve();
 	return Result;
 }
