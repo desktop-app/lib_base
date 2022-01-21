@@ -18,7 +18,7 @@ struct ConnectionDeleter {
 
 using ConnectionPointer = std::unique_ptr<xcb_connection_t, ConnectionDeleter>;
 
-class CustomConnection : ConnectionPointer {
+class CustomConnection : public ConnectionPointer {
 public:
 	CustomConnection()
 	: ConnectionPointer(xcb_connect(nullptr, nullptr)) {
