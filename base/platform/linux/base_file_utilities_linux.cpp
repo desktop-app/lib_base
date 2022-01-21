@@ -9,6 +9,7 @@
 #include "base/platform/base_platform_file_utilities.h"
 #include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/algorithm.h"
+#include "base/integration.h"
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include "base/platform/linux/base_linux_app_launch_context.h"
@@ -190,8 +191,12 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 void RemoveQuarantine(const QString &path) {
 }
 
-QString BundledResourcesPath() {
-	Unexpected("BundledResourcesPath not implemented.");
+QStringList PackedResourcesPaths() {
+	return QStringList{
+#ifdef _DEBUG
+		Integration::Instance().executableDir(),
+#endif
+	} + QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
 }
 
 // From http://stackoverflow.com/questions/2256945/removing-a-non-empty-directory-programmatically-in-c-or-c

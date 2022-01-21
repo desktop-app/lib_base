@@ -37,11 +37,15 @@ QString FileNameFromUserString(QString name) {
 	return Platform::FileNameFromUserString(std::move(name));
 }
 
-void RegisterBundledResources(const QString &name) {
-	const auto location = Platform::BundledResourcesPath();
-	if (!QResource::registerResource(location + '/' + name)) {
-		Unexpected("Packed resources not found.");
+void RegisterResourceArchive(const QString &name) {
+#ifdef DESKTOP_APP_USE_PACKED_RESOURCES
+	for (const QString &location : Platform::PackedResourcesPaths()) {
+		if (QResource::registerResource(location + '/' + name)) {
+			return;  // found
+		}
 	}
+	Unexpected("Packed resources not found.");
+#endif  // DESKTOP_APP_USE_PACKED_RESOURCES
 }
 
 } // namespace base

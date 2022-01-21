@@ -37,7 +37,7 @@ void RemoveQuarantine(const QString &path) {
 	removexattr(local.data(), kQuarantineAttribute, 0);
 }
 
-QString BundledResourcesPath() {
+QStringList PackedResourcesPaths() {
 	@autoreleasepool {
 
 	NSString *path = @"";
@@ -47,7 +47,7 @@ QString BundledResourcesPath() {
 			Unexpected("Could not get bundled path!");
 		}
 		path = [path stringByAppendingString:@"/Contents/Resources"];
-		return QFile::decodeName([path fileSystemRepresentation]);
+		return { QFile::decodeName([path fileSystemRepresentation]) };
 	}
 	@catch (NSException *exception) {
 		Unexpected("Exception in resource registering.");
