@@ -7,7 +7,7 @@
 #pragma once
 
 #include "base/platform/linux/base_linux_xcb_utilities.h"
-#include "base/qt_adapters.h"
+#include "base/qt/qt_common_adapters.h"
 
 #include <QtCore/QAbstractNativeEventFilter>
 

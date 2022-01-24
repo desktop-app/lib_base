@@ -7,7 +7,7 @@
 #include "base/single_instance.h"
 
 #include "base/crc32hash.h"
-#include "base/qt_adapters.h"
+#include "base/qt/qt_common_adapters.h"
 #include "base/platform/base_platform_process.h"
 
 #include <QtCore/QStandardPaths>
