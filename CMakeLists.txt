@@ -151,6 +151,8 @@ PRIVATE
     base/ordered_set.h
     base/openssl_help.h
     base/optional.h
+    base/options.cpp
+    base/options.h
     base/overload.h
     base/parse_helper.cpp
     base/parse_helper.h
