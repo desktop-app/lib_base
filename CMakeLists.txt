@@ -47,6 +47,8 @@ PRIVATE
     base/platform/linux/base_system_media_controls_linux.cpp
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
+    base/platform/mac/base_confirm_quit.h
+    base/platform/mac/base_confirm_quit.mm
     base/platform/mac/base_file_utilities_mac.h
     base/platform/mac/base_file_utilities_mac.mm
     base/platform/mac/base_global_shortcuts_mac.mm
