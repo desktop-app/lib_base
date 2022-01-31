@@ -451,9 +451,12 @@ namespace {
 } // namespace
 
 bool RunModal(QString text) {
-	text = std::move(text).replace("{key}", KeyCommandString());
 	return [[ConfirmQuitPanelController sharedControllerWithMessage:Q2NSString(text)]
 		runModalLoopForApplication:NSApp];
+}
+
+QString QuitKeysString() {
+	return KeyCommandString();
 }
 
 } // namespace Platform::ConfirmQuit

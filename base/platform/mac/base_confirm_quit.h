@@ -8,7 +8,7 @@
 
 namespace Platform::ConfirmQuit {
 
-// A "{key}" substring will be replaced by the key combination.
 [[nodiscard]] bool RunModal(QString text);
+[[nodiscard]] QString QuitKeysString();
 
 } // namespace Platform::ConfirmQuit
