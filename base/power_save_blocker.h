@@ -33,4 +33,20 @@ private:
 
 };
 
+// Description is a universal template so you don't construct QStrings.
+template <typename Description>
+void UpdatePowerSaveBlocker(
+		std::unique_ptr<PowerSaveBlocker> &blocker,
+		bool block,
+		PowerSaveBlockType type,
+		Description &&description) {
+	if (block && !blocker) {
+		blocker = std::make_unique<PowerSaveBlocker>(
+			type,
+			std::forward<Description>(description));
+	} else if (!block && blocker) {
+		blocker = nullptr;
+	}
+}
+
 } // namespace base
