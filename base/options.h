@@ -105,7 +105,7 @@ public:
 		return v::get<Type>(BasicOption::value());
 	}
 	[[nodiscard]] Type defaultValue() const {
-		return v::get<Type>(BasicOption::value());
+		return v::get<Type>(BasicOption::defaultValue());
 	}
 
 	[[nodiscard]] static option &Wrap(BasicOption &that) {
