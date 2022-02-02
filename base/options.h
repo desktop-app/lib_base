@@ -128,7 +128,7 @@ template <typename Type>
 }
 
 [[nodiscard]] bool changed();
-[[nodiscard]] void reset();
+void reset();
 void init(const QString &path);
 
 } // namespace base::options
