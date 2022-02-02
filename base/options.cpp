@@ -135,12 +135,16 @@ BasicOption::BasicOption(
 	const char id[],
 	const char name[],
 	const char description[],
-	ValueType defaultValue)
+	ValueType defaultValue,
+	Scope scope,
+	bool restartRequired)
 : _value(defaultValue)
 , _defaultValue(std::move(defaultValue))
 , _id(QString::fromUtf8(id))
 , _name(QString::fromUtf8(name))
-, _description(QString::fromUtf8(description)) {
+, _description(QString::fromUtf8(description))
+, _scope(scope)
+, _restartRequired(restartRequired) {
 	const auto [i, ok] = Map().emplace(id, this);
 
 	Ensures(ok);
@@ -176,6 +180,24 @@ const QString &BasicOption::description() const {
 	return _description;
 }
 
+bool BasicOption::relevant() const {
+#ifdef Q_OS_WIN
+	return _scope & windows;
+#elif defined Q_OS_MAC // Q_OS_WIN
+	return _scope & macos;
+#else // Q_OS_MAC || Q_OS_WIN
+	return _scope & linux;
+#endif // Q_OS_MAC || Q_OS_WIN
+}
+
+bool BasicOption::restartRequired() const {
+	return _restartRequired;
+}
+
+Scope BasicOption::scope() const {
+	return _scope;
+}
+
 BasicOption &Lookup(const char id[]) {
 	const auto i = Map().find(id);
 
@@ -184,6 +206,23 @@ BasicOption &Lookup(const char id[]) {
 }
 
 } // namespace details
+
+bool changed() {
+	for (const auto &[name, option] : details::Map()) {
+		if (option->value() != option->defaultValue()) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void reset() {
+	for (const auto &[name, option] : details::Map()) {
+		if (option->value() != option->defaultValue()) {
+			option->set(option->defaultValue());
+		}
+	}
+}
 
 void init(const QString &path) {
 	Expects(details::LocalPath().isEmpty());

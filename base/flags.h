@@ -276,6 +276,79 @@ inline constexpr auto operator>=(ExtendedEnum a, flags<extended_flags_t<Extended
 	return !(a < b);
 }
 
+// For bare-enum operators to work inside namespace base we duplicate them here.
+
+template <typename Enum,
+	typename = std::enable_if_t<std::is_enum<Enum>::value>,
+	typename = std::enable_if_t<is_flag_type(Enum{})>>
+inline constexpr auto operator!(Enum a) noexcept {
+	return !make_flags(a);
+}
+
+template <typename Enum,
+	typename = std::enable_if_t<std::is_enum<Enum>::value>,
+	typename = std::enable_if_t<is_flag_type(Enum{})>>
+inline constexpr auto operator~(Enum a) noexcept {
+	return ~make_flags(a);
+}
+
+template <typename Enum,
+	typename = std::enable_if_t<std::is_enum<Enum>::value>,
+	typename = std::enable_if_t<is_flag_type(Enum{})>>
+inline constexpr auto operator|(Enum a, Enum b) noexcept {
+	return make_flags(a) | b;
+}
+
+template <typename Enum,
+	typename = std::enable_if_t<std::is_enum<Enum>::value>,
+	typename = std::enable_if_t<is_flag_type(Enum{})>>
+inline constexpr auto operator|(Enum a, details::flags_zero_helper) noexcept {
+	return make_flags(a);
+}
+
+template <typename Enum,
+	typename = std::enable_if_t<std::is_enum<Enum>::value>,
+	typename = std::enable_if_t<is_flag_type(Enum{})>>
+inline constexpr auto operator|(details::flags_zero_helper, Enum b) noexcept {
+	return make_flags(b);
+}
+
+template <typename ExtendedEnum,
+	typename = typename extended_flags<ExtendedEnum>::type>
+inline constexpr auto operator|(ExtendedEnum a, ExtendedEnum b) {
+	return details::extended_flags_convert(a) | b;
+}
+
+template <typename ExtendedEnum,
+	typename = typename extended_flags<ExtendedEnum>::type>
+inline constexpr auto operator|(ExtendedEnum a, typename extended_flags<ExtendedEnum>::type b) {
+	return details::extended_flags_convert(a) | b;
+}
+
+template <typename ExtendedEnum,
+	typename = typename extended_flags<ExtendedEnum>::type>
+inline constexpr auto operator|(typename extended_flags<ExtendedEnum>::type a, ExtendedEnum b) {
+	return b | a;
+}
+
+template <typename ExtendedEnum,
+	typename = typename extended_flags<ExtendedEnum>::type>
+inline constexpr auto operator|(details::flags_zero_helper, ExtendedEnum b) {
+	return 0 | details::extended_flag_convert(b);
+}
+
+template <typename ExtendedEnum,
+	typename = typename extended_flags<ExtendedEnum>::type>
+inline constexpr auto operator|(ExtendedEnum a, details::flags_zero_helper) {
+	return details::extended_flag_convert(a) | 0;
+}
+
+template <typename ExtendedEnum,
+	typename = typename extended_flags<ExtendedEnum>::type>
+inline constexpr auto operator~(ExtendedEnum b) {
+	return ~details::extended_flags_convert(b);
+}
+
 } // namespace base
 
 template <typename Enum,
