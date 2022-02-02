@@ -98,4 +98,6 @@ template <typename Type>
 	return option<Type>::Wrap(details::Lookup(id));
 }
 
+void init(const QString &path);
+
 } // namespace base::options
