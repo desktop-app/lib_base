@@ -10,6 +10,10 @@
 #include "base/variant.h"
 #include "base/required.h"
 
+#ifdef linux // GCC, cmon..
+#undef linux
+#endif // linux
+
 namespace base::options {
 namespace details {
 

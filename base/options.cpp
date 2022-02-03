@@ -69,7 +69,6 @@ void Read(const QString &path) {
 			LOG(("Experimental: Unknown option '%1'.").arg(i.key()));
 			continue;
 		}
-		const auto &current = j->second->value();
 		const auto value = *i;
 		v::match(j->second->value(), [&](const auto &current) {
 			using T = std::remove_cvref_t<decltype(current)>;
