@@ -52,8 +52,8 @@ void Remove(not_null<PowerSaveBlocker*> blocker) {
 			return blocker->window() != nullptr;
 		});
 		const auto use = (good != end(set.list)) ? good : begin(set.list);
-		set.description = (*good)->description();
-		set.window = (*good)->window();
+		set.description = (*use)->description();
+		set.window = (*use)->window();
 		Platform::BlockPowerSave(
 			blocker->type(),
 			set.description,
