@@ -9,7 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/platform/base_platform_info.h"
 
-namespace Ui {
+namespace base {
 namespace Platform {
 
 struct WaylandIntegration::Private {
@@ -34,4 +34,4 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 }
 
 } // namespace Platform
-} // namespace Ui
+} // namespace base
