@@ -7,6 +7,7 @@
 #include "base/platform/linux/base_power_save_blocker_linux.h"
 
 #include "base/platform/base_platform_info.h"
+#include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/timer_rpl.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -51,11 +52,13 @@ void BlockPowerSave(
 	case PowerSaveBlockType::PreventAppSuspension:
 		break;
 	case PowerSaveBlockType::PreventDisplaySleep:
+		if (const auto integration = WaylandIntegration::Instance()) {
+			integration->preventDisplaySleep(true, window);
+		} else if (::Platform::IsX11()) {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-		if (::Platform::IsX11()) {
 			XCBPreventDisplaySleep(true);
-		}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+		}
 		break;
 	}
 }
@@ -65,11 +68,13 @@ void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 	case PowerSaveBlockType::PreventAppSuspension:
 		break;
 	case PowerSaveBlockType::PreventDisplaySleep:
+		if (const auto integration = WaylandIntegration::Instance()) {
+			integration->preventDisplaySleep(false, window);
+		} else if (::Platform::IsX11()) {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-		if (::Platform::IsX11()) {
 			XCBPreventDisplaySleep(false);
-		}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+		}
 		break;
 	}
 }

@@ -34,6 +34,9 @@ PRIVATE
     base/platform/linux/base_linux_glibmm_helper.h
     base/platform/linux/base_linux_library.cpp
     base/platform/linux/base_linux_library.h
+    base/platform/linux/base_linux_wayland_integration.cpp
+    base/platform/linux/base_linux_wayland_integration_dummy.cpp
+    base/platform/linux/base_linux_wayland_integration.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_linux_xdp_utilities.cpp
@@ -222,6 +225,16 @@ if (DESKTOP_APP_DISABLE_X11_INTEGRATION)
     )
 endif()
 
+if (DESKTOP_APP_DISABLE_WAYLAND_INTEGRATION)
+    remove_target_sources(lib_base ${src_loc}
+        base/platform/linux/base_linux_wayland_integration.cpp
+    )
+else()
+    remove_target_sources(lib_base ${src_loc}
+        base/platform/linux/base_linux_wayland_integration_dummy.cpp
+    )
+endif()
+
 target_include_directories(lib_base
 PUBLIC
     ${src_loc}
@@ -257,6 +270,13 @@ elseif (LINUX)
             desktop-app::external_xcb_record
             desktop-app::external_xcb_screensaver
             desktop-app::external_xcb
+        )
+    endif()
+
+    if (NOT DESKTOP_APP_DISABLE_WAYLAND_INTEGRATION)
+        target_link_libraries(lib_base
+        PUBLIC
+            desktop-app::external_kwayland
         )
     endif()
 endif()
