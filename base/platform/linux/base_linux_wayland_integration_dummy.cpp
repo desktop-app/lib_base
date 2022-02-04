@@ -26,6 +26,10 @@ WaylandIntegration *WaylandIntegration::Instance() {
 	return &instance;
 }
 
+QString WaylandIntegration::nativeHandle(QWindow *window) {
+	return {};
+}
+
 void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 }
 
