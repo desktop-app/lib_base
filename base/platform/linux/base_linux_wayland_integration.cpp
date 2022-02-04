@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <connection_thread.h>
 #include <registry.h>
 #include <surface.h>
+#include <xdgforeign.h>
 #include <idleinhibit.h>
 
 using namespace KWayland::Client;
@@ -26,6 +27,7 @@ namespace Platform {
 struct WaylandIntegration::Private {
 	std::unique_ptr<ConnectionThread> connection;
 	Registry registry;
+	std::unique_ptr<XdgExporter> xdgExporter;
 	std::unique_ptr<IdleInhibitManager> idleInhibitManager;
 	base::flat_map<QWindow*, QPointer<IdleInhibitor>> idleInhibitorMap;
 };
@@ -44,6 +46,21 @@ WaylandIntegration::WaylandIntegration()
 		&ConnectionThread::connectionDied,
 		&_private->registry,
 		&Registry::destroy);
+
+	QObject::connect(
+		&_private->registry,
+		&Registry::exporterUnstableV2Announced,
+		[=](uint name, uint version) {
+			_private->xdgExporter = std::unique_ptr<XdgExporter>{
+				_private->registry.createXdgExporter(name, version),
+			};
+
+			QObject::connect(
+				_private->connection.get(),
+				&ConnectionThread::connectionDied,
+				_private->xdgExporter.get(),
+				&XdgExporter::destroy);
+		});
 
 	QObject::connect(
 		&_private->registry,
