@@ -6,6 +6,10 @@
 //
 #pragma once
 
+#include <QtCore/QPointer>
+
+class QWindow;
+
 namespace base {
 
 enum class PowerSaveBlockType {
@@ -17,7 +21,10 @@ enum class PowerSaveBlockType {
 
 class PowerSaveBlocker final {
 public:
-	PowerSaveBlocker(PowerSaveBlockType type, const QString &description);
+	PowerSaveBlocker(
+		PowerSaveBlockType type,
+		const QString &description,
+		QWindow *window);
 	~PowerSaveBlocker();
 
 	[[nodiscard]] PowerSaveBlockType type() const {
@@ -26,24 +33,28 @@ public:
 	[[nodiscard]] const QString &description() const {
 		return _description;
 	}
+	[[nodiscard]] QPointer<QWindow> window() const;
 
 private:
 	const PowerSaveBlockType _type = {};
 	const QString _description;
+	const QPointer<QWindow> _window;
 
 };
 
-// Description is a universal template so you don't construct QStrings.
-template <typename Description>
+// DescriptionResolver -> QString, WindowResolver -> QPointer<QWindow>.
+template <typename DescriptionResolver, typename WindowResolver>
 void UpdatePowerSaveBlocker(
 		std::unique_ptr<PowerSaveBlocker> &blocker,
 		bool block,
 		PowerSaveBlockType type,
-		Description &&description) {
+		DescriptionResolver &&description,
+		WindowResolver &&window) {
 	if (block && !blocker) {
 		blocker = std::make_unique<PowerSaveBlocker>(
 			type,
-			std::forward<Description>(description));
+			description(),
+			window());
 	} else if (!block && blocker) {
 		blocker = nullptr;
 	}

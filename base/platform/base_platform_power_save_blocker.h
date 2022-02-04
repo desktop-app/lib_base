@@ -21,7 +21,11 @@ inline constexpr int kPowerSaveBlockTypeCount = static_cast<int>(
 	return static_cast<int>(type);
 }
 
-void BlockPowerSave(PowerSaveBlockType type, const QString &description);
-void UnblockPowerSave(PowerSaveBlockType type);
+// window may be null.
+void BlockPowerSave(
+	PowerSaveBlockType type,
+	const QString &description,
+	QPointer<QWindow> window);
+void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window);
 
 } // namespace base::Platform

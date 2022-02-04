@@ -81,13 +81,16 @@ void BlockManager::unblock(PowerSaveBlockType type) {
 
 } // namespace
 
-void BlockPowerSave(PowerSaveBlockType type, const QString &description) {
+void BlockPowerSave(
+		PowerSaveBlockType type,
+		const QString &description,
+		QPointer<QWindow> window) {
 	Manager().with([=](BlockManager &instance) {
 		instance.block(type, description);
 	});
 }
 
-void UnblockPowerSave(PowerSaveBlockType type) {
+void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 	Manager().with([=](BlockManager &instance) {
 		instance.unblock(type);
 	});

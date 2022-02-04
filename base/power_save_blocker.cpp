@@ -9,12 +9,14 @@
 #include "base/platform/base_platform_power_save_blocker.h"
 
 #include <QtCore/QMutex>
+#include <QtGui/QWindow>
 
 namespace base {
 namespace {
 
 struct BlockersSet {
 	flat_set<not_null<PowerSaveBlocker*>> list;
+	QPointer<QWindow> window;
 	QString description;
 };
 
@@ -26,7 +28,11 @@ void Add(not_null<PowerSaveBlocker*> blocker) {
 	auto &set = Blockers[blocker->type()];
 	if (set.list.empty()) {
 		set.description = blocker->description();
-		Platform::BlockPowerSave(blocker->type(), set.description);
+		set.window = blocker->window();
+		Platform::BlockPowerSave(
+			blocker->type(),
+			set.description,
+			set.window);
 	}
 	set.list.emplace(blocker);
 }
@@ -35,18 +41,23 @@ void Remove(not_null<PowerSaveBlocker*> blocker) {
 	const auto lock = QMutexLocker(&Mutex);
 	auto &set = Blockers[blocker->type()];
 	set.list.remove(blocker);
-	if (set.description != blocker->description()) {
+	if (set.description != blocker->description()
+		|| set.window != blocker->window()) {
 		return;
 	}
-	for (const auto &another : set.list) {
-		if (another->description() == set.description) {
-			return;
-		}
-	}
-	Platform::UnblockPowerSave(blocker->type());
+	Platform::UnblockPowerSave(blocker->type(), blocker->window());
 	if (!set.list.empty()) {
-		set.description = set.list.front()->description();
-		Platform::BlockPowerSave(blocker->type(), set.description);
+		const auto good = ranges::find_if(set.list, [](
+				not_null<PowerSaveBlocker*> blocker) {
+			return blocker->window() != nullptr;
+		});
+		const auto use = (good != end(set.list)) ? good : begin(set.list);
+		set.description = (*good)->description();
+		set.window = (*good)->window();
+		Platform::BlockPowerSave(
+			blocker->type(),
+			set.description,
+			set.window);
 	}
 }
 
@@ -54,10 +65,16 @@ void Remove(not_null<PowerSaveBlocker*> blocker) {
 
 PowerSaveBlocker::PowerSaveBlocker(
 	PowerSaveBlockType type,
-	const QString &description)
+	const QString &description,
+	QWindow *window)
 : _type(type)
-, _description(description) {
+, _description(description)
+, _window(window) {
 	Add(this);
+}
+
+QPointer<QWindow> PowerSaveBlocker::window() const {
+	return _window;
 }
 
 PowerSaveBlocker::~PowerSaveBlocker() {

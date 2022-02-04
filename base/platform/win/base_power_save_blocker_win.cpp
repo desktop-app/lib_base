@@ -70,7 +70,10 @@ POWER_REQUEST_TYPE RequestType(PowerSaveBlockType type) {
 
 }  // namespace
 
-void BlockPowerSave(PowerSaveBlockType type, const QString &description) {
+void BlockPowerSave(
+		PowerSaveBlockType type,
+		const QString &description,
+		QPointer<QWindow> window) {
 	Expects(!GlobalHandles[PowerSaveBlockTypeIndex(type)]);
 
 	const auto requestType = RequestType(type);
@@ -79,7 +82,7 @@ void BlockPowerSave(PowerSaveBlockType type, const QString &description) {
 		description);
 }
 
-void UnblockPowerSave(PowerSaveBlockType type) {
+void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 	DeletePowerRequest(
 		RequestType(type),
 		base::take(GlobalHandles[PowerSaveBlockTypeIndex(type)]));

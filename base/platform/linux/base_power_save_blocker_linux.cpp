@@ -8,10 +8,13 @@
 
 namespace base::Platform {
 
-void BlockPowerSave(PowerSaveBlockType type, const QString &description) {
+void BlockPowerSave(
+	PowerSaveBlockType type,
+	const QString &description,
+	QPointer<QWindow> window) {
 }
 
-void UnblockPowerSave(PowerSaveBlockType type) {
+void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 }
 
 } // namespace base::Platform
