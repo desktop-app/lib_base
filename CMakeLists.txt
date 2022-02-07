@@ -54,6 +54,8 @@ PRIVATE
     base/platform/linux/base_url_scheme_linux.h
     base/platform/mac/base_confirm_quit.h
     base/platform/mac/base_confirm_quit.mm
+    base/platform/mac/base_custom_app_icon_mac.h
+    base/platform/mac/base_custom_app_icon_mac.mm
     base/platform/mac/base_file_utilities_mac.h
     base/platform/mac/base_file_utilities_mac.mm
     base/platform/mac/base_global_shortcuts_mac.mm
@@ -102,6 +104,7 @@ PRIVATE
     base/platform/win/base_windows_wrl.h
     base/platform/win/wrl/wrl_implements_h.h
     base/platform/win/wrl/wrl_module_h.h
+    base/platform/base_platform_custom_app_icon.h
     base/platform/base_platform_global_shortcuts.h
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
@@ -131,6 +134,7 @@ PRIVATE
     base/concurrent_timer.cpp
     base/concurrent_timer.h
     base/const_string.h
+    base/custom_app_icon.h
     base/debug_log.cpp
     base/debug_log.h
     base/enum_mask.h
