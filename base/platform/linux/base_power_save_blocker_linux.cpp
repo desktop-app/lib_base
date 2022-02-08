@@ -52,7 +52,7 @@ void XCBPreventDisplaySleep(bool prevent) {
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#if 0 //ndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 void PortalPreventAppSuspension(
 	bool prevent,
 	const QString &description,
@@ -176,7 +176,7 @@ void BlockPowerSave(
 	QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#if 0 // ndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		PortalPreventAppSuspension(true, description, window);
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		break;
@@ -195,7 +195,7 @@ void BlockPowerSave(
 void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#if 0 // ndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		PortalPreventAppSuspension(false, {}, window);
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		break;
