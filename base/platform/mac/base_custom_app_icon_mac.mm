@@ -10,6 +10,7 @@
 #include "base/platform/mac/base_utilities_mac.h"
 
 #include <QtGui/QImage>
+#include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QTemporaryFile>
 
@@ -180,61 +181,34 @@ int Launch(const QString &command, const QStringList &arguments) {
 	return true;
 }
 
-} // namespace
-
-bool SetCustomAppIcon(const QString &path) {
-	const auto icns = path.endsWith(".icns", Qt::CaseInsensitive);
-	const auto temp = [&] {
-		const auto extension = QString(icns ? "icns" : "png");
-		auto file = QTemporaryFile("custom_icon_XXXXXX." + extension);
-		file.setAutoRemove(false);
-		return file.open() ? file.fileName() : QString();
-	}();
-	if (temp.isEmpty()) {
+[[nodiscard]] QString TempPath(const QString &extension) {
+	auto file = QTemporaryFile(
+		QDir::tempPath() + "/custom_icon_XXXXXX." + extension);
+	file.setAutoRemove(false);
+	const auto result = file.open() ? file.fileName() : QString();
+	if (result.isEmpty()) {
 		LOG(("Icon Error: Could not obtain a temporary file name."));
-		return false;
 	}
-	const auto guard = gsl::finally([&] { QFile::remove(temp); });
-	if (icns) {
-		QFile::remove(temp);
-		if (!QFile(path).copy(temp)) {
-			LOG(("Icon Error: Failed to copy icon from \"%1\" to \"%2\"."
-				).arg(path
-				).arg(temp));
-			return false;
-		}
-	} else {
-		auto image = QImage(path);
-		if (image.isNull()) {
-			LOG(("Icon Error: Failed to read image from \"%1\".").arg(path));
-			return false;
-		}
-		image = std::move(image).convertToFormat(QImage::Format_ARGB32);
-		if (image.isNull()) {
-			LOG(("Icon Error: Failed to convert image to ARGB32."));
-			return false;
-		}
-		if (!image.save(temp, "PNG")) {
-			LOG(("Icon Error: Failed to save image to \"%1\".").arg(temp));
-			return false;
-		}
-	}
+	return result;
+}
+
+[[nodiscard]] bool SetPreparedIcon(const QString &path) {
 	const auto sips = Launch("/usr/bin/sips", {
 		"-i",
-		temp
+		path
 	});
 	if (sips != 0) {
-		LOG(("Icon Error: Failed to run `sips -i \"%1\"`, result: %2.").arg(temp).arg(sips));
+		LOG(("Icon Error: Failed to run `sips -i \"%1\"`, result: %2.").arg(path).arg(sips));
 		return false;
 	}
 	const auto bundle = BundlePath();
 	const auto icon = bundle + "/Icon\r";
 	const auto touch = Launch("/usr/bin/touch", { icon });
 	if (touch != 0) {
-		LOG(("Icon Error: Failed to run `touch \"%1\"`, result: %2.").arg(icon).arg(sips));
+		LOG(("Icon Error: Failed to run `touch \"%1\"`, result: %2.").arg(icon).arg(touch));
 		return false;
 	}
-	const auto from = temp + "/..namedfork/rsrc";
+	const auto from = path + "/..namedfork/rsrc";
 	const auto to = icon + "/..namedfork/rsrc";
 	const auto cp = Launch("/bin/cp", { from, to });
 	if (cp != 0) {
@@ -247,6 +221,60 @@ bool SetCustomAppIcon(const QString &path) {
 		return false;
 	}
 	return RefreshDock();
+
+}
+
+} // namespace
+
+bool SetCustomAppIcon(QImage image) {
+	if (image.isNull()) {
+		LOG(("Icon Error: Null image received."));
+		return false;
+	}
+	if (image.format() != QImage::Format_ARGB32_Premultiplied
+		&& image.format() != QImage::Format_ARGB32
+		&& image.format() != QImage::Format_RGB32) {
+		image = std::move(image).convertToFormat(QImage::Format_ARGB32);
+		if (image.isNull()) {
+			LOG(("Icon Error: Failed to convert image to ARGB32."));
+			return false;
+		}
+	}
+	const auto temp = TempPath("icns");
+	if (temp.isEmpty()) {
+		return false;
+	}
+	const auto guard = gsl::finally([&] { QFile::remove(temp); });
+	if (!image.save(temp, "PNG")) {
+		LOG(("Icon Error: Failed to save image to \"%1\".").arg(temp));
+		return false;
+	}
+	return SetPreparedIcon(temp);
+}
+
+bool SetCustomAppIcon(const QString &path) {
+	const auto icns = path.endsWith(".icns", Qt::CaseInsensitive);
+	if (!icns) {
+		auto image = QImage(path);
+		if (image.isNull()) {
+			LOG(("Icon Error: Failed to read image from \"%1\".").arg(path));
+			return false;
+		}
+		return SetCustomAppIcon(std::move(image));
+	}
+	const auto temp = TempPath("icns");
+	if (temp.isEmpty()) {
+		return false;
+	}
+	const auto guard = gsl::finally([&] { QFile::remove(temp); });
+	QFile::remove(temp);
+	if (!QFile(path).copy(temp)) {
+		LOG(("Icon Error: Failed to copy icon from \"%1\" to \"%2\"."
+			).arg(path
+			).arg(temp));
+		return false;
+	}
+	return SetPreparedIcon(temp);
 }
 
 bool ClearCustomAppIcon() {
