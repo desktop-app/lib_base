@@ -10,12 +10,16 @@
 
 namespace base {
 
-inline bool SetCustomAppIcon(QImage image) {
+inline std::optional<uint64> SetCustomAppIcon(QImage image) {
 	return Platform::SetCustomAppIcon(std::move(image));
 }
 
-inline bool SetCustomAppIcon(const QString &path) {
+inline std::optional<uint64> SetCustomAppIcon(const QString &path) {
 	return Platform::SetCustomAppIcon(path);
+}
+
+inline std::optional<uint64> CurrentCustomAppIconDigest() {
+	return Platform::CurrentCustomAppIconDigest();
 }
 
 inline bool ClearCustomAppIcon() {

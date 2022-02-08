@@ -12,18 +12,23 @@ namespace base::Platform {
 
 #ifdef Q_OS_MAC
 
-bool SetCustomAppIcon(QImage image);
-bool SetCustomAppIcon(const QString &path);
+std::optional<uint64> SetCustomAppIcon(QImage image);
+std::optional<uint64> SetCustomAppIcon(const QString &path);
+std::optional<uint64> CurrentCustomAppIconDigest();
 bool ClearCustomAppIcon();
 
 #else // Q_OS_MAC
 
-inline bool SetCustomAppIcon(QImage image) {
-	return false;
+inline std::optional<uint64> SetCustomAppIcon(QImage image) {
+	return std::nullopt;
 }
 
-inline bool SetCustomAppIcon(const QString &path) {
-	return false;
+inline std::optional<uint64> SetCustomAppIcon(const QString &path) {
+	return std::nullopt;
+}
+
+inline std::optional<uint64> CurrentCustomAppIconDigest() {
+	return std::nullopt;
 }
 
 inline bool ClearCustomAppIcon() {

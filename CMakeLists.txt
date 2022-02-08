@@ -254,6 +254,8 @@ PUBLIC
     desktop-app::external_ranges
     desktop-app::external_gsl
     desktop-app::external_expected
+PRIVATE
+    desktop-app::external_xxhash
 )
 
 if (WIN32)
