@@ -305,7 +305,8 @@ public:
 		return insert(Type(std::forward<Args>(args)...));
 	}
 
-	constexpr bool removeOne(const Type &value) noexcept {
+	template <typename OtherType>
+	constexpr bool removeOne(const OtherType &value) noexcept {
 		if (empty()
 			|| compare()(value, front())
 			|| compare()(back(), value)) {
@@ -318,7 +319,11 @@ public:
 		impl().erase(where);
 		return true;
 	}
-	constexpr int removeAll(const Type &value) noexcept {
+	constexpr bool removeOne(const Type &value) noexcept {
+		return removeOne<Type>(value);
+	}
+	template <typename OtherType>
+	constexpr int removeAll(const OtherType &value) noexcept {
 		if (empty()
 			|| compare()(value, front())
 			|| compare()(back(), value)) {
@@ -331,6 +336,9 @@ public:
 		const auto result = (range.second - range.first);
 		impl().erase(range.first, range.second);
 		return result;
+	}
+	constexpr int removeAll(const Type &value) noexcept {
+		return removeAll<Type>(value);
 	}
 
 	constexpr iterator erase(const_iterator where) noexcept {
@@ -345,29 +353,7 @@ public:
 		return removeAll(value);
 	}
 
-	constexpr iterator findFirst(const Type &value) noexcept {
-		if (empty()
-			|| compare()(value, front())
-			|| compare()(back(), value)) {
-			return end();
-		}
-		auto where = getLowerBound(value);
-		return compare()(value, *where) ? impl().end() : where;
-	}
-
-	constexpr const_iterator findFirst(const Type &value) const noexcept {
-		if (empty()
-			|| compare()(value, front())
-			|| compare()(back(), value)) {
-			return end();
-		}
-		auto where = getLowerBound(value);
-		return compare()(value, *where) ? impl().end() : where;
-	}
-
-	template <
-		typename OtherType,
-		typename = typename Compare::is_transparent>
+	template <typename OtherType>
 	constexpr iterator findFirst(const OtherType &value) noexcept {
 		if (empty()
 			|| compare()(value, front())
@@ -377,10 +363,11 @@ public:
 		auto where = getLowerBound(value);
 		return compare()(value, *where) ? impl().end() : where;
 	}
+	constexpr iterator findFirst(const Type &value) noexcept {
+		return findFirst<Type>(value);
+	}
 
-	template <
-		typename OtherType,
-		typename = typename Compare::is_transparent>
+	template <typename OtherType>
 	constexpr const_iterator findFirst(
 			const OtherType &value) const noexcept {
 		if (empty()
@@ -391,11 +378,20 @@ public:
 		auto where = getLowerBound(value);
 		return compare()(value, *where) ? impl().end() : where;
 	}
+	constexpr const_iterator findFirst(
+			const Type &value) const noexcept {
+		return findFirst<Type>(value);
+	}
 
-	constexpr bool contains(const Type &value) const noexcept {
+	template <typename OtherType>
+	constexpr bool contains(const OtherType &value) const noexcept {
 		return findFirst(value) != end();
 	}
-	constexpr int count(const Type &value) const noexcept {
+	constexpr bool contains(const Type &value) const noexcept {
+		return contains<Type>(value);
+	}
+	template <typename OtherType>
+	constexpr int count(const OtherType &value) const noexcept {
 		if (empty()
 			|| compare()(value, front())
 			|| compare()(back(), value)) {
@@ -403,6 +399,9 @@ public:
 		}
 		auto range = getEqualRange(value);
 		return (range.second - range.first);
+	}
+	constexpr int count(const Type &value) const noexcept {
+		return count<Type>(value);
 	}
 
 	template <typename Action>
@@ -552,25 +551,7 @@ private:
 		return _data.elements;
 	}
 
-	constexpr typename impl_t::iterator getLowerBound(
-			const Type &value) noexcept {
-		return std::lower_bound(
-			std::begin(impl()),
-			std::end(impl()),
-			value,
-			compare());
-	}
-	constexpr typename impl_t::const_iterator getLowerBound(
-			const Type &value) const noexcept {
-		return std::lower_bound(
-			std::begin(impl()),
-			std::end(impl()),
-			value,
-			compare());
-	}
-	template <
-		typename OtherType,
-		typename = typename Compare::is_transparent>
+	template <typename OtherType>
 	constexpr typename impl_t::iterator getLowerBound(
 			const OtherType &value) noexcept {
 		return std::lower_bound(
@@ -579,9 +560,7 @@ private:
 			value,
 			compare());
 	}
-	template <
-		typename OtherType,
-		typename = typename Compare::is_transparent>
+	template <typename OtherType>
 	constexpr typename impl_t::const_iterator getLowerBound(
 			const OtherType &value) const noexcept {
 		return std::lower_bound(
@@ -590,36 +569,40 @@ private:
 			value,
 			compare());
 	}
+	template <typename OtherType>
 	constexpr typename impl_t::iterator getUpperBound(
-			const Type &value) noexcept {
+			const OtherType &value) noexcept {
 		return std::upper_bound(
 			std::begin(impl()),
 			std::end(impl()),
 			value,
 			compare());
 	}
+	template <typename OtherType>
 	constexpr typename impl_t::const_iterator getUpperBound(
-			const Type &value) const noexcept {
+			const OtherType &value) const noexcept {
 		return std::upper_bound(
 			std::begin(impl()),
 			std::end(impl()),
 			value,
 			compare());
 	}
+	template <typename OtherType>
 	constexpr std::pair<
 		typename impl_t::iterator,
 		typename impl_t::iterator
-	> getEqualRange(const Type &value) noexcept {
+	> getEqualRange(const OtherType &value) noexcept {
 		return std::equal_range(
 			std::begin(impl()),
 			std::end(impl()),
 			value,
 			compare());
 	}
+	template <typename OtherType>
 	constexpr std::pair<
 		typename impl_t::const_iterator,
 		typename impl_t::const_iterator
-	> getEqualRange(const Type &value) const noexcept {
+	> getEqualRange(const OtherType &value) const noexcept {
 		return std::equal_range(
 			std::begin(impl()),
 			std::end(impl()),
@@ -707,27 +690,27 @@ public:
 		return this->insert(Type(std::forward<Args>(args)...));
 	}
 
-	constexpr bool remove(const Type &value) noexcept {
+	template <typename OtherType>
+	constexpr bool remove(const OtherType &value) noexcept {
 		return this->removeOne(value);
 	}
+	constexpr bool remove(const Type &value) noexcept {
+		return remove<Type>(value);
+	}
 
-	constexpr iterator find(const Type &value) noexcept {
-		return this->findFirst(value);
-	}
-	constexpr const_iterator find(const Type &value) const noexcept {
-		return this->findFirst(value);
-	}
-	template <
-		typename OtherType,
-		typename = typename Compare::is_transparent>
+	template <typename OtherType>
 	constexpr iterator find(const OtherType &value) noexcept {
 		return this->findFirst(value);
 	}
-	template <
-		typename OtherType,
-		typename = typename Compare::is_transparent>
+	constexpr iterator find(const Type &value) noexcept {
+		return find<Type>(value);
+	}
+	template <typename OtherType>
 	constexpr const_iterator find(const OtherType &value) const noexcept {
 		return this->findFirst(value);
+	}
+	constexpr const_iterator find(const Type &value) const noexcept {
+		return find<Type>(value);
 	}
 
 	template <typename Action>

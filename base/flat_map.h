@@ -502,7 +502,8 @@ public:
 		return insert(value_type(std::forward<Args>(args)...));
 	}
 
-	constexpr bool removeOne(const Key &key) noexcept {
+	template <typename OtherKey>
+	constexpr bool removeOne(const OtherKey &key) noexcept {
 		if (empty()
 			|| compare()(key, front().first)
 			|| compare()(back().first, key)) {
@@ -515,7 +516,11 @@ public:
 		impl().erase(where);
 		return true;
 	}
-	constexpr int removeAll(const Key &key) noexcept {
+	constexpr bool removeOne(const Key &key) noexcept {
+		return removeOne<Key>(key);
+	}
+	template <typename OtherKey>
+	constexpr int removeAll(const OtherKey &key) noexcept {
 		if (empty()
 			|| compare()(key, front().first)
 			|| compare()(back().first, key)) {
@@ -529,7 +534,11 @@ public:
 		impl().erase(range.first, range.second);
 		return result;
 	}
-	constexpr bool remove(const Key &key, const Type &value) noexcept {
+	constexpr int removeAll(const Key &key) noexcept {
+		return removeAll<Key>(key);
+	}
+	template <typename OtherKey>
+	constexpr bool remove(const OtherKey &key, const Type &value) noexcept {
 		if (empty()
 			|| compare()(key, front().first)
 			|| compare()(back().first, key)) {
@@ -546,6 +555,9 @@ public:
 		}
 		return false;
 	}
+	constexpr bool remove(const Key &key, const Type &value) noexcept {
+		return remove<Key>(key, value);
+	}
 
 	constexpr iterator erase(const_iterator where) noexcept {
 		return impl().erase(where._impl);
@@ -559,26 +571,6 @@ public:
 		return removeAll(key);
 	}
 
-	constexpr iterator findFirst(const Key &key) noexcept {
-		if (empty()
-			|| compare()(key, front().first)
-			|| compare()(back().first, key)) {
-			return end();
-		}
-		auto where = getLowerBound(key);
-		return compare()(key, where->first) ? impl().end() : where;
-	}
-
-	constexpr const_iterator findFirst(const Key &key) const noexcept {
-		if (empty()
-			|| compare()(key, front().first)
-			|| compare()(back().first, key)) {
-			return end();
-		}
-		auto where = getLowerBound(key);
-		return compare()(key, where->first) ? impl().end() : where;
-	}
-
 	template <typename OtherKey>
 	constexpr iterator findFirst(const OtherKey &key) noexcept {
 		if (empty()
@@ -588,6 +580,9 @@ public:
 		}
 		auto where = getLowerBound(key);
 		return compare()(key, where->first) ? impl().end() : where;
+	}
+	constexpr iterator findFirst(const Key &key) noexcept {
+		return findFirst<Key>(key);
 	}
 
 	template <typename OtherKey>
@@ -600,11 +595,20 @@ public:
 		auto where = getLowerBound(key);
 		return compare()(key, where->first) ? impl().end() : where;
 	}
+	constexpr const_iterator findFirst(const Key &key) const noexcept {
+		return findFirst<Key>(key);
+	}
 
-	constexpr bool contains(const Key &key) const noexcept {
+	template <typename OtherKey>
+	constexpr bool contains(const OtherKey &key) const noexcept {
 		return findFirst(key) != end();
 	}
-	constexpr int count(const Key &key) const noexcept {
+	constexpr bool contains(const Key &key) const noexcept {
+		return contains<Key>(key);
+	}
+
+	template <typename OtherKey>
+	constexpr int count(const OtherKey &key) const noexcept {
 		if (empty()
 			|| compare()(key, front().first)
 			|| compare()(back().first, key)) {
@@ -612,6 +616,9 @@ public:
 		}
 		auto range = getEqualRange(key);
 		return (range.second - range.first);
+	}
+	constexpr int count(const Key &key) const noexcept {
+		return count<Key>(key);
 	}
 
 private:
@@ -897,23 +904,28 @@ public:
 		return { where, false };
 	}
 
-	constexpr bool remove(const Key &key) noexcept {
+	template <typename OtherKey>
+	constexpr bool remove(const OtherKey &key) noexcept {
 		return this->removeOne(key);
 	}
+	constexpr bool remove(const Key &key) noexcept {
+		return remove<Key>(key);
+	}
 
-	constexpr iterator find(const Key &key) noexcept {
-		return this->findFirst(key);
-	}
-	constexpr const_iterator find(const Key &key) const noexcept {
-		return this->findFirst(key);
-	}
 	template <typename OtherKey>
 	constexpr iterator find(const OtherKey &key) noexcept {
 		return this->template findFirst<OtherKey>(key);
 	}
+	constexpr iterator find(const Key &key) noexcept {
+		return find<Key>(key);
+	}
+
 	template <typename OtherKey>
 	constexpr const_iterator find(const OtherKey &key) const noexcept {
 		return this->template findFirst<OtherKey>(key);
+	}
+	constexpr const_iterator find(const Key &key) const noexcept {
+		return find<Key>(key);
 	}
 
 	constexpr Type &operator[](const Key &key) noexcept {
@@ -928,7 +940,8 @@ public:
 		return where->second;
 	}
 
-	constexpr std::optional<Type> take(const Key &key) noexcept {
+	template <typename OtherKey>
+	constexpr std::optional<Type> take(const OtherKey &key) noexcept {
 		auto it = find(key);
 		if (it == this->end()) {
 			return std::nullopt;
@@ -936,6 +949,9 @@ public:
 		auto result = std::move(it->second);
 		this->erase(it);
 		return result;
+	}
+	constexpr std::optional<Type> take(const Key &key) noexcept {
+		return take<Key>(key);
 	}
 
 	friend inline constexpr bool operator<(
