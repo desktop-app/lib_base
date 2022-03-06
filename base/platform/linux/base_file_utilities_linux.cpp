@@ -196,9 +196,18 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 		return appimagePath;
 	}
 
+#if   defined(Q_OS_FREEBSD) // includes DragonFly
+	// procfs(5) not enabled by default, best use KERN_PROC_PATHNAME sysctl(2)
+	constexpr auto kSelfPath = "/proc/curproc/file"_cs;
+#elif defined(Q_OS_NETBSD)
+	constexpr auto kSelfPath = "/proc/curproc/exe"_cs;
+#else // Q_OS_LINUX
+	constexpr auto kSelfPath = "/proc/self/exe"_cs;
+#endif
+
 	constexpr auto kMaxPath = 1024;
 	char result[kMaxPath] = { 0 };
-	auto count = readlink("/proc/self/exe", result, kMaxPath);
+	auto count = readlink(kSelfPath.data(), result, kMaxPath);
 	if (count > 0) {
 		auto filename = QFile::decodeName(result);
 		auto deletedPostfix = qstr(" (deleted)");
