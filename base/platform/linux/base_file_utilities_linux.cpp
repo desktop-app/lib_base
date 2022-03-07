@@ -12,7 +12,7 @@
 #include <QtCore/QProcess>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
-#include <QtCore/QDir>
+#include <QtCore/QStandardPaths>
 #include <QtGui/QDesktopServices>
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
@@ -210,7 +210,18 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 	}
 
 	// Fallback to the first command line argument.
-	return argc ? QFile::decodeName(argv[0]) : QString();
+	if (argc) {
+		const auto argv0 = QFile::decodeName(argv[0]);
+		if (!argv0.isEmpty() && !QFileInfo::exists(argv0)) {
+			const auto argv0InPath = QStandardPaths::findExecutable(argv0);
+			if (!argv0InPath.isEmpty()) {
+				return argv0InPath;
+			}
+		}
+		return argv0;
+	}
+
+	return QString();
 }
 
 void RemoveQuarantine(const QString &path) {
