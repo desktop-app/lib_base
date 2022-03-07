@@ -196,17 +196,9 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 		return appimagePath;
 	}
 
-	constexpr auto kMaxPath = 1024;
-	char result[kMaxPath] = { 0 };
-	auto count = readlink("/proc/self/exe", result, kMaxPath);
-	if (count > 0) {
-		auto filename = QFile::decodeName(result);
-		auto deletedPostfix = qstr(" (deleted)");
-		if (filename.endsWith(deletedPostfix)
-			&& !QFileInfo::exists(filename)) {
-			filename.chop(deletedPostfix.size());
-		}
-		return filename;
+	const auto exeLink = QFileInfo(u"/proc/%1/exe"_q.arg(getpid()));
+	if (exeLink.exists() && exeLink.isSymLink()) {
+		return exeLink.canonicalFilePath();
 	}
 
 	// Fallback to the first command line argument.
