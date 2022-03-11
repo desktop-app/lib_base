@@ -14,7 +14,7 @@ namespace base {
 	return rpl::make_producer<>([=](const auto &consumer) {
 		auto result = rpl::lifetime();
 		result.make_state<base::Timer>([=] {
-			consumer.put_next(rpl::empty_value());
+			consumer.put_next_copy(rpl::empty);
 			consumer.put_done();
 		})->callOnce(delay);
 		return result;
@@ -25,7 +25,7 @@ namespace base {
 	return rpl::make_producer<>([=](const auto &consumer) {
 		auto result = rpl::lifetime();
 		result.make_state<base::Timer>([=] {
-			consumer.put_next(rpl::empty_value());
+			consumer.put_next_copy(rpl::empty);
 		})->callEach(delay);
 		return result;
 	});
