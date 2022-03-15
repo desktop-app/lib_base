@@ -411,7 +411,7 @@ void SystemMediaControls::Private::handleMethodCall(
 	if (methodName == "Seek") {
 		// Seek (x: Offset);
 		Glib::Variant<gint64> offset;
-		parameters.get_child(offset, 1);
+		parameters.get_child(offset, 0);
 
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_player.position += offset.get();
