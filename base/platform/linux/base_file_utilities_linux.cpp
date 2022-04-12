@@ -173,10 +173,6 @@ bool ShowInFolder(const QString &filepath) {
 		return true;
 	}
 
-	if (QProcess::startDetached("xdg-open", { folder.toEncoded() })) {
-		return true;
-	}
-
 	return false;
 }
 
