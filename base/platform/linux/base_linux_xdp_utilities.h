@@ -15,10 +15,10 @@ class QWindow;
 
 namespace base::Platform::XDP {
 
-inline constexpr auto kXDPService = "org.freedesktop.portal.Desktop"_cs;
-inline constexpr auto kXDPObjectPath = "/org/freedesktop/portal/desktop"_cs;
-inline constexpr auto kXDPRequestInterface = "org.freedesktop.portal.Request"_cs;
-inline constexpr auto kXDPSettingsInterface = "org.freedesktop.portal.Settings"_cs;
+inline constexpr auto kService = "org.freedesktop.portal.Desktop"_cs;
+inline constexpr auto kObjectPath = "/org/freedesktop/portal/desktop"_cs;
+inline constexpr auto kRequestInterface = "org.freedesktop.portal.Request"_cs;
+inline constexpr auto kSettingsInterface = "org.freedesktop.portal.Settings"_cs;
 
 Glib::ustring ParentWindowID(QWindow *window);
 
