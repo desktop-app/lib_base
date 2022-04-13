@@ -7,8 +7,30 @@
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 
 #include "base/platform/linux/base_linux_glibmm_helper.h"
+#include "base/platform/linux/base_linux_wayland_integration.h"
+#include "base/platform/base_platform_info.h"
+
+#include <QtGui/QWindow>
 
 namespace base::Platform::XDP {
+
+Glib::ustring ParentWindowID(QWindow *window) {
+	std::stringstream result;
+	if (!window) {
+		return result.str();
+	}
+
+	if (const auto integration = WaylandIntegration::Instance()) {
+		if (const auto handle = integration->nativeHandle(window)
+			; !handle.isEmpty()) {
+			result << "wayland:" << handle.toStdString();
+		}
+	} else if (::Platform::IsX11()) {
+		result << "x11:" << std::hex << window->winId();
+	}
+
+	return result.str();
+}
 
 std::optional<Glib::VariantBase> ReadSetting(
 		const Glib::ustring &group,
