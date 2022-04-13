@@ -8,8 +8,10 @@
 
 #include "base/const_string.h"
 
-#include <glibmm.h>
-#include <giomm.h>
+namespace Glib {
+class ustring;
+class VariantBase;
+} // namespace Glib
 
 class QWindow;
 
