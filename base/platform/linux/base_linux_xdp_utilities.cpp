@@ -10,6 +10,9 @@
 #include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/platform/base_platform_info.h"
 
+#include <glibmm.h>
+#include <giomm.h>
+
 #include <QtGui/QWindow>
 
 namespace base::Platform::XDP {
