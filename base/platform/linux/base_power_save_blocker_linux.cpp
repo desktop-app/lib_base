@@ -65,10 +65,10 @@ void PortalPreventAppSuspension(
 		if (!prevent && !requestPath.empty()) {
 			connection->call_sync(
 				requestPath,
-				std::string(XDP::kXDPRequestInterface),
+				std::string(XDP::kRequestInterface),
 				"Close",
 				{},
-				std::string(XDP::kXDPService));
+				std::string(XDP::kService));
 			requestPath = "";
 			return;
 		} else if (!(prevent && requestPath.empty())) {
@@ -105,8 +105,8 @@ void PortalPreventAppSuspension(
 				const Glib::VariantContainerBase &parameters) {
 				loop->quit();
 			},
-			std::string(XDP::kXDPService),
-			std::string(XDP::kXDPRequestInterface),
+			std::string(XDP::kService),
+			std::string(XDP::kRequestInterface),
 			"Response",
 			requestPath);
 
@@ -117,7 +117,7 @@ void PortalPreventAppSuspension(
 		});
 
 		connection->call_sync(
-			std::string(XDP::kXDPObjectPath),
+			std::string(XDP::kObjectPath),
 			"org.freedesktop.portal.Inhibit",
 			"Inhibit",
 			Glib::VariantContainerBase::create_tuple({
@@ -138,7 +138,7 @@ void PortalPreventAppSuspension(
 					},
 				}),
 			}),
-			std::string(XDP::kXDPService));
+			std::string(XDP::kService));
 
 		if (signalId != 0) {
 			QWindow tempWindow;

@@ -40,14 +40,14 @@ std::optional<Glib::VariantBase> ReadSetting(
 			Gio::DBus::BusType::BUS_TYPE_SESSION);
 
 		auto reply = connection->call_sync(
-			std::string(kXDPObjectPath),
-			std::string(kXDPSettingsInterface),
+			std::string(kObjectPath),
+			std::string(kSettingsInterface),
 			"Read",
 			MakeGlibVariant(std::tuple{
 				group,
 				key,
 			}),
-			std::string(kXDPService));
+			std::string(kService));
 
 		return GlibVariantCast<Glib::VariantBase>(
 			GlibVariantCast<Glib::VariantBase>(reply.get_child(0)));
@@ -100,10 +100,10 @@ SettingWatcher::SettingWatcher(
 				} catch (...) {
 				}
 			},
-			std::string(kXDPService),
-			std::string(kXDPSettingsInterface),
+			std::string(kService),
+			std::string(kSettingsInterface),
 			"SettingChanged",
-			std::string(kXDPObjectPath));
+			std::string(kObjectPath));
 	} catch (...) {
 	}
 }
