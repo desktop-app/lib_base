@@ -30,7 +30,8 @@ namespace {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 constexpr auto kResetScreenSaverTimeout = 10 * crl::time(1000);
 
-// Due to https://gitlab.freedesktop.org/xorg/xserver/-/issues/363 use the basic reset API
+// Use the basic reset API
+// due to https://gitlab.freedesktop.org/xorg/xserver/-/issues/363
 void XCBPreventDisplaySleep(bool prevent) {
 	static rpl::lifetime lifetime;
 	if (!prevent) {
@@ -134,7 +135,8 @@ void PortalPreventAppSuspension(
 					},
 					{
 						"reason",
-						Glib::Variant<Glib::ustring>::create(description.toStdString())
+						Glib::Variant<Glib::ustring>::create(
+							description.toStdString())
 					},
 				}),
 			}),
