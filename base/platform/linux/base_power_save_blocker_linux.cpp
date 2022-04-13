@@ -75,24 +75,6 @@ void PortalPreventAppSuspension(
 			return;
 		}
 
-		const auto windowId = [&]() -> Glib::ustring {
-			std::stringstream result;
-			if (!window) {
-				return result.str();
-			}
-
-			if (const auto integration = WaylandIntegration::Instance()) {
-				if (const auto handle = integration->nativeHandle(window)
-					; !handle.isEmpty()) {
-					result << "wayland:" << handle.toStdString();
-				}
-			} else if (::Platform::IsX11()) {
-				result << "x11:" << std::hex << window->winId();
-			}
-
-			return result.str();
-		}();
-
 		const auto handleToken = Glib::ustring("desktop_app")
 			+ std::to_string(base::RandomValue<uint>());
 
@@ -139,7 +121,8 @@ void PortalPreventAppSuspension(
 			"org.freedesktop.portal.Inhibit",
 			"Inhibit",
 			Glib::VariantContainerBase::create_tuple({
-				Glib::Variant<Glib::ustring>::create(windowId),
+				Glib::Variant<Glib::ustring>::create(
+					XDP::ParentWindowID(window)),
 				Glib::Variant<uint>::create(4), // Suspend
 				Glib::Variant<std::map<
 					Glib::ustring,

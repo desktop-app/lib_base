@@ -11,12 +11,16 @@
 #include <glibmm.h>
 #include <giomm.h>
 
+class QWindow;
+
 namespace base::Platform::XDP {
 
 inline constexpr auto kXDPService = "org.freedesktop.portal.Desktop"_cs;
 inline constexpr auto kXDPObjectPath = "/org/freedesktop/portal/desktop"_cs;
 inline constexpr auto kXDPRequestInterface = "org.freedesktop.portal.Request"_cs;
 inline constexpr auto kXDPSettingsInterface = "org.freedesktop.portal.Settings"_cs;
+
+Glib::ustring ParentWindowID(QWindow *window);
 
 std::optional<Glib::VariantBase> ReadSetting(
 	const Glib::ustring &group,
