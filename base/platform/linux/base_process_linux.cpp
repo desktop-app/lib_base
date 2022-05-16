@@ -13,6 +13,7 @@
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QtGui/QGuiApplication>
+#include <private/qtx11extras_p.h>
 
 namespace base::Platform {
 namespace {
@@ -26,11 +27,6 @@ void XCBActivateWindow(WId window) {
 
 	const auto root = XCB::GetRootWindow(connection);
 	if (!root.has_value()) {
-		return;
-	}
-
-	const auto appTime = XCB::GetAppTimeFromQt();
-	if (!appTime.has_value()) {
 		return;
 	}
 
@@ -63,7 +59,7 @@ void XCBActivateWindow(WId window) {
 	xev.window = window;
 	xev.type = *activeWindowAtom;
 	xev.data.data32[0] = 1; // source: 1=application 2=pager
-	xev.data.data32[1] = *appTime; // timestamp
+	xev.data.data32[1] = QX11Info::appTime(); // timestamp
 	xev.data.data32[2] = focusWindow // currently active window
 		? focusWindow->winId()
 		: XCB_NONE;
