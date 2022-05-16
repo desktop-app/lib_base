@@ -7,18 +7,17 @@
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 
 #include <QtGui/QGuiApplication>
-#include <qpa/qplatformnativeinterface.h>
 
 namespace base::Platform::XCB {
 
 xcb_connection_t *GetConnectionFromQt() {
-	const auto native = QGuiApplication::platformNativeInterface();
+	using namespace QNativeInterface;
+	const auto native = qApp->nativeInterface<QX11Application>();
 	if (!native) {
 		return nullptr;
 	}
 
-	return reinterpret_cast<xcb_connection_t*>(
-		native->nativeResourceForIntegration(QByteArray("connection")));
+	return native->connection();
 }
 
 std::optional<xcb_window_t> GetRootWindow(xcb_connection_t *connection) {
