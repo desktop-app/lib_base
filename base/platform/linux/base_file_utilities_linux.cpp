@@ -9,7 +9,6 @@
 #include "base/platform/base_platform_file_utilities.h"
 #include "base/algorithm.h"
 
-#include <QtCore/QProcess>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QStandardPaths>
@@ -94,50 +93,6 @@ bool DBusShowInFolder(const QString &filepath) {
 
 	return false;
 }
-
-bool ProcessShowInFolder(const QString &filepath) {
-	const auto fileManager = [] {
-		try {
-			const auto appInfo = Gio::AppInfo::get_default_for_type(
-				"inode/directory",
-				false);
-
-			if (appInfo) {
-				return QString::fromStdString(appInfo->get_id());
-			}
-		} catch (...) {
-		}
-
-		return QString();
-	}();
-
-	if (fileManager == qstr("dolphin.desktop")
-		|| fileManager == qstr("org.kde.dolphin.desktop")) {
-		return QProcess::startDetached("dolphin", {
-			"--select",
-			filepath
-		});
-	} else if (fileManager == qstr("nautilus.desktop")
-		|| fileManager == qstr("org.gnome.Nautilus.desktop")
-		|| fileManager == qstr("nautilus-folder-handler.desktop")) {
-		return QProcess::startDetached("nautilus", {
-			filepath
-		});
-	} else if (fileManager == qstr("nemo.desktop")) {
-		return QProcess::startDetached("nemo", {
-			"--no-desktop",
-			filepath
-		});
-	} else if (fileManager == qstr("konqueror.desktop")
-		|| fileManager == qstr("kfmclient_dir.desktop")) {
-		return QProcess::startDetached("konqueror", {
-			"--select",
-			filepath
-		});
-	}
-
-	return false;
-}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 } // namespace
@@ -149,10 +104,6 @@ bool ShowInFolder(const QString &filepath) {
 	}
 
 	if (PortalShowInFolder(filepath)) {
-		return true;
-	}
-
-	if (ProcessShowInFolder(filepath)) {
 		return true;
 	}
 
