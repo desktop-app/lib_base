@@ -22,7 +22,7 @@
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <QtGui/QWindow>
-#include <private/qguiapplication_p.h>
+#include <QtWidgets/QWidget>
 
 namespace base::Platform {
 namespace {
@@ -89,12 +89,7 @@ void PortalPreventAppSuspension(
 			+ '/'
 			+ handleToken;
 
-		const auto context = Glib::MainContext::create();
-		const auto loop = Glib::MainLoop::create(context);
-		g_main_context_push_thread_default(context->gobj());
-		const auto contextGuard = gsl::finally([&] {
-			g_main_context_pop_thread_default(context->gobj());
-		});
+		const auto loop = Glib::MainLoop::create();
 
 		const auto signalId = connection->signal_subscribe(
 			[&](
@@ -143,10 +138,11 @@ void PortalPreventAppSuspension(
 			std::string(XDP::kService));
 
 		if (signalId != 0) {
-			QWindow tempWindow;
-			QGuiApplicationPrivate::showModalWindow(&tempWindow);
+			QWidget tempWindow;
+			tempWindow.setAttribute(Qt::WA_DontShowOnScreen);
+			tempWindow.setWindowModality(Qt::ApplicationModal);
+			tempWindow.show();
 			loop->run();
-			QGuiApplicationPrivate::hideModalWindow(&tempWindow);
 		}
 	} catch (...) {
 	}
