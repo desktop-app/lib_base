@@ -15,9 +15,7 @@
 
 #include <QtCore/QFile>
 #include <QtCore/QProcess>
-#include <QtGui/QWindow>
-
-#include <private/qguiapplication_p.h>
+#include <QtWidgets/QWidget>
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <gio/gio.h>
@@ -84,9 +82,7 @@ void SnapDefaultHandler(const QString &protocol) {
 			return;
 		}
 
-		const auto context = Glib::MainContext::create();
-		const auto loop = Glib::MainLoop::create(context);
-		g_main_context_push_thread_default(context->gobj());
+		const auto loop = Glib::MainLoop::create();
 
 		connection->call(
 			std::string(kSnapcraftSettingsObjectPath),
@@ -109,11 +105,11 @@ void SnapDefaultHandler(const QString &protocol) {
 			},
 			std::string(kSnapcraftSettingsService));
 
-		QWindow window;
-		QGuiApplicationPrivate::showModalWindow(&window);
+		QWidget window;
+		window.setAttribute(Qt::WA_DontShowOnScreen);
+		window.setWindowModality(Qt::ApplicationModal);
+		window.show();
 		loop->run();
-		g_main_context_pop_thread_default(context->gobj());
-		QGuiApplicationPrivate::hideModalWindow(&window);
 	} catch (const Glib::Error &e) {
 		LOG(("Snap Default Handler Error: %1")
 			.arg(QString::fromStdString(e.what())));
