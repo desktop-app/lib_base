@@ -6,9 +6,102 @@
 //
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 
+#include "base/qt/qt_common_adapters.h"
+
+#include <QtCore/QAbstractNativeEventFilter>
 #include <QtGui/QGuiApplication>
 
 namespace base::Platform::XCB {
+namespace {
+
+class TimestampGetter : public QAbstractNativeEventFilter {
+public:
+	TimestampGetter() {
+	}
+
+	std::optional<xcb_timestamp_t> get() {
+		_connection = GetConnectionFromQt();
+		if (!_connection) {
+			return std::nullopt;
+		}
+
+		const auto window = GetRootWindow(_connection);
+		if (!window.has_value()) {
+			return std::nullopt;
+		}
+
+		const auto atom = GetAtom(_connection, "CLIP_TEMPORARY");
+		if (!atom.has_value()) {
+			return std::nullopt;
+		}
+
+		_window = *window;
+		_atom = *atom;
+
+		QCoreApplication::instance()->installNativeEventFilter(this);
+
+		xcb_change_property(
+			_connection,
+			XCB_PROP_MODE_APPEND,
+			_window,
+			_atom,
+			XCB_ATOM_INTEGER,
+			32,
+			0,
+			nullptr);
+		
+		xcb_flush(_connection);
+		sync();
+		_loop.exec();
+		xcb_delete_property(_connection, _window, _atom);
+
+		return _timestamp;
+	}
+
+private:
+	bool nativeEventFilter(
+			const QByteArray &eventType,
+			void *message,
+			NativeEventResult *result) override {
+		const auto guard = gsl::finally([&] {
+			_connection = GetConnectionFromQt();
+			if (!_connection || xcb_connection_has_error(_connection)) {
+				_loop.quit();
+			}
+
+			if (_loop.isRunning()) {
+				sync();
+			}
+		});
+
+		const auto event = reinterpret_cast<xcb_generic_event_t*>(message);
+		if ((event->response_type & ~0x80) != XCB_PROPERTY_NOTIFY) {
+			return false;
+		}
+
+		const auto pn = reinterpret_cast<xcb_property_notify_event_t*>(event);
+		if (pn->window != _window || pn->atom != _atom) {
+			return false;
+		}
+
+		_timestamp = pn->time;
+		_loop.quit();
+		return false;
+	}
+
+	void sync() {
+		const auto cookie = xcb_get_input_focus(_connection);
+		free(xcb_get_input_focus_reply(_connection, cookie, nullptr));
+	}
+
+	QEventLoop _loop;
+	xcb_connection_t *_connection = nullptr;
+	xcb_window_t _window = XCB_WINDOW_NONE;
+	xcb_atom_t _atom = XCB_ATOM_NONE;
+	std::optional<xcb_timestamp_t> _timestamp;
+};
+
+} // namespace
 
 xcb_connection_t *GetConnectionFromQt() {
 	using namespace QNativeInterface;
@@ -18,6 +111,10 @@ xcb_connection_t *GetConnectionFromQt() {
 	}
 
 	return native->connection();
+}
+
+std::optional<xcb_timestamp_t> GetTimestamp() {
+	return TimestampGetter().get();
 }
 
 std::optional<xcb_window_t> GetRootWindow(xcb_connection_t *connection) {
