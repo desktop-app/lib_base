@@ -252,9 +252,9 @@ std::optional<xcb_window_t> GetSupportingWMCheck(
 		} : std::nullopt;
 }
 
-bool IsSupportedByWM(const QString &atomName) {
-	CustomConnection connection;
-	if (xcb_connection_has_error(connection)) {
+bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName) {
+	// for inline GetConnectionFromQt use
+	if (!connection) {
 		return false;
 	}
 
