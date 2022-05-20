@@ -66,6 +66,7 @@ std::optional<xcb_window_t> GetSupportingWMCheck(
 		xcb_connection_t *connection,
 		xcb_window_t root);
 
-bool IsSupportedByWM(const QString &atomName);
+// convenient API, checks connection for nullptr
+bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName);
 
 } // namespace base::Platform::XCB
