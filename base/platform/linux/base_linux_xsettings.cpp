@@ -258,7 +258,8 @@ XSettings::XSettings()
 	xcb_change_window_attributes(
 		_private->connection,
 		_private->x_settings_window,
-		event,event_mask);
+		event,
+		event_mask);
 
 	_private->populateSettings(_private->getSettings());
 	_private->initialized = true;
@@ -276,27 +277,20 @@ bool XSettings::initialized() const {
 	return _private->initialized;
 }
 
-void XSettings::handlePropertyNotifyEvent(
-		const xcb_property_notify_event_t *event) {
-	if (event->window != _private->x_settings_window)
-		return;
-
-	_private->populateSettings(_private->getSettings());
-}
-
 bool XSettings::nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
 		NativeEventResult *result) {
 	const auto event = static_cast<xcb_generic_event_t*>(message);
 	const auto response_type = event->response_type & ~0x80;
-	switch (response_type) {
-	case XCB_PROPERTY_NOTIFY: {
-		const auto propertyNotify = reinterpret_cast<
-			xcb_property_notify_event_t *>(event);
-		handlePropertyNotifyEvent(propertyNotify);
-	} break;
-	}
+	if (response_type != XCB_PROPERTY_NOTIFY)
+		return false;
+
+	const auto pn = reinterpret_cast<xcb_property_notify_event_t*>(event);
+	if (pn->window != _private->x_settings_window)
+		return false;
+
+	_private->populateSettings(_private->getSettings());
 	return false;
 }
 
