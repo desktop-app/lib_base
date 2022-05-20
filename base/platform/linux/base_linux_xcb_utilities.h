@@ -46,6 +46,8 @@ ReplyPointer<T> MakeReplyPointer(T *reply) {
 
 xcb_connection_t *GetConnectionFromQt();
 
+std::optional<xcb_timestamp_t> GetTimestamp();
+
 std::optional<xcb_window_t> GetRootWindow(xcb_connection_t *connection);
 
 std::optional<xcb_atom_t> GetAtom(
