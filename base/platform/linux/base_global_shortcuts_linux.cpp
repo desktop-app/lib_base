@@ -8,8 +8,7 @@
 
 #include "base/const_string.h"
 #include "base/global_shortcuts_generic.h"
-#include "base/platform/base_platform_info.h" // IsWayland
-#include "base/unique_qptr.h"
+#include "base/platform/base_platform_info.h" // IsX11
 #include "base/debug_log.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -17,7 +16,6 @@
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QKeySequence>
-#include <QScopedPointer>
 #include <QSocketNotifier>
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -40,6 +38,12 @@ Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 using XcbReply = xcb_record_enable_context_reply_t;
 
+struct KeySymbolsDeleter {
+	void operator()(xcb_key_symbols_t *value) {
+		xcb_key_symbols_free(value);
+	}
+};
+
 bool IsKeypad(xcb_keysym_t keysym) {
 	return (xcb_is_keypad_key(keysym) || xcb_is_private_keypad_key(keysym));
 }
@@ -52,6 +56,7 @@ bool SkipMouseButton(xcb_button_t b) {
 class X11Manager final {
 public:
 	X11Manager();
+	~X11Manager();
 
 	[[nodiscard]] bool available() const;
 
@@ -60,81 +65,81 @@ private:
 	xcb_keysym_t computeKeysym(xcb_keycode_t detail, uint16_t state);
 
 	XCB::CustomConnection _connection;
-	const unique_qptr<QObject> _object;
-	not_null<xcb_key_symbols_t*> _keySymbols;
+	std::unique_ptr<xcb_key_symbols_t, KeySymbolsDeleter> _keySymbols;
 	std::unique_ptr<QSocketNotifier> _notifier;
-	bool _isAvailable = true;
+	std::optional<xcb_record_context_t> _context;
+	std::optional<xcb_record_enable_context_cookie_t> _cookie;
 
 };
 
 X11Manager::X11Manager()
-: _object(make_unique_q<QObject>())
-, _keySymbols(xcb_key_symbols_alloc(_connection)) {
+: _keySymbols(xcb_key_symbols_alloc(_connection)) {
 
 	if (xcb_connection_has_error(_connection)) {
 		LOG((
 			"Global Shortcuts Manager: Error to open local display!"));
-		_isAvailable = false;
 		return;
 	}
 
 	if (!XCB::IsExtensionPresent(_connection, &xcb_record_id)) {
 		LOG(("Global Shortcuts Manager: "
 			"RECORD extension not supported on this X server!"));
-		_isAvailable = false;
 		return;
 	}
 
-	auto id = xcb_generate_id(_connection);
-	auto clientSpec = xcb_record_client_spec_t(XCB_RECORD_CS_ALL_CLIENTS);
+	_context = xcb_generate_id(_connection);
+	const xcb_record_client_spec_t clientSpec[] = {
+		XCB_RECORD_CS_ALL_CLIENTS
+	};
 
-	auto recordRange = []() -> xcb_record_range_t {
-		xcb_record_range_t rr;
-		memset(&rr, 0, sizeof(rr));
+	const xcb_record_range_t recordRange[] = {
+		[] {
+			xcb_record_range_t rr;
+			memset(&rr, 0, sizeof(rr));
 
-		// XCB_KEY_PRESS = 2
-		// XCB_KEY_RELEASE = 3
-		// XCB_BUTTON_PRESS = 4
-		// XCB_BUTTON_RELEASE = 5
-		rr.device_events = { XCB_KEY_PRESS, XCB_BUTTON_RELEASE };
-		return rr;
-	}();
+			// XCB_KEY_PRESS = 2
+			// XCB_KEY_RELEASE = 3
+			// XCB_BUTTON_PRESS = 4
+			// XCB_BUTTON_RELEASE = 5
+			rr.device_events = { XCB_KEY_PRESS, XCB_BUTTON_RELEASE };
+			return rr;
+		}()
+	};
 
-	auto createCookie = xcb_record_create_context_checked(
+	const auto createCookie = xcb_record_create_context_checked(
 		_connection,
-		id,
+		*_context,
 		0,
-		1,
-		1,
-		&clientSpec,
-		&recordRange);
+		sizeof(clientSpec) / sizeof(clientSpec[0]),
+		sizeof(recordRange) / sizeof(recordRange[0]),
+		clientSpec,
+		recordRange);
 	if (xcb_request_check(_connection, createCookie)) {
 		LOG((
 			"Global Shortcuts Manager: Could not create a record context!"));
-		_isAvailable = false;
+		_context = std::nullopt;
 		return;
 	}
 
-	const auto cookie = xcb_record_enable_context(_connection, id);
+	_cookie = xcb_record_enable_context(_connection, *_context);
 	xcb_flush(_connection);
 
 	_notifier = std::make_unique<QSocketNotifier>(
 		xcb_get_file_descriptor(_connection),
-		QSocketNotifier::Read,
-		_object);
+		QSocketNotifier::Read);
 
-	_object->connect(_notifier.get(), &QSocketNotifier::activated, [=] {
-		xcb_generic_event_t *event;
-		while ((event = xcb_poll_for_event(_connection))) {
-			std::free(event);
+	QObject::connect(_notifier.get(), &QSocketNotifier::activated, [=] {
+		while (const auto event = xcb_poll_for_event(_connection)) {
+			free(event);
 		}
 
 		void *reply = nullptr;
 		xcb_generic_error_t *error = nullptr;
-		while (cookie.sequence
+		while (_cookie
+			&& _cookie->sequence
 			&& xcb_poll_for_reply(
 				_connection,
-				cookie.sequence,
+				_cookie->sequence,
 				&reply,
 				&error)) {
 			// The xcb_poll_for_reply method may set both reply and error
@@ -144,7 +149,7 @@ X11Manager::X11Manager()
 			}
 
 			if (error) {
-				std::free(error);
+				free(error);
 				break;
 			}
 
@@ -152,13 +157,24 @@ X11Manager::X11Manager()
 				continue;
 			}
 
-			const auto data =
-				QScopedPointer<XcbReply, QScopedPointerPodDeleter>(
-					reinterpret_cast<XcbReply*>(reply));
-			process(data.data());
+			process(reinterpret_cast<XcbReply*>(reply));
+			free(reply);
 		}
 	});
 	_notifier->setEnabled(true);
+}
+
+
+X11Manager::~X11Manager() {
+	if (_cookie) {
+		xcb_record_disable_context(_connection, *_context);
+		_cookie = std::nullopt;
+	}
+
+	if (_context) {
+		xcb_record_free_context(_connection, *_context);
+		_context = std::nullopt;
+	}
 }
 
 void X11Manager::process(XcbReply *reply) {
@@ -198,7 +214,7 @@ void X11Manager::process(XcbReply *reply) {
 
 xcb_keysym_t X11Manager::computeKeysym(xcb_keycode_t detail, uint16_t state) {
 	// Perhaps XCB_MOD_MASK_1-5 are needed here.
-	const auto keySym1 = xcb_key_symbols_get_keysym(_keySymbols, detail, 1);
+	const auto keySym1 = xcb_key_symbols_get_keysym(_keySymbols.get(), detail, 1);
 	if (IsKeypad(keySym1)) {
 		return keySym1;
 	}
@@ -208,11 +224,11 @@ xcb_keysym_t X11Manager::computeKeysym(xcb_keycode_t detail, uint16_t state) {
 		}
 	}
 
-	return xcb_key_symbols_get_keysym(_keySymbols, detail, 0);
+	return xcb_key_symbols_get_keysym(_keySymbols.get(), detail, 0);
 }
 
 bool X11Manager::available() const {
-	return _isAvailable;
+	return _cookie.has_value();
 }
 
 std::unique_ptr<X11Manager> _x11Manager = nullptr;
