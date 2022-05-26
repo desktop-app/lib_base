@@ -11,6 +11,10 @@
 #include <QtCore/QAbstractNativeEventFilter>
 #include <QtGui/QGuiApplication>
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#include <qpa/qplatformnativeinterface.h>
+#endif // Qt < 6.0.0
+
 namespace base::Platform::XCB {
 namespace {
 
@@ -104,6 +108,7 @@ private:
 } // namespace
 
 xcb_connection_t *GetConnectionFromQt() {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 	using namespace QNativeInterface;
 	const auto native = qApp->nativeInterface<QX11Application>();
 	if (!native) {
@@ -111,6 +116,13 @@ xcb_connection_t *GetConnectionFromQt() {
 	}
 
 	return native->connection();
+#else  // Qt >= 6.0.0
+	const auto native = QGuiApplication::platformNativeInterface();
+	if (!native) return nullptr;
+
+	return reinterpret_cast<xcb_connection_t*>(
+		native->nativeResourceForIntegration(QByteArray("connection")));
+#endif // Qt >= 6.0.0
 }
 
 std::optional<xcb_timestamp_t> GetTimestamp() {
