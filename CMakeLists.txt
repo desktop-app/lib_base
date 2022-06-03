@@ -14,7 +14,7 @@ init_target(lib_base_crash_report_writer)
 
 get_filename_component(src_loc . REALPATH)
 
-target_precompile_headers(lib_base PRIVATE ${src_loc}/base/base_pch.h)
+target_precompile_headers(lib_base PRIVATE $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:${src_loc}/base/base_pch.h>)
 nice_target_sources(lib_base ${src_loc}
 PRIVATE
     base/platform/linux/base_file_utilities_linux.cpp
@@ -261,6 +261,16 @@ PRIVATE
 if (WIN32)
     nuget_add_winrt(lib_base)
 elseif (LINUX)
+    if (DESKTOP_APP_QT6)
+        qt6_generate_wayland_protocol_client_sources(lib_base
+        FILES
+            ${third_party_loc}/wayland-protocols/unstable/xdg-foreign/xdg-foreign-unstable-v2.xml
+            ${third_party_loc}/wayland-protocols/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
+        )
+    else()
+        message(FATAL_ERROR "This piece of cmake code is not ported to Qt 5")
+    endif()
+
     if (NOT DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
         target_link_libraries(lib_base
         PUBLIC
@@ -282,7 +292,7 @@ elseif (LINUX)
     if (NOT DESKTOP_APP_DISABLE_WAYLAND_INTEGRATION)
         target_link_libraries(lib_base
         PUBLIC
-            desktop-app::external_kwayland
+            desktop-app::external_wayland_client
         )
     endif()
 endif()
