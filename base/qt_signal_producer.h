@@ -8,6 +8,8 @@
 
 #include "base/integration.h"
 
+#include <QtCore/QPointer>
+
 namespace base {
 
 // This method allows to create an rpl::producer from a Qt object
