@@ -32,7 +32,7 @@
 
 #pragma warning(push)
 #pragma warning(disable:4091)
-#include "client/windows/handler/exception_handler.h"
+#include <client/windows/handler/exception_handler.h>
 #pragma warning(pop)
 
 #elif defined Q_OS_MAC // Q_OS_WIN
@@ -46,9 +46,9 @@
 #include <unistd.h>
 
 #ifdef USE_BREAKPAD
-#include "client/mac/handler/exception_handler.h"
+#include <client/mac/handler/exception_handler.h>
 #else // USE_BREAKPAD
-#include "client/crashpad_client.h"
+#include <client/crashpad_client.h>
 #endif // USE_BREAKPAD
 
 #elif defined Q_OS_UNIX // Q_OS_MAC
@@ -58,7 +58,7 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
-#include "client/linux/handler/exception_handler.h"
+#include <client/linux/handler/exception_handler.h>
 
 #endif // Q_OS_UNIX
 
