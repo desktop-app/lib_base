@@ -6,7 +6,7 @@
 //
 #include "base/platform/base_platform_system_media_controls.h"
 
-#include "unknwn.h" // Conversion from winrt::guid_of to GUID.
+#include <unknwn.h> // Conversion from winrt::guid_of to GUID.
 
 #include "base/integration.h"
 #include "base/platform/win/base_info_win.h"

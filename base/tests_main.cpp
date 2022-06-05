@@ -5,8 +5,8 @@
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
 #define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
-#include "reporters/catch_reporter_compact.hpp"
+#include <catch.hpp>
+#include <reporters/catch_reporter_compact.hpp>
 #include <QFile>
 
 int (*TestForkedMethod)()/* = nullptr*/;
