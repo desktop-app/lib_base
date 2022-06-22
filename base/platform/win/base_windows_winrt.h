@@ -33,10 +33,8 @@ using TryResult = std::conditional_t<
 [[nodiscard]] bool Supported();
 
 template <typename Method>
-inline details::TryResult<Method> Try(Method &&method) noexcept {
-	if (!Supported()) {
-		return {};
-	} else try {
+inline details::TryResult<Method> TryNoCheck(Method &&method) noexcept {
+	try {
 		if constexpr (details::ReturnsVoid<Method>) {
 			method();
 			return true;
@@ -56,12 +54,20 @@ inline details::TryResult<Method> Try(Method &&method) noexcept {
 	}
 }
 
+template <typename Method>
+inline details::TryResult<Method> Try(Method &&method) noexcept {
+	if (!Supported()) {
+		return {};
+	}
+	return TryNoCheck(std::forward<Method>(method));
+}
+
 template <typename Interface>
 auto TryCreateInstance(
 		const winrt::guid &clsid,
 		uint32_t context = 0x1 /*CLSCTX_INPROC_SERVER*/,
 		void *outer = nullptr) {
-	return Try([&] {
+	return TryNoCheck([&] {
 		return winrt::create_instance<Interface>(clsid, context, outer);
 	}).value_or(winrt::com_ptr<Interface>());
 }
