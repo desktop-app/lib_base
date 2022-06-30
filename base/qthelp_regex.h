@@ -8,6 +8,8 @@
 
 #include "base/flags.h"
 
+#include <QtCore/QRegularExpression>
+
 namespace qthelp {
 
 class RegularExpressionMatch {
