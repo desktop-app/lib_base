@@ -81,18 +81,16 @@ uint RegisterServiceWatcher(
 			const Glib::ustring &object_path,
 			const Glib::ustring &interface_name,
 			const Glib::ustring &signal_name,
-			const Glib::VariantContainerBase &parameters) {
+			Glib::VariantContainerBase parameters) {
 			try {
-				auto parametersCopy = parameters;
-
 				const auto name = GlibVariantCast<Glib::ustring>(
-					parametersCopy.get_child(0));
+					parameters.get_child(0));
 
 				const auto oldOwner = GlibVariantCast<Glib::ustring>(
-					parametersCopy.get_child(1));
+					parameters.get_child(1));
 
 				const auto newOwner = GlibVariantCast<Glib::ustring>(
-					parametersCopy.get_child(2));
+					parameters.get_child(2));
 
 				if (name != service) {
 					return;
