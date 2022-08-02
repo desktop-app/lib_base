@@ -30,6 +30,10 @@ QString WaylandIntegration::nativeHandle(QWindow *window) {
 	return {};
 }
 
+QString WaylandIntegration::activationToken() {
+	return {};
+}
+
 void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 }
 

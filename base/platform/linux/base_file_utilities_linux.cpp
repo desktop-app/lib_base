@@ -7,7 +7,12 @@
 #include "base/platform/linux/base_file_utilities_linux.h"
 
 #include "base/platform/base_platform_file_utilities.h"
+#include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/algorithm.h"
+
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#include "base/platform/linux/base_linux_app_launch_context.h"
+#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
@@ -45,6 +50,16 @@ bool PortalShowInFolder(const QString &filepath) {
 
 		const auto guard = gsl::finally([&] { close(fd); });
 
+		const auto activationToken = []() -> std::optional<Glib::ustring> {
+			if (const auto integration = WaylandIntegration::Instance()) {
+				if (const auto token = integration->activationToken()
+					; !token.isNull()) {
+					return Glib::ustring(token.toStdString());
+				}
+			}
+			return std::nullopt;
+		}();
+
 		const auto fdList = Gio::UnixFDList::create();
 		fdList->append(fd);
 		auto outFdList = Glib::RefPtr<Gio::UnixFDList>();
@@ -56,8 +71,17 @@ bool PortalShowInFolder(const QString &filepath) {
 			Glib::VariantContainerBase::create_tuple({
 				Glib::Variant<Glib::ustring>::create({}),
 				Glib::wrap(g_variant_new_handle(0)),
-				Glib::Variant<
-					std::map<Glib::ustring, Glib::VariantBase>>::create({}),
+				Glib::Variant<std::map<
+					Glib::ustring,
+					Glib::VariantBase
+				>>::create({
+					activationToken
+						? std::pair<Glib::ustring, Glib::VariantBase>{
+							"activation_token",
+							Glib::Variant<Glib::ustring>::create(*activationToken)
+						}
+						: std::pair<Glib::ustring, Glib::VariantBase>{},
+				}),
 			}),
 			fdList,
 			outFdList,
@@ -75,6 +99,13 @@ bool DBusShowInFolder(const QString &filepath) {
 		const auto connection = Gio::DBus::Connection::get_sync(
 			Gio::DBus::BusType::BUS_TYPE_SESSION);
 
+		const auto startupId = []() -> Glib::ustring {
+			if (const auto integration = WaylandIntegration::Instance()) {
+				return integration->activationToken().toStdString();
+			}
+			return {};
+		}();
+
 		connection->call_sync(
 			"/org/freedesktop/FileManager1",
 			"org.freedesktop.FileManager1",
@@ -83,7 +114,7 @@ bool DBusShowInFolder(const QString &filepath) {
 				Glib::Variant<std::vector<Glib::ustring>>::create({
 					Glib::filename_to_uri(filepath.toStdString())
 				}),
-				Glib::Variant<Glib::ustring>::create({}),
+				Glib::Variant<Glib::ustring>::create(startupId),
 			}),
 			"org.freedesktop.FileManager1");
 
@@ -110,21 +141,16 @@ bool ShowInFolder(const QString &filepath) {
 	try {
 		if (Gio::AppInfo::launch_default_for_uri(
 			Glib::filename_to_uri(
-				Glib::path_get_dirname(filepath.toStdString())))) {
+				Glib::path_get_dirname(filepath.toStdString())),
+			AppLaunchContext())) {
 			return true;
 		}
 	} catch (...) {
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
-	const auto folder = QUrl::fromLocalFile(
-		QFileInfo(filepath).absolutePath());
-
-	if (QDesktopServices::openUrl(folder)) {
-		return true;
-	}
-
-	return false;
+	return QDesktopServices::openUrl(
+		QUrl::fromLocalFile(QFileInfo(filepath).absolutePath()));
 }
 
 QString CurrentExecutablePath(int argc, char *argv[]) {
