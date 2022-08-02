@@ -29,6 +29,8 @@ PRIVATE
     base/platform/linux/base_layout_switch_linux.h
     base/platform/linux/base_linux_allocation_tracer.cpp
     base/platform/linux/base_linux_allocation_tracer.h
+    base/platform/linux/base_linux_app_launch_context.cpp
+    base/platform/linux/base_linux_app_launch_context.h
     base/platform/linux/base_linux_dbus_utilities.cpp
     base/platform/linux/base_linux_dbus_utilities.h
     base/platform/linux/base_linux_glibmm_helper.h
@@ -207,6 +209,8 @@ PRIVATE
 
 if (DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
+        base/platform/linux/base_linux_app_launch_context.cpp
+        base/platform/linux/base_linux_app_launch_context.h
         base/platform/linux/base_linux_dbus_utilities.cpp
         base/platform/linux/base_linux_dbus_utilities.h
         base/platform/linux/base_linux_glibmm_helper.h
@@ -283,6 +287,7 @@ elseif (LINUX)
         if (DESKTOP_APP_QT6)
             qt6_generate_wayland_protocol_client_sources(lib_base
             FILES
+                ${third_party_loc}/wayland-protocols/staging/xdg-activation/xdg-activation-v1.xml
                 ${third_party_loc}/wayland-protocols/unstable/xdg-foreign/xdg-foreign-unstable-v2.xml
                 ${third_party_loc}/wayland-protocols/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
             )
