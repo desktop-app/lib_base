@@ -50,14 +50,14 @@ bool PortalShowInFolder(const QString &filepath) {
 
 		const auto guard = gsl::finally([&] { close(fd); });
 
-		const auto activationToken = []() -> std::optional<Glib::ustring> {
+		const auto activationToken = []() -> Glib::ustring {
 			if (const auto integration = WaylandIntegration::Instance()) {
 				if (const auto token = integration->activationToken()
 					; !token.isNull()) {
-					return Glib::ustring(token.toStdString());
+					return token.toStdString();
 				}
 			}
-			return std::nullopt;
+			return {};
 		}();
 
 		const auto fdList = Gio::UnixFDList::create();
@@ -75,12 +75,10 @@ bool PortalShowInFolder(const QString &filepath) {
 					Glib::ustring,
 					Glib::VariantBase
 				>>::create({
-					activationToken
-						? std::pair<Glib::ustring, Glib::VariantBase>{
-							"activation_token",
-							Glib::Variant<Glib::ustring>::create(*activationToken)
-						}
-						: std::pair<Glib::ustring, Glib::VariantBase>{},
+					{
+						"activation_token",
+						Glib::Variant<Glib::ustring>::create(activationToken)
+					},
 				}),
 			}),
 			fdList,
