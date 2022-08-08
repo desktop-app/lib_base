@@ -284,16 +284,12 @@ elseif (LINUX)
     endif()
 
     if (NOT DESKTOP_APP_DISABLE_WAYLAND_INTEGRATION)
-        if (DESKTOP_APP_QT6)
-            qt6_generate_wayland_protocol_client_sources(lib_base
-            FILES
-                ${third_party_loc}/wayland-protocols/staging/xdg-activation/xdg-activation-v1.xml
-                ${third_party_loc}/wayland-protocols/unstable/xdg-foreign/xdg-foreign-unstable-v2.xml
-                ${third_party_loc}/wayland-protocols/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
-            )
-        else()
-            message(FATAL_ERROR "This piece of cmake code is not ported to Qt 5")
-        endif()
+        qt_generate_wayland_protocol_client_sources(lib_base
+        FILES
+            ${third_party_loc}/wayland-protocols/staging/xdg-activation/xdg-activation-v1.xml
+            ${third_party_loc}/wayland-protocols/unstable/xdg-foreign/xdg-foreign-unstable-v2.xml
+            ${third_party_loc}/wayland-protocols/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
+        )
 
         target_link_libraries(lib_base
         PUBLIC
