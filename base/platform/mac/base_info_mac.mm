@@ -12,7 +12,12 @@
 #include "base/platform/mac/base_utilities_mac.h"
 
 #include <QtCore/QDate>
+#include <QtCore/QProcess>
 #include <QtCore/QJsonObject>
+#include <QtCore/QJsonDocument>
+#include <QtCore/QJsonObject>
+#include <QtCore/QJsonArray>
+#include <QtCore/QJsonValue>
 #include <QtCore/QOperatingSystemVersion>
 #include <sys/sysctl.h>
 #include <Cocoa/Cocoa.h>
@@ -113,9 +118,35 @@ template <int Minor>
 	 return (result == 1);
 }
 
+[[nodiscard]] QString DeviceFromSystemProfiler() {
+	// Starting with MacBook M2 the hw.model returns simply Mac[digits],[digits].
+	// So we try reading "system_profiler" output.
+	auto process = QProcess();
+	process.start(
+		"system_profiler",
+		{ "-json", "SPHardwareDataType", "-detailLevel", "mini" });
+	process.waitForFinished();
+	auto error = QJsonParseError{ 0, QJsonParseError::NoError };
+	const auto document = QJsonDocument::fromJson(process.readAll(), &error);
+	if (error.error != QJsonParseError::NoError || !document.isObject()) {
+		return {};
+	}
+	const auto fields = document.object()["SPHardwareDataType"].toArray()[0].toObject();
+	const auto result = fields["machine_name"].toString();
+	if (result.isEmpty()) {
+		return {};
+	}
+	const auto chip = fields["chip_type"].toString();
+	return chip.startsWith("Apple ") ? (result + chip.mid(5)) : result;
+}
+
 } // namespace
 
 QString DeviceModelPretty() {
+	static const auto Result = DeviceFromSystemProfiler();
+	if (!Result.isEmpty()) {
+		return Result;
+	}
 	size_t length = 0;
 	sysctlbyname("hw.model", nullptr, &length, nullptr, 0);
 	if (length > 0) {
