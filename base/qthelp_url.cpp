@@ -28,7 +28,7 @@ QString ExpressionDomainExplicit() {
 }
 
 QString ExpressionIpExplicit() {
-	//Matches any ip, containing a protocol, including "test://127.0.0.1:1234"	
+	//Matches any ip, containing a protocol, including "test://127.0.0.1:1234"
 	return QString::fromUtf8("(?<![\\w\\$\\-\\_%=\\.])(?:([a-zA-Z]+)://)(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\:\\d+)?)");
 }
 

@@ -53,7 +53,7 @@ public:
 			32,
 			0,
 			nullptr);
-		
+
 		xcb_flush(_connection);
 		sync();
 		_loop.exec();
