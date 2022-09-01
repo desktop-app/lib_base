@@ -19,18 +19,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <qpa/qplatformnativeinterface.h>
 #include <wayland-client.h>
 
-// private QtWaylandClient headers are using keywords :(
-#ifdef QT_NO_KEYWORDS
-#define signals Q_SIGNALS
-#define slots Q_SLOTS
-#endif // QT_NO_KEYWORDS
-
-#include <private/qwaylanddisplay_p.h>
-#include <private/qwaylandwindow_p.h>
-#include <private/qwaylandinputdevice_p.h>
-
-using QtWaylandClient::QWaylandWindow;
-
 namespace base {
 namespace Platform {
 namespace {
@@ -283,16 +271,10 @@ QString WaylandIntegration::activationToken() {
 	const auto seat = reinterpret_cast<wl_seat*>(
 		native->nativeResourceForIntegration(QByteArray("wl_seat")));
 	
-	const auto serial = [&]() -> std::optional<uint32_t> {
-		const auto waylandWindow = static_cast<QWaylandWindow*>(
-			window->handle());
-		if (!waylandWindow) {
-			return std::nullopt;
-		}
-		return waylandWindow->display()->defaultInputDevice()->serial();
-	}();
+	const auto serial = uint32_t(reinterpret_cast<quintptr>(
+		native->nativeResourceForIntegration(QByteArray("serial"))));
 	
-	if (!surface || !seat || !serial) {
+	if (!surface || !seat) {
 		return {};
 	}
 
@@ -300,7 +282,7 @@ QString WaylandIntegration::activationToken() {
 		_private->xdgActivation.get_activation_token(),
 		surface,
 		seat,
-		*serial,
+		serial,
 		QGuiApplication::desktopFileName().chopped(8)).token();
 }
 
