@@ -11,6 +11,25 @@ extern "C" {
 } // extern "C"
 
 namespace base {
+namespace {
+
+template <typename Next>
+int RandomIndex(int count, Next &&next) {
+	Expects(count > 0);
+
+	if (count == 1) {
+		return 0;
+	}
+	const auto max = (std::numeric_limits<uint32>::max() / count) * count;
+	while (true) {
+		const auto random = next();
+		if (random < max) {
+			return int(random % count);
+		}
+	}
+}
+
+} // namespace
 
 void RandomFill(bytes::span bytes) {
 	const auto result = RAND_bytes(
@@ -21,18 +40,11 @@ void RandomFill(bytes::span bytes) {
 }
 
 int RandomIndex(int count) {
-	Expects(count > 0);
+	return RandomIndex(count, [] { return  RandomValue<uint32>(); });
+}
 
-	if (count == 1) {
-		return 0;
-	}
-	const auto max = (std::numeric_limits<uint32>::max() / count) * count;
-	while (true) {
-		const auto random = RandomValue<uint32>();
-		if (random < max) {
-			return int(random % count);
-		}
-	}
+int RandomIndex(int count, BufferedRandom<uint32> buffered) {
+	return RandomIndex(count, [&] { return buffered.next(); });
 }
 
 void RandomAddSeed(bytes::const_span bytes) {

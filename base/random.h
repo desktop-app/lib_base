@@ -30,6 +30,31 @@ template <
 
 [[nodiscard]] int RandomIndex(int count);
 
+template <typename T>
+class BufferedRandom final {
+public:
+	explicit BufferedRandom(int bufferSize) : _buffer(bufferSize) {
+		Expects(bufferSize > 0);
+	}
+
+	[[nodiscard]] T next() {
+		if (_index == _buffer.size()) {
+			_index = 0;
+		}
+		if (!_index) {
+			RandomFill(bytes::make_span(_buffer));
+		}
+		return _buffer[_index++];
+	}
+
+private:
+	std::vector<T> _buffer;
+	int _index = 0;
+
+};
+
+[[nodiscard]] int RandomIndex(int count, BufferedRandom<uint32> buffered);
+
 void RandomAddSeed(bytes::const_span bytes);
 
 } // namespace base
