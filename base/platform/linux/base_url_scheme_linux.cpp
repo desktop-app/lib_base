@@ -16,6 +16,7 @@
 #include <QtCore/QProcess>
 #include <QtWidgets/QWidget>
 #include <KShell>
+#include <KSandbox>
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <gio/gio.h>
@@ -126,7 +127,7 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	try {
-		if (qEnvironmentVariableIsSet("SNAP")) {
+		if (KSandbox::isSnap()) {
 			SnapDefaultHandler(descriptor.protocol);
 			return;
 		}
