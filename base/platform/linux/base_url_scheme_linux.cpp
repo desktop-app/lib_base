@@ -154,7 +154,8 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 			newAppInfo->set_as_default_for_type(handlerType.toStdString());
 		}
 	} catch (const Glib::Error &e) {
-		LOG(("Register Url Scheme Error: %1").arg(QString::fromStdString(e.what())));
+		LOG(("Register Url Scheme Error: %1").arg(
+			QString::fromStdString(e.what())));
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 }
