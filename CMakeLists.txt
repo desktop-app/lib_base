@@ -265,6 +265,11 @@ PRIVATE
 if (WIN32)
     nuget_add_winrt(lib_base)
 elseif (LINUX)
+    target_link_libraries(lib_base
+    PUBLIC
+        desktop-app::external_kcoreaddons
+    )
+
     if (NOT DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
         target_link_libraries(lib_base
         PUBLIC
