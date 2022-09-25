@@ -24,6 +24,9 @@ public:
 	virtual void logMessageDebug(const QString &message) = 0;
 	virtual void logMessage(const QString &message) = 0;
 	virtual void logAssertionViolation(const QString &info);
+	virtual void setCrashAnnotation(
+		const std::string &key,
+		const QString &value);
 
 	[[nodiscard]] QString executableDir() const;
 	[[nodiscard]] QString executableName() const;

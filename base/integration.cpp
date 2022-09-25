@@ -55,6 +55,11 @@ void Integration::logAssertionViolation(const QString &info) {
 	logMessage("Assertion Failed! " + info);
 }
 
+void Integration::setCrashAnnotation(
+	const std::string &key,
+	const QString &value) {
+}
+
 QString Integration::executableDir() const {
 	return _executableDir;
 }
