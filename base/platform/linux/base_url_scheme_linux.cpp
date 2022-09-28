@@ -15,8 +15,9 @@
 
 #include <QtCore/QProcess>
 #include <QtWidgets/QWidget>
-#include <KShell>
-#include <KSandbox>
+
+#include <kshell.h>
+#include <ksandbox.h>
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <gio/gio.h>
