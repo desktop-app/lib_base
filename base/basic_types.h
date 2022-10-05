@@ -50,9 +50,13 @@ using float64 = double;
 
 using TimeId = int32;
 
+#ifndef _DEBUG
+
 #ifdef _MSC_VER
 #define DESKTOP_APP_USE_NO_ALLOCATION_LITERAL
 #endif // _MSC_VER
+
+#endif // !_DEBUG
 
 #ifdef DESKTOP_APP_USE_NO_ALLOCATION_LITERAL
 
