@@ -198,11 +198,14 @@ PRIVATE
     base/unique_qptr.h
     base/unixtime.cpp
     base/unixtime.h
-    base/value_ordering.h
     base/variant.h
     base/virtual_method.h
     base/weak_ptr.h
     base/zlib_help.h
+    base/qt/qt_common_adapters.h
+    base/qt/qt_compare.h
+    base/qt/qt_key_modifiers.h
+    base/qt/qt_string_view.h
 
     base/base_pch.h
 )

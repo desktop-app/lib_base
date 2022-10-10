@@ -208,6 +208,10 @@ public:
 		return get();
 	}
 
+	[[nodiscard]] friend inline constexpr auto operator<=>(
+		weak_ptr,
+		weak_ptr) noexcept = default;
+
 	void reset(T *value = nullptr) {
 		if (get() != value) {
 			destroy();
