@@ -23,3 +23,45 @@ template <typename P>
 		const QString &b) noexcept {
 	return a.compare(b) <=> 0;
 }
+
+#ifndef _MSC_VER
+namespace base::details {
+
+template <typename T>
+using compare_three_way_result_t = decltype(
+    (std::declval<const std::remove_reference_t<T>&>()
+		<=> std::declval<const std::remove_reference_t<T>&>()));
+
+template <typename ...Types>
+using variant_compare_result = std::common_comparison_category_t<
+	compare_three_way_result_t<Types>...>;
+
+template <int Index, typename ...Types>
+constexpr variant_compare_result<Types...> variant_comparator(
+		const std::variant<Types...> &a,
+		const std::variant<Types...> &b,
+		int index) {
+	if (index == Index) {
+		return *std::get_if<Index>(&a) <=> *std::get_if<Index>(&b);
+	} else if constexpr (Index + 1 < sizeof...(Types)) {
+		return variant_comparator<Index + 1>(a, b, index);
+	} else {
+		Unexpected("Index value in variant_comparator.");
+	}
+}
+
+} // namespace base::details
+
+template <typename ...Types>
+inline constexpr auto operator<=>(
+	const std::variant<Types...> &a,
+	const std::variant<Types...> &b)
+-> base::details::variant_compare_result<Types...> {
+	const auto index = a.index();
+	if (const auto result = (index <=> b.index())
+		; result != std::strong_ordering::equal) {
+		return result;
+	}
+	return base::details::variant_comparator<0>(a, b, index);
+}
+#endif
