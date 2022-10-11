@@ -208,7 +208,7 @@ public:
 		return get();
 	}
 
-	[[nodiscard]] friend inline constexpr auto operator<=>(
+	[[nodiscard]] friend inline auto operator<=>(
 		weak_ptr,
 		weak_ptr) noexcept = default;
 
