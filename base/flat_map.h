@@ -621,6 +621,35 @@ public:
 		return count<Key>(key);
 	}
 
+	template <typename OtherKey>
+	constexpr iterator lower_bound(const OtherKey &key) noexcept {
+		return getLowerBound(key);
+	}
+	template <typename OtherKey>
+	constexpr const_iterator lower_bound(
+			const OtherKey &key) const noexcept {
+		return getLowerBound(key);
+	}
+	template <typename OtherKey>
+	constexpr iterator upper_bound(const OtherKey &key) noexcept {
+		return getUpperBound(key);
+	}
+	template <typename OtherKey>
+	constexpr const_iterator upper_bound(
+			const OtherKey &key) const noexcept {
+		return getUpperBound(key);
+	}
+	template <typename OtherKey>
+	constexpr std::pair<iterator, iterator> equal_range(
+			const OtherKey &key) noexcept {
+		return getEqualRange(key);
+	}
+	template <typename OtherKey>
+	constexpr std::pair<const_iterator, const_iterator> equal_range(
+			const OtherKey &key) const noexcept {
+		return getEqualRange(key);
+	}
+
 private:
 	friend class flat_map<Key, Type, Compare>;
 
@@ -804,6 +833,9 @@ public:
 	using parent::back;
 	using parent::erase;
 	using parent::contains;
+	using parent::lower_bound;
+	using parent::upper_bound;
+	using parent::equal_range;
 
 	std::pair<iterator, bool> insert(const value_type &value) {
 		if (this->empty()

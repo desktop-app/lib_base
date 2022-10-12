@@ -404,6 +404,35 @@ public:
 		return count<Type>(value);
 	}
 
+	template <typename OtherType>
+	constexpr iterator lower_bound(const OtherType &value) noexcept {
+		return getLowerBound(value);
+	}
+	template <typename OtherType>
+	constexpr const_iterator lower_bound(
+			const OtherType &value) const noexcept {
+		return getLowerBound(value);
+	}
+	template <typename OtherType>
+	constexpr iterator upper_bound(const OtherType &value) noexcept {
+		return getUpperBound(value);
+	}
+	template <typename OtherType>
+	constexpr const_iterator upper_bound(
+			const OtherType &value) const noexcept {
+		return getUpperBound(value);
+	}
+	template <typename OtherType>
+	constexpr std::pair<iterator, iterator> equal_range(
+			const OtherType &value) noexcept {
+		return getEqualRange(value);
+	}
+	template <typename OtherType>
+	constexpr std::pair<const_iterator, const_iterator> equal_range(
+			const OtherType &value) const noexcept {
+		return getEqualRange(value);
+	}
+
 	template <typename Action>
 	constexpr auto modify(iterator which, Action action) noexcept {
 		auto result = action(which.wrapped());
@@ -660,6 +689,9 @@ public:
 	using parent::back;
 	using parent::contains;
 	using parent::erase;
+	using parent::lower_bound;
+	using parent::upper_bound;
+	using parent::equal_range;
 
 	constexpr std::pair<iterator, bool> insert(const Type &value) noexcept {
 		if (this->empty() || this->compare()(this->back(), value)) {
