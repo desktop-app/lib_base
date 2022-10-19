@@ -100,6 +100,9 @@ public:
 	weak_ptr(T *value)
 	: _alive(value ? value->incrementAliveTracker() : nullptr) {
 	}
+	weak_ptr(gsl::not_null<T*> value)
+	: _alive(value->incrementAliveTracker()) {
+	}
 	weak_ptr(const std::unique_ptr<T> &value)
 	: weak_ptr(value.get()) {
 	}
@@ -132,6 +135,10 @@ public:
 
 	weak_ptr &operator=(T *value) {
 		reset(value);
+		return *this;
+	}
+	weak_ptr &operator=(gsl::not_null<T*> value) {
+		reset(value.get());
 		return *this;
 	}
 	weak_ptr &operator=(const std::unique_ptr<T> &value) {
@@ -263,6 +270,13 @@ weak_ptr<T> make_weak(T *value) {
 template <
 	typename T,
 	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>>>
+weak_ptr<T> make_weak(gsl::not_null<T*> value) {
+	return value;
+}
+
+template <
+	typename T,
+	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>>>
 weak_ptr<T> make_weak(const std::unique_ptr<T> &value) {
 	return value;
 }
@@ -322,7 +336,7 @@ struct guard_traits<
 	std::enable_if_t<
 		std::is_base_of_v<base::has_weak_ptr, std::remove_cv_t<T>>>> {
 	static base::weak_ptr<T> create(gsl::not_null<T*> value) {
-		return value.get();
+		return value;
 	}
 	static bool check(const base::weak_ptr<T> &guard) {
 		return guard.get() != nullptr;
