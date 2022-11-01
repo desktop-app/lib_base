@@ -64,4 +64,25 @@ inline constexpr auto operator<=>(
 	}
 	return base::details::variant_comparator<0>(a, b, index);
 }
+
+template <typename Type, typename Result = decltype(std::declval<Type>() <=> std::declval<Type>())>
+inline constexpr auto operator<=>(
+		const std::vector<Type> &a,
+		const std::vector<Type> &b) -> Result {
+	const auto asize = a.size();
+	const auto bsize = b.size();
+	const auto min = std::min(asize, bsize);
+	for (auto i = std::size_t(); i != min; ++i) {
+		const auto result = (a[i] <=> b[i]);
+		if (result != Result()) {
+			return result;
+		}
+	}
+	if (asize < bsize) {
+		return Result(-1);
+	} else if (asize > bsize) {
+		return Result(1);
+	}
+	return Result();
+}
 #endif
