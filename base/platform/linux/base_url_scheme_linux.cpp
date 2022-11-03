@@ -97,28 +97,25 @@ void SnapDefaultHandler(const QString &protocol) {
 
 bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-	try {
-		const auto handlerType = QString("x-scheme-handler/%1")
-			.arg(descriptor.protocol);
+	const auto handlerType = QString("x-scheme-handler/%1")
+		.arg(descriptor.protocol);
 
-		const auto neededCommandline = KShell::joinArgs(QStringList{
-			descriptor.executable,
-		} + KShell::splitArgs(descriptor.arguments) + QStringList{
-			"--",
-			"%u",
-		}).toUtf8();
+	const auto neededCommandline = KShell::joinArgs(QStringList{
+		descriptor.executable,
+	} + KShell::splitArgs(descriptor.arguments) + QStringList{
+		"--",
+		"%u",
+	}).toUtf8();
 
-		const auto currentAppInfo = Gio::AppInfo::get_default_for_type(
-			handlerType.toStdString(),
-			true);
+	const auto currentAppInfo = Gio::AppInfo::get_default_for_type(
+		handlerType.toStdString(),
+		true);
 
-		if (currentAppInfo) {
-			const auto currentCommandline = QString::fromStdString(
-				currentAppInfo->get_commandline());
+	if (currentAppInfo) {
+		const auto currentCommandline = QString::fromStdString(
+			currentAppInfo->get_commandline());
 
-			return currentCommandline == neededCommandline;
-		}
-	} catch (...) {
+		return currentCommandline == neededCommandline;
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
