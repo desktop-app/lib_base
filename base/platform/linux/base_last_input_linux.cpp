@@ -73,7 +73,7 @@ std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 		const auto connection = [] {
 			try {
 				return Gio::DBus::Connection::get_sync(
-					Gio::DBus::BusType::BUS_TYPE_SESSION);
+					Gio::DBus::BusType::SESSION);
 			} catch (...) {
 				return Glib::RefPtr<Gio::DBus::Connection>();
 			}
@@ -134,7 +134,7 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 		const auto connection = [] {
 			try {
 				return Gio::DBus::Connection::get_sync(
-					Gio::DBus::BusType::BUS_TYPE_SESSION);
+					Gio::DBus::BusType::SESSION);
 			} catch (...) {
 				return Glib::RefPtr<Gio::DBus::Connection>();
 			}

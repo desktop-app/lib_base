@@ -249,9 +249,9 @@ private:
 
 SystemMediaControls::Private::Private()
 : _interfaceVTable(Gio::DBus::InterfaceVTable(
-	sigc::mem_fun(this, &Private::handleMethodCall),
-	sigc::mem_fun(this, &Private::handleGetProperty),
-	sigc::mem_fun(this, &Private::handleSetProperty)))
+	sigc::mem_fun(*this, &Private::handleMethodCall),
+	sigc::mem_fun(*this, &Private::handleGetProperty),
+	sigc::mem_fun(*this, &Private::handleSetProperty)))
 , _objectPath("/org/mpris/MediaPlayer2")
 , _playerInterface("org.mpris.MediaPlayer2.Player")
 , _propertiesInterface("org.freedesktop.DBus.Properties")
@@ -259,7 +259,7 @@ SystemMediaControls::Private::Private()
 , _signalSeekedName("Seeked") {
 	Noexcept([&] {
 		_dbusConnection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::BUS_TYPE_SESSION);
+			Gio::DBus::BusType::SESSION);
 	});
 }
 
@@ -283,7 +283,7 @@ bool SystemMediaControls::Private::init() {
 	}
 	Noexcept([&] {
 		_dbus.ownId = Gio::DBus::own_name(
-			Gio::DBus::BusType::BUS_TYPE_SESSION,
+			Gio::DBus::BusType::SESSION,
 			_player.serviceName);
 	});
 	if (!_dbus.ownId) {

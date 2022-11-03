@@ -38,7 +38,7 @@ namespace {
 bool PortalShowInFolder(const QString &filepath) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::BUS_TYPE_SESSION);
+			Gio::DBus::BusType::SESSION);
 
 		const auto fd = open(
 			QFile::encodeName(filepath).constData(),
@@ -93,7 +93,7 @@ bool PortalShowInFolder(const QString &filepath) {
 bool DBusShowInFolder(const QString &filepath) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::BUS_TYPE_SESSION);
+			Gio::DBus::BusType::SESSION);
 
 		const auto startupId = []() -> Glib::ustring {
 			if (const auto integration = WaylandIntegration::Instance()) {
