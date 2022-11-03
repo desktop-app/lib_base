@@ -60,7 +60,7 @@ void PortalPreventAppSuspension(
 	QWindow *window) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::BUS_TYPE_SESSION);
+			Gio::DBus::BusType::SESSION);
 
 		static Glib::ustring requestPath;
 		if (!prevent && !requestPath.empty()) {

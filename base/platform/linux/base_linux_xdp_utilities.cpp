@@ -40,7 +40,7 @@ std::optional<Glib::VariantBase> ReadSetting(
 		const Glib::ustring &key) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::BUS_TYPE_SESSION);
+			Gio::DBus::BusType::SESSION);
 
 		auto reply = connection->call_sync(
 			std::string(kObjectPath),
@@ -74,7 +74,7 @@ SettingWatcher::SettingWatcher(
 : _private(std::make_unique<Private>()) {
 	try {
 		_private->dbusConnection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::BUS_TYPE_SESSION);
+			Gio::DBus::BusType::SESSION);
 		if (!_private->dbusConnection) {
 			return;
 		}
