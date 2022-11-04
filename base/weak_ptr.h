@@ -221,7 +221,7 @@ public:
 		return get();
 	}
 
-	[[nodiscard]] friend inline auto operator<=>(
+	friend inline auto operator<=>(
 		weak_ptr,
 		weak_ptr) noexcept = default;
 

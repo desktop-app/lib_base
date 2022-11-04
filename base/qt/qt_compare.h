@@ -11,6 +11,8 @@
 
 #include <QString>
 
+#if !defined(__apple_build_version__) || (__apple_build_version__ > 12000032)
+
 template <typename P>
 [[nodiscard]] inline std::strong_ordering operator<=>(
 		const gsl::not_null<P> &a,
@@ -85,4 +87,6 @@ inline constexpr auto operator<=>(
 	}
 	return Result();
 }
-#endif
+
+#endif // _MSC_VER
+#endif // __apple_build_version__
