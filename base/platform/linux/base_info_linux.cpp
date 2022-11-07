@@ -22,9 +22,9 @@
 
 #include <sys/utsname.h>
 
-#ifdef Q_OS_LINUX
+#ifdef __GLIBC__
 #include <gnu/libc-version.h>
-#endif // Q_OS_LINUX
+#endif // __GLIBC__
 
 namespace Platform {
 namespace {
@@ -200,21 +200,21 @@ QString AutoUpdateKey() {
 }
 
 QString GetLibcName() {
-#ifdef Q_OS_LINUX
+#ifdef __GLIBC__
 	return "glibc";
-#endif // Q_OS_LINUX
+#endif // __GLIBC__
 
 	return QString();
 }
 
 QString GetLibcVersion() {
-#ifdef Q_OS_LINUX
+#ifdef __GLIBC__
 	static const auto result = [&] {
 		const auto version = QString::fromLatin1(gnu_get_libc_version());
 		return QVersionNumber::fromString(version).isNull() ? QString() : version;
 	}();
 	return result;
-#endif // Q_OS_LINUX
+#endif // __GLIBC__
 
 	return QString();
 }
