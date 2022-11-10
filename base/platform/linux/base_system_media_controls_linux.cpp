@@ -13,6 +13,7 @@
 
 #include <glibmm.h>
 #include <giomm.h>
+#include <ksandbox.h>
 
 #include <QtCore/QBuffer>
 #include <QtGui/QGuiApplication>
@@ -284,7 +285,16 @@ bool SystemMediaControls::Private::init() {
 	Noexcept([&] {
 		_dbus.ownId = Gio::DBus::own_name(
 			Gio::DBus::BusType::SESSION,
-			_player.serviceName);
+			"org.mpris.MediaPlayer2." + (!_player.serviceName.empty()
+				? _player.serviceName
+				: KSandbox::isFlatpak()
+				? Glib::ustring(
+					qEnvironmentVariable("FLATPAK_ID").toStdString())
+				: KSandbox::isSnap()
+				? Glib::ustring(
+					qEnvironmentVariable("SNAP_NAME").toStdString())
+				: Glib::ustring(
+					QCoreApplication::applicationName().toStdString())));
 	});
 	if (!_dbus.ownId) {
 		return false;
