@@ -218,6 +218,8 @@ WaylandIntegration::WaylandIntegration()
 		_private->xdgExporter.init(nullptr);
 		free(_private->registry.release());
 	}, _private->lifetime);
+
+	wl_display_roundtrip(display);
 }
 
 WaylandIntegration::~WaylandIntegration() = default;
