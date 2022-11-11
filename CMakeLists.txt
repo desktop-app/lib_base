@@ -164,8 +164,6 @@ PRIVATE
     base/network_reachability.cpp
     base/network_reachability.h
     base/object_ptr.h
-    base/observer.cpp
-    base/observer.h
     base/ordered_set.h
     base/openssl_help.h
     base/optional.h
