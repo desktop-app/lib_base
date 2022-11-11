@@ -21,23 +21,32 @@ G_DEFINE_TYPE(
 
 static void desktop_app_app_launch_context_class_init(
 		DesktopAppAppLaunchContextClass *klass) {
-	auto ctx_class = G_APP_LAUNCH_CONTEXT_CLASS(klass);
+	const auto ctx_class = G_APP_LAUNCH_CONTEXT_CLASS(klass);
 	ctx_class->get_startup_notify_id = [](
-			GAppLaunchContext*,
+			GAppLaunchContext *context,
 			GAppInfo*,
 			GList*) -> char* {
-		using base::Platform::WaylandIntegration;
-		if (const auto integration = WaylandIntegration::Instance()) {
-			if (const auto token = integration->activationToken()
-				; !token.isNull()) {
-				return strdup(token.toUtf8().constData());
-			}
+		if (const auto token = g_environ_getenv(
+			g_app_launch_context_get_environment(context),
+			"XDG_ACTIVATION_TOKEN")) {
+			return strdup(token);
 		}
 		return nullptr;
 	};
 }
 
-static void desktop_app_app_launch_context_init(DesktopAppAppLaunchContext *ctx) {
+static void desktop_app_app_launch_context_init(
+		DesktopAppAppLaunchContext *ctx) {
+	using base::Platform::WaylandIntegration;
+	if (const auto integration = WaylandIntegration::Instance()) {
+		if (const auto token = integration->activationToken()
+			; !token.isNull()) {
+			g_app_launch_context_setenv(
+				G_APP_LAUNCH_CONTEXT(ctx),
+				"XDG_ACTIVATION_TOKEN",
+				token.toUtf8().constData());
+		}
+	}
 }
 
 namespace base::Platform {
