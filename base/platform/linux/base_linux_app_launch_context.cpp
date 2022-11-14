@@ -53,7 +53,7 @@ namespace base::Platform {
 
 Glib::RefPtr<Gio::AppLaunchContext> AppLaunchContext() {
 	return Glib::wrap(
-		static_cast<GAppLaunchContext*>(
+		G_APP_LAUNCH_CONTEXT(
 			g_object_new(
 				desktop_app_app_launch_context_get_type(),
 				nullptr)));
