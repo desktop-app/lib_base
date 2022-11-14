@@ -163,8 +163,8 @@ public:
 
 		bool enabled = false;
 		bool shuffle = false;
-		gint64 position = 0;
-		gint64 duration = 0;
+		int64 position = 0;
+		int64 duration = 0;
 		float64 volume = 0.;
 		PlaybackStatus playbackStatus = PlaybackStatus::Stopped;
 		LoopStatus loopStatus = LoopStatus::None;
@@ -211,12 +211,12 @@ public:
 	void signalPropertyChanged(
 			const Glib::ustring &name,
 			const Glib::VariantBase &value);
-	void signalSeeked(gint64 position);
+	void signalSeeked(int64 position);
 
 	[[nodiscard]] Player &player();
 
 	[[nodiscard]] rpl::producer<Command> commandRequests() const;
-	[[nodiscard]] rpl::producer<gint64> seekRequests() const;
+	[[nodiscard]] rpl::producer<int64> seekRequests() const;
 	[[nodiscard]] rpl::producer<float64> volumeChangeRequests() const;
 	[[nodiscard]] rpl::producer<> updatePositionRequests() const;
 
@@ -243,7 +243,7 @@ private:
 	Player _player;
 
 	rpl::event_stream<Command> _commandRequests;
-	rpl::event_stream<gint64> _seekRequests;
+	rpl::event_stream<int64> _seekRequests;
 	rpl::event_stream<float64> _volumeChangeRequests;
 	rpl::event_stream<> _updatePositionRequests;
 };
@@ -398,7 +398,7 @@ void SystemMediaControls::Private::handleGetProperty(
 				ConvertLoopStatus(_player.loopStatus));
 		} else if (propertyName == "Position") {
 			_updatePositionRequests.fire({});
-			property = MakeGlibVariant<gint64>(_player.position);
+			property = MakeGlibVariant<int64>(_player.position);
 		} else if (propertyName == "Rate") {
 			property = MakeGlibVariant<float64>(1.0);
 		} else if (propertyName == "Shuffle") {
@@ -420,7 +420,7 @@ void SystemMediaControls::Private::handleMethodCall(
 
 	if (methodName == "Seek") {
 		// Seek (x: Offset);
-		Glib::Variant<gint64> offset;
+		Glib::Variant<int64> offset;
 		parameters.get_child(offset, 0);
 
 		base::Integration::Instance().enterFromEventLoop([&] {
@@ -429,7 +429,7 @@ void SystemMediaControls::Private::handleMethodCall(
 		});
 	} else if (methodName == "SetPosition") {
 		// SetPosition (o: TrackId, x: Position);
-		Glib::Variant<gint64> newPosition;
+		Glib::Variant<int64> newPosition;
 		parameters.get_child(newPosition, 1);
 
 		base::Integration::Instance().enterFromEventLoop([&] {
@@ -505,7 +505,7 @@ void SystemMediaControls::Private::signalPropertyChanged(
 	});
 }
 
-void SystemMediaControls::Private::signalSeeked(gint64 position) {
+void SystemMediaControls::Private::signalSeeked(int64 position) {
 	Noexcept([&] {
 		_dbusConnection->emit_signal(
 			_objectPath,
@@ -525,7 +525,7 @@ auto SystemMediaControls::Private::commandRequests() const
 	return _commandRequests.events();
 }
 
-rpl::producer<gint64> SystemMediaControls::Private::seekRequests() const {
+rpl::producer<int64> SystemMediaControls::Private::seekRequests() const {
 	return _seekRequests.events();
 }
 
@@ -639,7 +639,7 @@ void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 
 void SystemMediaControls::setDuration(int duration) {
 	_private->player().duration = duration * 1000;
-	_private->player().metadata["mpris:length"] = MakeGlibVariant<gint64>(
+	_private->player().metadata["mpris:length"] = MakeGlibVariant<int64>(
 		_private->player().duration);
 }
 
@@ -692,7 +692,7 @@ auto SystemMediaControls::commandRequests() const
 
 rpl::producer<float64> SystemMediaControls::seekRequests() const {
 	return _private->seekRequests(
-	) | rpl::map([=](gint64 position) {
+	) | rpl::map([=](int64 position) {
 		return float64(position) / (_private->player().duration);
 	});
 }
