@@ -15,6 +15,10 @@ inline NSString *Q2NSString(const QString &str) {
 	return [NSString stringWithUTF8String:str.toUtf8().constData()];
 }
 
+inline NSString *Q2NSString(QStringView str) {
+	return [NSString stringWithUTF8String:str.toUtf8().constData()];
+}
+
 inline QString NS2QString(NSString *str) {
 	return QString::fromUtf8([str cStringUsingEncoding:NSUTF8StringEncoding]);
 }
