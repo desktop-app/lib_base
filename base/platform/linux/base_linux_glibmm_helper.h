@@ -109,7 +109,7 @@ namespace Platform {
 
 template <typename T>
 auto MakeGlibVariant(T &&data) {
-	return Glib::Variant<T>::create(data);
+	return Glib::Variant<std::decay_t<T>>::create(data);
 }
 
 template <typename T>
