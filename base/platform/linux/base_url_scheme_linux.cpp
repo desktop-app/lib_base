@@ -13,7 +13,7 @@
 #include "base/platform/linux/base_linux_glibmm_helper.h"
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
-#include <QtCore/QProcess>
+#include <QtGui/QGuiApplication>
 #include <QtWidgets/QWidget>
 
 #include <kshell.h>
@@ -121,26 +121,36 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+	if (KSandbox::isSnap()) {
+		SnapDefaultHandler(descriptor.protocol);
+		return;
+	}
+
+	if (CheckUrlScheme(descriptor)) {
+		return;
+	}
+	UnregisterUrlScheme(descriptor);
+
+	const auto handlerType = "x-scheme-handler/"
+		+ descriptor.protocol.toStdString();
+
+	const auto commandlineForCreator = KShell::joinArgs(QStringList{
+		descriptor.executable,
+	} + KShell::splitArgs(descriptor.arguments) + QStringList{
+		"--",
+	}).toStdString();
+
+	const auto desktopId = QGuiApplication::desktopFileName().toStdString();
+	if (!desktopId.empty()) {
+		if (const auto appInfo = Gio::DesktopAppInfo::create(desktopId)) {
+			if (appInfo->get_commandline() == commandlineForCreator + " %u") {
+				appInfo->set_as_default_for_type(handlerType);
+				return;
+			}
+		}
+	}
+
 	try {
-		if (KSandbox::isSnap()) {
-			SnapDefaultHandler(descriptor.protocol);
-			return;
-		}
-
-		if (CheckUrlScheme(descriptor)) {
-			return;
-		}
-		UnregisterUrlScheme(descriptor);
-
-		const auto handlerType = "x-scheme-handler/"
-			+ descriptor.protocol.toStdString();
-
-		const auto commandlineForCreator = KShell::joinArgs(QStringList{
-			descriptor.executable,
-		} + KShell::splitArgs(descriptor.arguments) + QStringList{
-			"--",
-		}).toStdString();
-
 		const auto newAppInfo = Gio::AppInfo::create_from_commandline(
 			commandlineForCreator,
 			descriptor.displayAppName.toStdString(),
