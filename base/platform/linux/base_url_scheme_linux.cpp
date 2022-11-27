@@ -97,25 +97,22 @@ void SnapDefaultHandler(const QString &protocol) {
 
 bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-	const auto handlerType = QString("x-scheme-handler/%1")
-		.arg(descriptor.protocol);
+	const auto handlerType = "x-scheme-handler/"
+		+ descriptor.protocol.toStdString();
 
 	const auto neededCommandline = KShell::joinArgs(QStringList{
 		descriptor.executable,
 	} + KShell::splitArgs(descriptor.arguments) + QStringList{
 		"--",
 		"%u",
-	}).toUtf8();
+	}).toStdString();
 
 	const auto currentAppInfo = Gio::AppInfo::get_default_for_type(
-		handlerType.toStdString(),
+		handlerType,
 		true);
 
 	if (currentAppInfo) {
-		const auto currentCommandline = QString::fromStdString(
-			currentAppInfo->get_commandline());
-
-		return currentCommandline == neededCommandline;
+		return currentAppInfo->get_commandline() == neededCommandline;
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
@@ -135,22 +132,22 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		}
 		UnregisterUrlScheme(descriptor);
 
-		const auto handlerType = QString("x-scheme-handler/%1")
-			.arg(descriptor.protocol);
+		const auto handlerType = "x-scheme-handler/"
+			+ descriptor.protocol.toStdString();
 
 		const auto commandlineForCreator = KShell::joinArgs(QStringList{
 			descriptor.executable,
 		} + KShell::splitArgs(descriptor.arguments) + QStringList{
 			"--",
-		}).toUtf8();
+		}).toStdString();
 
 		const auto newAppInfo = Gio::AppInfo::create_from_commandline(
-			commandlineForCreator.toStdString(),
+			commandlineForCreator,
 			descriptor.displayAppName.toStdString(),
 			Gio::AppInfo::CreateFlags::SUPPORTS_URIS);
 
 		if (newAppInfo) {
-			newAppInfo->set_as_default_for_type(handlerType.toStdString());
+			newAppInfo->set_as_default_for_type(handlerType);
 		}
 	} catch (const std::exception &e) {
 		LOG(("Register Url Scheme Error: %1").arg(
