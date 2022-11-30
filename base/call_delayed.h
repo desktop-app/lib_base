@@ -25,4 +25,18 @@ inline void call_delayed(
 		std::forward<Callable>(callable)));
 }
 
+template <typename Guard, typename Callable>
+[[nodiscard]] inline auto fn_delayed(
+		crl::time delay,
+		Guard &&object,
+		Callable &&callable) {
+	auto guarded = crl::guard(
+		std::forward<Guard>(object),
+		std::forward<Callable>(callable));
+	return [saved = std::move(guarded), delay] {
+		auto copy = saved;
+		base::call_delayed(delay, std::move(copy));
+	};
+}
+
 } // namespace base
