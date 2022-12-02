@@ -10,6 +10,19 @@ class QJsonObject;
 class QString;
 class QDate;
 
+namespace base::Platform {
+
+[[nodiscard]] bool IsDeviceModelOk(const QString &model);
+
+[[nodiscard]] QString SimplifyDeviceModel(QString model);
+[[nodiscard]] QString SimplifyGoodDeviceModel(
+	QString model,
+	std::vector<QString> remove);
+[[nodiscard]] std::optional<QString> ProductNameToDeviceModel(
+	const QString &productName);
+
+} // namespace base::Platform
+
 namespace Platform {
 
 enum class OutdateReason {

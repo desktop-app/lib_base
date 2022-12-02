@@ -67,14 +67,12 @@ constexpr auto kMaxDeviceModelLength = 15;
 	}
 }
 
-[[nodiscard]] QString SimplifyDeviceModel(QString model) {
-	return base::CleanAndSimplify(model.replace(QChar('_'), QString()));
-}
-
 } // namespace
 
 QString DeviceModelPretty() {
 	static const auto result = [&] {
+		using namespace base::Platform;
+
 		const auto value = [](const char *key) {
 			auto file = QFile(u"/sys/class/dmi/id/"_q + key);
 			return (file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -82,9 +80,8 @@ QString DeviceModelPretty() {
 				: QString();
 		};
 		const auto productName = value("product_name");
-		if (!productName.isEmpty()
-			&& productName.size() <= kMaxDeviceModelLength) {
-			return productName;
+		if (const auto model = ProductNameToDeviceModel(productName)) {
+			return *model;
 		}
 
 		const auto productFamily = value("product_family");
@@ -92,14 +89,11 @@ QString DeviceModelPretty() {
 		const auto familyName = SimplifyDeviceModel(
 			productFamily + ' ' + boardName);
 
-		if (!familyName.isEmpty()
-			&& familyName.size() <= kMaxDeviceModelLength) {
+		if (IsDeviceModelOk(familyName)) {
 			return familyName;
-		} else if (!boardName.isEmpty()
-			&& boardName.size() <= kMaxDeviceModelLength) {
+		} else if (IsDeviceModelOk(boardName)) {
 			return boardName;
-		} else if (!productFamily.isEmpty()
-			&& productFamily.size() <= kMaxDeviceModelLength) {
+		} else if (IsDeviceModelOk(productFamily)) {
 			return productFamily;
 		}
 

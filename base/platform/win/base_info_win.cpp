@@ -20,9 +20,6 @@
 namespace Platform {
 namespace {
 
-constexpr auto kMaxDeviceModelLength = 15;
-constexpr auto kMaxGoodDeviceModelLength = 32;
-
 #define qsl(S) QStringLiteral(S)
 
 QString GetLangCodeById(unsigned int lngId) {
@@ -144,34 +141,12 @@ QString GetLangCodeById(unsigned int lngId) {
 	return QString();
 }
 
-[[nodiscard]] QString SimplifyDeviceModel(QString model) {
-	return base::CleanAndSimplify(model.replace(QChar('_'), QString()));
-}
-
-[[nodiscard]] QString SimplifyGoodDeviceModel(
-		QString model,
-		int limit,
-		std::vector<QString> remove) {
-	const auto words = model.split(QChar(' '));
-	auto result = QString();
-	for (const auto &word : model.split(QChar(' '))) {
-		if (ranges::contains(remove, word.toLower())) {
-			continue;
-		} else if (result.isEmpty()) {
-			result = word;
-		} else if (result.size() + word.size() + 1 > limit) {
-			return result;
-		} else {
-			result += ' ' + word;
-		}
-	}
-	return result;
-}
-
 } // namespace
 
 QString DeviceModelPretty() {
 	static const auto result = [&] {
+		using namespace base::Platform;
+
 		const auto bios = QSettings(
 			"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\BIOS",
 			QSettings::NativeFormat);
@@ -180,15 +155,8 @@ QString DeviceModelPretty() {
 		};
 
 		const auto systemProductName = value("SystemProductName");
-		if (systemProductName.startsWith("HP ")) {
-			// Some special cases for good strings, like HP laptops.
-			return SimplifyGoodDeviceModel(
-				systemProductName,
-				kMaxGoodDeviceModelLength,
-				{ "notebook", "desktop", "mobile", "workstation", "pc" });
-		} else if (!systemProductName.isEmpty()
-			&& systemProductName.size() <= kMaxDeviceModelLength) {
-			return systemProductName;
+		if (const auto model = ProductNameToDeviceModel(systemProductName)) {
+			return *model;
 		}
 
 		const auto systemFamily = value("SystemFamily");
@@ -196,17 +164,13 @@ QString DeviceModelPretty() {
 		const auto familyBoard = SimplifyDeviceModel(
 			systemFamily + ' ' + baseBoardProduct);
 
-		if (!familyBoard.isEmpty()
-			&& familyBoard.size() <= kMaxDeviceModelLength) {
+		if (IsDeviceModelOk(familyBoard)) {
 			return familyBoard;
-		} else if (!baseBoardProduct.isEmpty()
-			&& baseBoardProduct.size() <= kMaxDeviceModelLength) {
+		} else if (IsDeviceModelOk(baseBoardProduct)) {
 			return baseBoardProduct;
-		} else if (!systemFamily.isEmpty()
-			&& systemFamily.size() <= kMaxDeviceModelLength) {
+		} else if (IsDeviceModelOk(systemFamily)) {
 			return systemFamily;
 		}
-
 		return u"Desktop"_q;
 	}();
 
