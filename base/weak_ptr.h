@@ -200,6 +200,9 @@ public:
 		destroy();
 	}
 
+	[[nodiscard]] bool null() const {
+		return !_alive;
+	}
 	[[nodiscard]] bool empty() const {
 		return !_alive || !_alive->value;
 	}
