@@ -103,7 +103,9 @@ std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 			"org.freedesktop.DBus.Error.AccessDenied",
 		};
 
-		const auto errorName = Gio::DBus::ErrorUtils::get_remote_error(e);
+		const auto errorName = Gio::DBus::ErrorUtils::get_remote_error(
+			e).raw();
+
 		if (ranges::contains(NotSupportedErrors, errorName)) {
 			NotSupported = true;
 			return std::nullopt;
@@ -163,7 +165,9 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 			"org.freedesktop.DBus.Error.AccessDenied",
 		};
 
-		const auto errorName = Gio::DBus::ErrorUtils::get_remote_error(e);
+		const auto errorName = Gio::DBus::ErrorUtils::get_remote_error(
+			e).raw();
+
 		if (ranges::contains(NotSupportedErrors, errorName)) {
 			NotSupported = true;
 			return std::nullopt;
