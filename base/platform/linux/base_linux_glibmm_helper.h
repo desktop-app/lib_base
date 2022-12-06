@@ -10,6 +10,7 @@
 
 #include <glibmm/variant.h>
 
+#ifdef _LP64
 namespace Glib {
 
 template <>
@@ -101,6 +102,7 @@ public:
 };
 
 } // namespace Glib
+#endif // 64bit
 
 namespace base {
 namespace Platform {
