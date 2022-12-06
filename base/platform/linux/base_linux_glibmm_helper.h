@@ -13,8 +13,7 @@
 namespace Glib {
 
 template <>
-class Variant<int64> : public VariantBase
-{
+class Variant<int64> : public VariantBase {
 public:
 	using CType = gint64;
 
@@ -58,8 +57,7 @@ public:
 };
 
 template <>
-class Variant<uint64> : public VariantBase
-{
+class Variant<uint64> : public VariantBase {
 public:
 	using CType = guint64;
 
