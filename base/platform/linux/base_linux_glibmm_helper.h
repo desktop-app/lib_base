@@ -10,7 +10,7 @@
 
 #include <glibmm/variant.h>
 
-#ifdef _LP64
+#if LONG_TYPE_SIZE == 64
 namespace Glib {
 
 template <>
@@ -102,7 +102,7 @@ public:
 };
 
 } // namespace Glib
-#endif // 64bit
+#endif // LONG_TYPE_SIZE == 64
 
 namespace base {
 namespace Platform {
