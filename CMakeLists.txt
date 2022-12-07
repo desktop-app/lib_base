@@ -6,7 +6,7 @@
 
 add_library(lib_base STATIC)
 add_library(desktop-app::lib_base ALIAS lib_base)
-init_target(lib_base)
+init_target(lib_base ltcg)
 
 add_library(lib_base_crash_report_writer STATIC)
 add_library(desktop-app::lib_base_crash_report_writer ALIAS lib_base_crash_report_writer)
