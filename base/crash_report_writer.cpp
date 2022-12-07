@@ -62,6 +62,10 @@
 
 #endif // Q_OS_UNIX
 
+namespace base::Platform {
+using namespace ::Platform;
+} // namespace base::Platform
+
 namespace base {
 namespace {
 
