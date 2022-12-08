@@ -10,11 +10,16 @@
 
 #include <glibmm/variant.h>
 
-#if LONG_TYPE_SIZE == 64
 namespace Glib {
 
+struct Int64Helper0 {};
+using Int64Helper = std::conditional_t<std::is_same_v<gint64, int64>, Int64Helper0, int64>;
+
+struct UInt64Helper0 {};
+using UInt64Helper = std::conditional_t<std::is_same_v<guint64, uint64>, UInt64Helper0, uint64>;
+
 template <>
-class Variant<int64> : public VariantBase {
+class Variant<Int64Helper> : public VariantBase {
 public:
 	using CType = gint64;
 
@@ -58,7 +63,7 @@ public:
 };
 
 template <>
-class Variant<uint64> : public VariantBase {
+class Variant<UInt64Helper> : public VariantBase {
 public:
 	using CType = guint64;
 
@@ -102,7 +107,6 @@ public:
 };
 
 } // namespace Glib
-#endif // LONG_TYPE_SIZE == 64
 
 namespace base {
 namespace Platform {
