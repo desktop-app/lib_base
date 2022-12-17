@@ -4,6 +4,7 @@
 // For license and copyright information please follow this link:
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
+#include <vector>
 #pragma once
 
 class QJsonObject;
