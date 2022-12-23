@@ -629,7 +629,7 @@ void SystemMediaControls::setArtist(const QString &artist) {
 void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 	QByteArray thumbnailData;
 	QBuffer thumbnailBuffer(&thumbnailData);
-	thumbnail.save(&thumbnailBuffer, "JPG", 87);
+	thumbnail.save(&thumbnailBuffer, "JPG", 90);
 
 	_private->player().metadata["mpris:artUrl"] =
 		Q2VUString("data:image/jpeg;base64," + thumbnailData.toBase64());

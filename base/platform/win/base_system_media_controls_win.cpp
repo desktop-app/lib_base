@@ -238,7 +238,7 @@ void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 		QByteArray bytes;
 		QBuffer buffer(&bytes);
 		buffer.open(QIODevice::WriteOnly);
-		thumbnail.save(&buffer, "JPG", 87);
+		thumbnail.save(&buffer, "JPG", 90);
 		buffer.close();
 		return std::vector<unsigned char>(bytes.begin(), bytes.end());
 	}();
