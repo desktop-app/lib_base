@@ -7,7 +7,6 @@
 #include "base/single_instance.h"
 
 #include "base/crc32hash.h"
-#include "base/qt/qt_common_adapters.h"
 #include "base/platform/base_platform_process.h"
 
 #include <QtCore/QStandardPaths>
@@ -72,7 +71,7 @@ void SingleInstance::start(
 	};
 
 	QObject::connect(&_socket, &QLocalSocket::connected, secondary);
-	QObject::connect(&_socket, QLocalSocket_error, handleError);
+	QObject::connect(&_socket, &QLocalSocket::errorOccurred, handleError);
 	QObject::connect(
 		&_socket,
 		&QLocalSocket::disconnected,
@@ -109,7 +108,7 @@ void SingleInstance::clearSocket() {
 		nullptr);
 	QObject::disconnect(
 		&_socket,
-		QLocalSocket_error,
+		&QLocalSocket::errorOccurred,
 		nullptr,
 		nullptr);
 	QObject::disconnect(
