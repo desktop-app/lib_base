@@ -164,6 +164,7 @@ PRIVATE
     base/match_method.h
     base/network_reachability.cpp
     base/network_reachability.h
+    base/never_freed_pointer.h
     base/object_ptr.h
     base/ordered_set.h
     base/openssl_help.h
