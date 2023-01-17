@@ -58,7 +58,10 @@ void SnapDefaultHandler(const QString &protocol) {
 			return;
 		}
 
-		const auto loop = Glib::MainLoop::create();
+		const auto window = std::make_shared<QWidget>();
+		window->setAttribute(Qt::WA_DontShowOnScreen);
+		window->setWindowModality(Qt::ApplicationModal);
+		window->show();
 
 		connection->call(
 			std::string(kSnapcraftSettingsObjectPath),
@@ -69,23 +72,16 @@ void SnapDefaultHandler(const QString &protocol) {
 				Glib::ustring(protocol.toStdString()),
 				Glib::ustring(expectedHandler.toStdString()),
 			}),
-			[&](const Glib::RefPtr<Gio::AsyncResult> &result) {
+			[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+				(void)window; // don't destroy until finish
 				try {
 					connection->call_finish(result);
 				} catch (const std::exception &e) {
 					LOG(("Snap Default Handler Error: %1")
 						.arg(QString::fromStdString(e.what())));
 				}
-
-				loop->quit();
 			},
 			std::string(kSnapcraftSettingsService));
-
-		QWidget window;
-		window.setAttribute(Qt::WA_DontShowOnScreen);
-		window.setWindowModality(Qt::ApplicationModal);
-		window.show();
-		loop->run();
 	} catch (const std::exception &e) {
 		LOG(("Snap Default Handler Error: %1")
 			.arg(QString::fromStdString(e.what())));
