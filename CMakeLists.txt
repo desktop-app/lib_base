@@ -202,6 +202,8 @@ PRIVATE
     base/virtual_method.h
     base/weak_ptr.h
     base/zlib_help.h
+    base/qt/qt_debug_hotkey.cpp
+    base/qt/qt_debug_hotkey.h
     base/qt/qt_common_adapters.h
     base/qt/qt_compare.h
     base/qt/qt_key_modifiers.h
