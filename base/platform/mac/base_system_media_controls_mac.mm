@@ -207,7 +207,7 @@ SystemMediaControls::~SystemMediaControls() {
 	[_private->commandHandler release];
 }
 
-bool SystemMediaControls::init(std::optional<QWidget*> parent) {
+bool SystemMediaControls::init() {
 	clearMetadata();
 	updateDisplay();
 

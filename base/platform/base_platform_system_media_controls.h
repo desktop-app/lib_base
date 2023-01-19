@@ -6,8 +6,6 @@
 //
 #pragma once
 
-class QWidget;
-
 namespace base::Platform {
 
 class SystemMediaControls {
@@ -43,7 +41,7 @@ public:
 	SystemMediaControls();
 	~SystemMediaControls();
 
-	bool init(std::optional<QWidget*> parent);
+	bool init();
 
 	[[nodiscard]] bool seekingSupported() const;
 	[[nodiscard]] bool volumeSupported() const;

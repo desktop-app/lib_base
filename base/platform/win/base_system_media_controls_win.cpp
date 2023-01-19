@@ -19,6 +19,7 @@
 #include <systemmediatransportcontrolsinterop.h>
 
 #include <QtCore/QBuffer>
+#include <QtCore/QAbstractNativeEventFilter>
 #include <QtGui/QImage>
 #include <QtGui/QWindow>
 #include <QtWidgets/QWidget>
@@ -34,7 +35,7 @@ namespace Media {
 
 namespace base::Platform {
 
-struct SystemMediaControls::Private {
+struct SystemMediaControls::Private : QAbstractNativeEventFilter {
 	using IReferenceStatics
 		= winrt::Streams::IRandomAccessStreamReferenceStatics;
 	Private()
@@ -43,6 +44,14 @@ struct SystemMediaControls::Private {
 		<winrt::Streams::RandomAccessStreamReference,
 		IReferenceStatics>()) {
 	}
+
+	bool nativeEventFilter(
+		const QByteArray &eventType,
+		void *message,
+		long *result) override;
+
+	QWidget parent;
+	HWND hwnd = nullptr;
 	winrt::Media::SystemMediaTransportControls controls;
 	winrt::Media::ISystemMediaTransportControlsDisplayUpdater displayUpdater;
 	winrt::Media::IMusicDisplayProperties displayProperties;
@@ -53,6 +62,31 @@ struct SystemMediaControls::Private {
 
 	rpl::event_stream<SystemMediaControls::Command> commandRequests;
 };
+
+bool SystemMediaControls::Private::nativeEventFilter(
+		const QByteArray &eventType,
+		void *message,
+		long *result) {
+	Expects(hwnd != nullptr);
+
+	const auto msg = static_cast<MSG*>(message);
+	if (msg->hwnd == hwnd
+		&& msg->message == WM_ACTIVATEAPP
+		&& msg->wParam
+		&& msg->lParam) {
+		const auto handle = OpenThread(
+			THREAD_QUERY_LIMITED_INFORMATION,
+			FALSE,
+			msg->lParam);
+		if (handle) {
+			if (GetProcessIdOfThread(handle) != GetCurrentProcessId()) {
+				commandRequests.fire(Command::Raise);
+			}
+			CloseHandle(handle);
+		}
+	}
+	return false;
+}
 
 namespace {
 
@@ -109,14 +143,13 @@ SystemMediaControls::~SystemMediaControls() {
 	}
 }
 
-bool SystemMediaControls::init(std::optional<QWidget*> parent) {
+bool SystemMediaControls::init() {
 	if (_private->initialized) {
 		return _private->initialized;
 	}
-	if (!parent.has_value()) {
-		return false;
-	}
-	const auto window = (*parent)->window()->windowHandle();
+	_private->parent.hide();
+	_private->parent.createWinId();
+	const auto window = _private->parent.windowHandle();
 	if (!window) {
 		return false;
 	}
@@ -175,6 +208,10 @@ bool SystemMediaControls::init(std::optional<QWidget*> parent) {
 	});
 
 	_private->initialized = result;
+	if (result) {
+		_private->hwnd = hwnd;
+		qApp->installNativeEventFilter(_private.get());
+	}
 	return result;
 }
 

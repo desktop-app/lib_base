@@ -546,7 +546,7 @@ SystemMediaControls::~SystemMediaControls() {
 	_private->deinit();
 }
 
-bool SystemMediaControls::init(std::optional<QWidget*> parent) {
+bool SystemMediaControls::init() {
 	clearMetadata();
 
 	return _private->dbusAvailable();
