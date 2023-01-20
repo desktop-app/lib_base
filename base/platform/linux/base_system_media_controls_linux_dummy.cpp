@@ -18,7 +18,7 @@ SystemMediaControls::SystemMediaControls()
 SystemMediaControls::~SystemMediaControls() {
 }
 
-bool SystemMediaControls::init(std::optional<QWidget*> parent) {
+bool SystemMediaControls::init() {
 	return false;
 }
 
