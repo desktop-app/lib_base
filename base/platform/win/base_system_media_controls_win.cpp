@@ -71,19 +71,11 @@ bool SystemMediaControls::Private::nativeEventFilter(
 
 	const auto msg = static_cast<MSG*>(message);
 	if (msg->hwnd == hwnd
-		&& msg->message == WM_ACTIVATEAPP
-		&& msg->wParam
-		&& msg->lParam) {
-		const auto handle = OpenThread(
-			THREAD_QUERY_LIMITED_INFORMATION,
-			FALSE,
-			msg->lParam);
-		if (handle) {
-			if (GetProcessIdOfThread(handle) != GetCurrentProcessId()) {
-				commandRequests.fire(Command::Raise);
-			}
-			CloseHandle(handle);
-		}
+		&& msg->message == WM_NCACTIVATE
+		&& msg->wParam) {
+		base::Integration::Instance().enterFromEventLoop([&] {
+			commandRequests.fire(Command::Raise);
+		});
 	}
 	return false;
 }
