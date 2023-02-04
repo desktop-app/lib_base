@@ -70,9 +70,8 @@ constexpr auto kMaxDeviceModelLength = 15;
 } // namespace
 
 QString DeviceModelPretty() {
-	static const auto result = [&] {
-		using namespace base::Platform;
-
+	using namespace base::Platform;
+	static const auto result = FinalizeDeviceModel([&] {
 		const auto value = [](const char *key) {
 			auto file = QFile(u"/sys/class/dmi/id/"_q + key);
 			return (file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -80,8 +79,9 @@ QString DeviceModelPretty() {
 				: QString();
 		};
 		const auto productName = value("product_name");
-		if (const auto model = ProductNameToDeviceModel(productName)) {
-			return *model;
+		if (const auto model = ProductNameToDeviceModel(productName)
+			; !model.isEmpty()) {
+			return model;
 		}
 
 		const auto productFamily = value("product_family");
@@ -114,8 +114,8 @@ QString DeviceModelPretty() {
 			return chassisType;
 		}
 
-		return u"Desktop"_q;
-	}();
+		return QString();
+	}());
 
 	return result;
 }

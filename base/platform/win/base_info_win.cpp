@@ -144,9 +144,8 @@ QString GetLangCodeById(unsigned int lngId) {
 } // namespace
 
 QString DeviceModelPretty() {
-	static const auto result = [&] {
-		using namespace base::Platform;
-
+	using namespace base::Platform;
+	static const auto result = FinalizeDeviceModel([&] {
 		const auto bios = QSettings(
 			"HKEY_LOCAL_MACHINE\\HARDWARE\\DESCRIPTION\\System\\BIOS",
 			QSettings::NativeFormat);
@@ -155,8 +154,9 @@ QString DeviceModelPretty() {
 		};
 
 		const auto systemProductName = value("SystemProductName");
-		if (const auto model = ProductNameToDeviceModel(systemProductName)) {
-			return *model;
+		if (const auto model = ProductNameToDeviceModel(systemProductName)
+			; !model.isEmpty()) {
+			return model;
 		}
 
 		const auto systemFamily = value("SystemFamily");
@@ -171,8 +171,8 @@ QString DeviceModelPretty() {
 		} else if (IsDeviceModelOk(systemFamily)) {
 			return systemFamily;
 		}
-		return u"Desktop"_q;
-	}();
+		return QString();
+	}());
 
 	return result;
 }

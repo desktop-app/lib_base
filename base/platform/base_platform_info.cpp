@@ -42,7 +42,7 @@ QString SimplifyGoodDeviceModel(QString model, std::vector<QString> remove) {
 	return result;
 }
 
-std::optional<QString> ProductNameToDeviceModel(const QString &productName) {
+QString ProductNameToDeviceModel(const QString &productName) {
 	if (productName.startsWith("HP ")) {
 		// Some special cases for good strings, like HP laptops.
 		return SimplifyGoodDeviceModel(
@@ -52,6 +52,13 @@ std::optional<QString> ProductNameToDeviceModel(const QString &productName) {
 		return productName;
 	}
 	return {};
+}
+
+QString FinalizeDeviceModel(QString model) {
+	using namespace ::Platform;
+
+	model = std::move(model).trimmed();
+	return !model.isEmpty() ? model : IsMac() ? u"Mac"_q : u"Desktop"_q;
 }
 
 } // namespace base::Platform

@@ -20,8 +20,8 @@ namespace base::Platform {
 [[nodiscard]] QString SimplifyGoodDeviceModel(
 	QString model,
 	std::vector<QString> remove);
-[[nodiscard]] std::optional<QString> ProductNameToDeviceModel(
-	const QString &productName);
+[[nodiscard]] QString ProductNameToDeviceModel(const QString &productName);
+[[nodiscard]] QString FinalizeDeviceModel(QString model);
 
 } // namespace base::Platform
 

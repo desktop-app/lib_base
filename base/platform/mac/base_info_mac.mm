@@ -143,22 +143,26 @@ template <int Minor>
 } // namespace
 
 QString DeviceModelPretty() {
-	static const auto Result = DeviceFromSystemProfiler();
-	if (!Result.isEmpty()) {
-		return Result;
-	}
-	size_t length = 0;
-	sysctlbyname("hw.model", nullptr, &length, nullptr, 0);
-	if (length > 0) {
-		QByteArray bytes(length, Qt::Uninitialized);
-		sysctlbyname("hw.model", bytes.data(), &length, nullptr, 0);
-		const auto parsed = base::CleanAndSimplify(
-			FromIdentifier(QString::fromUtf8(bytes)));
-		if (!parsed.isEmpty()) {
-			return parsed;
+	using namespace base::Platform;
+	static const auto result = FinalizeDeviceModel([&] {
+		const auto fromSystemProfiler = DeviceFromSystemProfiler();
+		if (!fromSystemProfiler.isEmpty()) {
+			return fromSystemProfile;
 		}
-	}
-	return "Mac";
+		size_t length = 0;
+		sysctlbyname("hw.model", nullptr, &length, nullptr, 0);
+		if (length > 0) {
+			QByteArray bytes(length, Qt::Uninitialized);
+			sysctlbyname("hw.model", bytes.data(), &length, nullptr, 0);
+			const auto parsed = base::CleanAndSimplify(
+				FromIdentifier(QString::fromUtf8(bytes)));
+			if (!parsed.isEmpty()) {
+				return parsed;
+			}
+		}
+		return QString();
+	}());
+	return result;
 }
 
 QString SystemVersionPretty() {
