@@ -8,6 +8,7 @@
 
 #include "base/bytes.h"
 #include "base/algorithm.h"
+#include "base/assertion.h"
 #include "base/basic_types.h"
 
 extern "C" {
