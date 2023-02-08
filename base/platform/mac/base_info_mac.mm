@@ -147,7 +147,7 @@ QString DeviceModelPretty() {
 	static const auto result = FinalizeDeviceModel([&] {
 		const auto fromSystemProfiler = DeviceFromSystemProfiler();
 		if (!fromSystemProfiler.isEmpty()) {
-			return fromSystemProfile;
+			return fromSystemProfiler;
 		}
 		size_t length = 0;
 		sysctlbyname("hw.model", nullptr, &length, nullptr, 0);
