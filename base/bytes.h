@@ -8,7 +8,7 @@
 
 #include "base/basic_types.h"
 #include <gsl/gsl>
-#include <gsl/gsl_byte>
+#include <gsl/byte>
 #include <vector>
 #include <array>
 
