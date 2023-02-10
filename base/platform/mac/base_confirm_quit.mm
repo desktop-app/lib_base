@@ -206,7 +206,7 @@ ConfirmQuitPanelController* g_confirmQuitPanelController = nil;
 	NSWindow *window
 		= [[NSWindow alloc]
 		   initWithContentRect:kWindowFrame
-		   styleMask:NSBorderlessWindowMask
+		   styleMask:NSWindowStyleMaskBorderless
 		   backing:NSBackingStoreBuffered
 		   defer:NO];
 	const auto guard = gsl::finally([&] { [window release]; });
@@ -253,7 +253,7 @@ ConfirmQuitPanelController* g_confirmQuitPanelController = nil;
 		NSEvent* nextEvent = [self
 			pumpEventQueueForKeyUp:app
 			untilDate:[NSDate distantFuture]];
-		[app discardEventsMatchingMask:NSAnyEventMask beforeEvent:nextEvent];
+		[app discardEventsMatchingMask:NSEventMaskAny beforeEvent:nextEvent];
 		return YES;
 	} else {
 		lastQuitAttempt = timeNow;
@@ -264,7 +264,7 @@ ConfirmQuitPanelController* g_confirmQuitPanelController = nil;
 
 	// Explicitly announce the hold-to-quit message. For an ordinary modal dialog
 	// VoiceOver would announce it and read its message, but VoiceOver does not do
-	// this for windows whose styleMask is NSBorderlessWindowMask, so do it
+	// this for windows whose styleMask is NSWindowStyleMaskBorderless, so do it
 	// manually here. Without this screenreader users have no way to know why
 	// their quit hotkey seems not to work.
 	[self sendAccessibilityAnnouncement];
@@ -302,7 +302,7 @@ ConfirmQuitPanelController* g_confirmQuitPanelController = nil;
 
 	// The user has released the key combo. Discard any events (i.e. the
 	// repeated KeyDown Cmd+Q).
-	[app discardEventsMatchingMask:NSAnyEventMask beforeEvent:nextEvent];
+	[app discardEventsMatchingMask:NSEventMaskAny beforeEvent:nextEvent];
 
 	if (willQuit) {
 		// The user held down the combination long enough that quitting should
@@ -370,7 +370,7 @@ ConfirmQuitPanelController* g_confirmQuitPanelController = nil;
 // Runs a nested loop that pumps the event queue until the next KeyUp event.
 - (NSEvent*)pumpEventQueueForKeyUp:(NSApplication*)app untilDate:(NSDate*)date {
 	return [app
-		nextEventMatchingMask:NSKeyUpMask
+		nextEventMatchingMask:NSEventMaskKeyUp
 		untilDate:date
 		inMode:NSEventTrackingRunLoopMode
 		dequeue:YES];
@@ -416,7 +416,7 @@ namespace {
 		initWithTitle:@""
 		action:@selector(terminate:)
 		keyEquivalent:@"q"] autorelease];
-	item.keyEquivalentModifierMask = NSCommandKeyMask;
+	item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
 	return item;
 }
 
@@ -424,16 +424,16 @@ namespace {
 	auto result = QString();
 
 	NSUInteger modifiers = item.keyEquivalentModifierMask;
-	if (modifiers & NSCommandKeyMask) {
+	if (modifiers & NSEventModifierFlagCommand) {
 		result.append(QChar(0x2318));
 	}
-	if (modifiers & NSControlKeyMask) {
+	if (modifiers & NSEventModifierFlagControl) {
 		result.append(QChar(0x2303));
 	}
-	if (modifiers & NSAlternateKeyMask) {
+	if (modifiers & NSEventModifierFlagOption) {
 		result.append(QChar(0x2325));
 	}
-	if (modifiers & NSShiftKeyMask) {
+	if (modifiers & NSEventModifierFlagShift) {
 		result.append(QChar(0x21E7));
 	}
 	result.append(NS2QString([item.keyEquivalent uppercaseString]));
