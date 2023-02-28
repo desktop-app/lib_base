@@ -18,6 +18,7 @@ target_precompile_headers(lib_base PRIVATE $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:${sr
 nice_target_sources(lib_base ${src_loc}
 PRIVATE
     base/platform/linux/base_battery_saving_linux.cpp
+    base/platform/linux/base_battery_saving_linux_dummy.cpp
     base/platform/linux/base_battery_saving_linux.h
     base/platform/linux/base_file_utilities_linux.cpp
     base/platform/linux/base_file_utilities_linux.h
@@ -222,6 +223,7 @@ if (DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_app_launch_context.cpp
         base/platform/linux/base_linux_app_launch_context.h
+        base/platform/linux/base_battery_saving_linux.cpp
         base/platform/linux/base_linux_dbus_utilities.cpp
         base/platform/linux/base_linux_dbus_utilities.h
         base/platform/linux/base_linux_glibmm_helper.h
@@ -231,6 +233,7 @@ if (DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
     )
 else()
     remove_target_sources(lib_base ${src_loc}
+        base/platform/linux/base_battery_saving_linux_dummy.cpp
         base/platform/linux/base_system_media_controls_linux_dummy.cpp
     )
 endif()
