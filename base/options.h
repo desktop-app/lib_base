@@ -25,7 +25,9 @@ enum class ScopeFlag : uchar {
 	Linux   = (1 << 3),
 };
 inline constexpr bool is_flag_type(ScopeFlag) { return true; }
-using Scope = base::flags<ScopeFlag>;
+using ScopeFlags = base::flags<ScopeFlag>;
+using ScopeFn = Fn<bool()>;
+using Scope = std::variant<ScopeFlags, ScopeFn>;
 
 class BasicOption {
 public:
@@ -59,7 +61,7 @@ private:
 	QString _id;
 	QString _name;
 	QString _description;
-	Scope _scope = {};
+	Scope _scope;
 	bool _restartRequired = false;
 
 };
