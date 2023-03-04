@@ -180,12 +180,18 @@ const QString &BasicOption::description() const {
 }
 
 bool BasicOption::relevant() const {
+	const auto scopeFn = std::get_if<ScopeFn>(&_scope);
+	if (scopeFn) {
+		return (*scopeFn)();
+	}
+
+	const auto scopeFlags = v::get<ScopeFlags>(_scope);
 #ifdef Q_OS_WIN
-	return _scope & windows;
+	return scopeFlags & windows;
 #elif defined Q_OS_MAC // Q_OS_WIN
-	return _scope & macos;
+	return scopeFlags & macos;
 #else // Q_OS_MAC || Q_OS_WIN
-	return _scope & linux;
+	return scopeFlags & linux;
 #endif // Q_OS_MAC || Q_OS_WIN
 }
 
