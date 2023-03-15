@@ -34,7 +34,7 @@ public:
 			return std::nullopt;
 		}
 
-		const auto atom = GetAtom(_connection, "CLIP_TEMPORARY");
+		const auto atom = GetAtom(_connection, "_DESKTOP_APP_GET_TIMESTAMP");
 		if (!atom.has_value()) {
 			return std::nullopt;
 		}
@@ -46,7 +46,7 @@ public:
 
 		xcb_change_property(
 			_connection,
-			XCB_PROP_MODE_APPEND,
+			XCB_PROP_MODE_REPLACE,
 			_window,
 			_atom,
 			XCB_ATOM_INTEGER,
@@ -57,7 +57,6 @@ public:
 		xcb_flush(_connection);
 		sync();
 		_loop.exec();
-		xcb_delete_property(_connection, _window, _atom);
 
 		return _timestamp;
 	}
