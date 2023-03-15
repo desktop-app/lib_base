@@ -28,6 +28,8 @@
 #include <X11/keysym.h>
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
+class QKeyEvent;
+
 namespace base::Platform::GlobalShortcuts {
 namespace {
 
