@@ -667,4 +667,8 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 	return {};
 }
 
+bool IsToggleFullScreenKey(not_null<QKeyEvent*> e) {
+	return false;
+}
+
 } // namespace base::Platform::GlobalShortcuts

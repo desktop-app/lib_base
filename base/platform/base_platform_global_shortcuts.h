@@ -8,6 +8,8 @@
 
 #include "base/global_shortcuts_generic.h"
 
+class QKeyEvent;
+
 namespace base::Platform::GlobalShortcuts {
 
 [[nodiscard]] bool Available();
@@ -17,5 +19,7 @@ void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process);
 void Stop();
 
 [[nodiscard]] QString KeyName(GlobalShortcutKeyGeneric descriptor);
+
+[[nodiscard]] bool IsToggleFullScreenKey(not_null<QKeyEvent*> e);
 
 } // namespace base::Platform::GlobalShortcuts

@@ -217,4 +217,8 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 		: QString("\\x%1").arg(GetVirtualKeyCode(descriptor), 0, 16);
 }
 
+bool IsToggleFullScreenKey(not_null<QKeyEvent*> e) {
+	return false;
+}
+
 } // namespace base::Platform::GlobalShortcuts

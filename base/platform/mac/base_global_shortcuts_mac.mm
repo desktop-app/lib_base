@@ -10,6 +10,8 @@
 #include "base/invoke_queued.h"
 #include "base/const_string.h"
 
+#include <QtGui/QtEvents>
+
 #include <Carbon/Carbon.h>
 #import <Foundation/Foundation.h>
 #import <IOKit/hidsystem/IOHIDLib.h>
@@ -331,6 +333,13 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 	return (i != end(KeyToString))
 		? i->second.utf16()
 		: QString("\\x%1").arg(descriptor, 0, 16);
+}
+
+bool IsToggleFullScreenKey(not_null<QKeyEvent*> e) {
+	const auto mods = e->nativeModifiers()
+		& NSEventModifierFlagDeviceIndependentFlagsMask;
+	return (mods == NSEventModifierFlagFunction) // Fn
+		&& (e->nativeVirtualKey() == 3); // F
 }
 
 } // namespace base::Platform::GlobalShortcuts
