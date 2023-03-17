@@ -20,7 +20,6 @@
 #include <ksandbox.h>
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-#include <gio/gio.h>
 #include <glibmm.h>
 #include <giomm.h>
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
@@ -164,37 +163,24 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 
 void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-	const auto handlerType = QString("x-scheme-handler/%1")
-		.arg(descriptor.protocol);
+	const auto handlerType = "x-scheme-handler/"
+		+ descriptor.protocol.toStdString();
 
 	const auto neededCommandline = KShell::joinArgs(QStringList{
 		descriptor.executable,
 	} + KShell::splitArgs(descriptor.arguments) + QStringList{
 		"--",
 		"%u",
-	}).toUtf8();
+	}).toStdString();
 
-	auto registeredAppInfoList = g_app_info_get_recommended_for_type(
-		handlerType.toUtf8().constData());
+	const auto registeredAppInfos = Gio::AppInfo::get_recommended_for_type(
+		handlerType);
 
-	for (auto l = registeredAppInfoList; l != nullptr; l = l->next) {
-		const auto currentRegisteredAppInfo = reinterpret_cast<GAppInfo*>(
-			l->data);
-
-		const auto currentAppInfoId = QString(
-			g_app_info_get_id(currentRegisteredAppInfo));
-
-		const auto currentCommandline = QString(
-			g_app_info_get_commandline(currentRegisteredAppInfo));
-
-		if (currentCommandline == neededCommandline
-			&& currentAppInfoId.startsWith("userapp-")) {
-			g_app_info_delete(currentRegisteredAppInfo);
+	for (const auto &appInfo : registeredAppInfos) {
+		if (appInfo->get_commandline() == neededCommandline
+			&& !appInfo->get_id().compare(0, 8, "userapp-")) {
+			appInfo->do_delete();
 		}
-	}
-
-	if (registeredAppInfoList) {
-		g_list_free_full(registeredAppInfoList, g_object_unref);
 	}
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 }
