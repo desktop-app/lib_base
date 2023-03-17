@@ -182,6 +182,14 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
+	const auto libcName = GetLibcName();
+	const auto libcVersion = GetLibcVersion();
+
+	if (libcName == qstr("glibc") && !libcVersion.isEmpty()) {
+		if (QVersionNumber::fromString(libcVersion) < QVersionNumber(2, 28)) {
+			return QDate(2023, 7, 1); // Older than CentOS 8.
+		}
+	}
 	return QDate();
 }
 
