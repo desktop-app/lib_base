@@ -55,7 +55,7 @@ private:
 	}
 
 	LowPowerModeObserver *_observer = nil;
-	CFRunLoopSourceRef _runLoopSource;
+	CFRunLoopSourceRef _runLoopSource = nullptr;
 
 };
 
