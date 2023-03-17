@@ -7,7 +7,7 @@
 #include "base/platform/base_platform_network_reachability.h"
 
 #ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-#include <gio/gio.h>
+#include <giomm.h>
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 namespace base::Platform {
@@ -26,16 +26,16 @@ std::optional<bool> NetworkAvailable() {
 	}
 
 	[[maybe_unused]] static const auto Inited = [] {
-		g_signal_connect(
-			g_network_monitor_get_default(),
-			"notify::network-available",
-			G_CALLBACK(NotifyNetworkAvailableChanged),
-			nullptr);
+		Gio::NetworkMonitor::get_default(
+		)->property_network_available(
+		).signal_changed(
+		).connect([] {
+			NotifyNetworkAvailableChanged();
+		});
 		return true;
 	}();
 
-	return g_network_monitor_get_network_available(
-		g_network_monitor_get_default());
+	return Gio::NetworkMonitor::get_default()->get_network_available();
 #else // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	return std::nullopt;
 #endif // DESKTOP_APP_DISABLE_DBUS_INTEGRATION
