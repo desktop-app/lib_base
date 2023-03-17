@@ -200,6 +200,9 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
+	if (!IsMac10_13OrGreater()) {
+		return QDate(2023, 7, 1);
+	}
 	return QDate();
 }
 
