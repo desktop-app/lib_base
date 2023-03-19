@@ -130,6 +130,7 @@ PRIVATE
     base/algorithm.h
     base/assertion.cpp
     base/assertion.h
+    base/atomic.h
     base/base_file_utilities.cpp
     base/base_file_utilities.h
     base/basic_types.h
