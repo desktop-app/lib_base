@@ -207,10 +207,13 @@ QDate WhenSystemBecomesOutdated() {
 }
 
 int AutoUpdateVersion() {
+#if 0 // mtp
 	if (!IsMac10_13OrGreater()) {
 		return 2;
 	}
 	return 4;
+#endif
+	return 5;
 }
 
 QString AutoUpdateKey() {
