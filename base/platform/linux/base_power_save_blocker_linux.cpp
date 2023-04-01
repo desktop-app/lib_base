@@ -22,7 +22,6 @@
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <QtGui/QWindow>
-#include <QtWidgets/QWidget>
 
 namespace base::Platform {
 namespace {
@@ -53,21 +52,22 @@ void XCBPreventDisplaySleep(bool prevent) {
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#if 0 //ndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 void PortalPreventAppSuspension(
 	bool prevent,
-	const QString &description,
-	QWindow *window) {
+	const QString &description = {},
+	QPointer<QWindow> window = {}) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
 			Gio::DBus::BusType::SESSION);
 
 		static Glib::ustring requestPath;
 		if (!prevent && !requestPath.empty()) {
-			connection->call_sync(
+			connection->call(
 				requestPath,
 				std::string(XDP::kRequestInterface),
 				"Close",
+				{},
 				{},
 				std::string(XDP::kService));
 			requestPath = "";
@@ -89,30 +89,7 @@ void PortalPreventAppSuspension(
 			+ '/'
 			+ handleToken;
 
-		const auto loop = Glib::MainLoop::create();
-
-		const auto signalId = connection->signal_subscribe(
-			[&](
-				const Glib::RefPtr<Gio::DBus::Connection> &connection,
-				const Glib::ustring &sender_name,
-				const Glib::ustring &object_path,
-				const Glib::ustring &interface_name,
-				const Glib::ustring &signal_name,
-				const Glib::VariantContainerBase &parameters) {
-				loop->quit();
-			},
-			std::string(XDP::kService),
-			std::string(XDP::kRequestInterface),
-			"Response",
-			requestPath);
-
-		const auto signalGuard = gsl::finally([&] {
-			if (signalId != 0) {
-				connection->signal_unsubscribe(signalId);
-			}
-		});
-
-		connection->call_sync(
+		connection->call(
 			std::string(XDP::kObjectPath),
 			"org.freedesktop.portal.Inhibit",
 			"Inhibit",
@@ -135,15 +112,8 @@ void PortalPreventAppSuspension(
 					},
 				}),
 			}),
+			{},
 			std::string(XDP::kService));
-
-		if (signalId != 0) {
-			QWidget tempWindow;
-			tempWindow.setAttribute(Qt::WA_DontShowOnScreen);
-			tempWindow.setWindowModality(Qt::ApplicationModal);
-			tempWindow.show();
-			loop->run();
-		}
 	} catch (...) {
 	}
 }
@@ -157,7 +127,7 @@ void BlockPowerSave(
 	QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
-#if 0 // ndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		PortalPreventAppSuspension(true, description, window);
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		break;
@@ -176,8 +146,8 @@ void BlockPowerSave(
 void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
-#if 0 // ndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-		PortalPreventAppSuspension(false, {}, window);
+#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
+		PortalPreventAppSuspension(false);
 #endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		break;
 	case PowerSaveBlockType::PreventDisplaySleep:
