@@ -46,7 +46,6 @@ public:
 	[[nodiscard]] bool seekingSupported() const;
 	[[nodiscard]] bool volumeSupported() const;
 
-	void setServiceName(const QString &name);
 	void setApplicationName(const QString &name);
 
 	void setEnabled(bool enabled);

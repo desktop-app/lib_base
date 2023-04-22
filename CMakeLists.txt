@@ -265,6 +265,9 @@ elseif (LINUX)
         desktop-app::external_kcoreaddons
     )
 
+    include(${cmake_helpers_loc}/external/glib/generate_dbus.cmake)
+    generate_dbus(lib_base org.mpris. Mpris ${src_loc}/base/platform/linux/mpris.xml)
+
     if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
         target_link_libraries(lib_base
         PUBLIC
