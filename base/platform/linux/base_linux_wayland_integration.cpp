@@ -65,7 +65,19 @@ public:
 	XdgExported(struct ::zxdg_exported_v2 *object, QObject *parent = nullptr)
 	: QObject(parent)
 	, zxdg_exported_v2(object) {
-		_loop.exec();
+		const auto native = QGuiApplication::platformNativeInterface();
+		if (!native) {
+			return;
+		}
+
+		const auto display = reinterpret_cast<wl_display*>(
+			native->nativeResourceForIntegration(QByteArray("wl_display")));
+
+		if (!display) {
+			return;
+		}
+
+		wl_display_roundtrip(display);
 	}
 
 	~XdgExported() {
@@ -79,11 +91,9 @@ public:
 protected:
 	void zxdg_exported_v2_handle(const QString &handle) override {
 		_handle = handle;
-		_loop.quit();
 	}
 
 private:
-	QEventLoop _loop;
 	QString _handle;
 };
 
@@ -100,7 +110,20 @@ public:
 		set_serial(serial, seat);
 		set_app_id(appId);
 		commit();
-		_loop.exec();
+
+		const auto native = QGuiApplication::platformNativeInterface();
+		if (!native) {
+			return;
+		}
+
+		const auto display = reinterpret_cast<wl_display*>(
+			native->nativeResourceForIntegration(QByteArray("wl_display")));
+
+		if (!display) {
+			return;
+		}
+
+		wl_display_roundtrip(display);
 	}
 
 	~XdgActivationToken() {
@@ -114,11 +137,9 @@ public:
 protected:
 	void xdg_activation_token_v1_done(const QString &token) override {
 		_token = token;
-		_loop.quit();
 	}
 
 private:
-	QEventLoop _loop;
 	QString _token;
 };
 
