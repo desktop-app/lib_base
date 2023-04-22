@@ -207,9 +207,6 @@ bool SystemMediaControls::init() {
 	return result;
 }
 
-void SystemMediaControls::setServiceName(const QString &name) {
-}
-
 void SystemMediaControls::setApplicationName(const QString &name) {
 }
 
