@@ -62,21 +62,12 @@ class XdgExported
 	: public QObject
 	, public QtWayland::zxdg_exported_v2 {
 public:
-	XdgExported(struct ::zxdg_exported_v2 *object, QObject *parent = nullptr)
+	XdgExported(
+		struct ::wl_display *display,
+		struct ::zxdg_exported_v2 *object,
+		QObject *parent = nullptr)
 	: QObject(parent)
 	, zxdg_exported_v2(object) {
-		const auto native = QGuiApplication::platformNativeInterface();
-		if (!native) {
-			return;
-		}
-
-		const auto display = reinterpret_cast<wl_display*>(
-			native->nativeResourceForIntegration(QByteArray("wl_display")));
-
-		if (!display) {
-			return;
-		}
-
 		wl_display_roundtrip(display);
 	}
 
@@ -100,6 +91,7 @@ private:
 class XdgActivationToken : public QtWayland::xdg_activation_token_v1 {
 public:
 	XdgActivationToken(
+		struct ::wl_display *display,
 		struct ::xdg_activation_token_v1 *object,
 		struct ::wl_surface *surface,
 		struct ::wl_seat *seat,
@@ -110,19 +102,6 @@ public:
 		set_serial(serial, seat);
 		set_app_id(appId);
 		commit();
-
-		const auto native = QGuiApplication::platformNativeInterface();
-		if (!native) {
-			return;
-		}
-
-		const auto display = reinterpret_cast<wl_display*>(
-			native->nativeResourceForIntegration(QByteArray("wl_display")));
-
-		if (!display) {
-			return;
-		}
-
 		wl_display_roundtrip(display);
 	}
 
@@ -261,14 +240,18 @@ QString WaylandIntegration::nativeHandle(QWindow *window) {
 		return {};
 	}
 
+	const auto display = reinterpret_cast<wl_display*>(
+		native->nativeResourceForIntegration(QByteArray("wl_display")));
+
 	const auto surface = reinterpret_cast<wl_surface*>(
 		native->nativeResourceForWindow(QByteArray("surface"), window));
 
-	if (!surface) {
+	if (!display || !surface) {
 		return {};
 	}
 
 	return (new XdgExported(
+		display,
 		_private->xdgExporter.export_toplevel(surface),
 		window))->handle();
 }
@@ -288,6 +271,9 @@ QString WaylandIntegration::activationToken() {
 		return {};
 	}
 
+	const auto display = reinterpret_cast<wl_display*>(
+		native->nativeResourceForIntegration(QByteArray("wl_display")));
+
 	const auto surface = reinterpret_cast<wl_surface*>(
 		native->nativeResourceForWindow(QByteArray("surface"), window));
 
@@ -297,11 +283,12 @@ QString WaylandIntegration::activationToken() {
 	const auto serial = uint32_t(reinterpret_cast<quintptr>(
 		native->nativeResourceForIntegration(QByteArray("serial"))));
 
-	if (!surface || !seat) {
+	if (!display || !surface || !seat) {
 		return {};
 	}
 
 	return XdgActivationToken(
+		display,
 		_private->xdgActivation.get_activation_token(),
 		surface,
 		seat,
