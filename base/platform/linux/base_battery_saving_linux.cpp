@@ -7,6 +7,7 @@
 #include "base/platform/linux/base_battery_saving_linux.h"
 
 #include "base/battery_saving.h"
+#include "base/integration.h"
 
 #include <QtCore/QDir>
 #include <gio/gio.h>
@@ -56,7 +57,9 @@ BatterySaving::BatterySaving(Fn<void()> changedCallback)
 			_monitor,
 			"notify::power-saver-enabled",
 			G_CALLBACK(+[](BatterySaving *instance) {
-				instance->_changedCallback();
+				Integration::Instance().enterFromEventLoop([&] {
+					instance->_changedCallback();
+				});
 			}), this);
 	}
 }
