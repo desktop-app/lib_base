@@ -8,6 +8,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/platform/linux/base_linux_app_launch_context.h"
 
 #include "base/platform/linux/base_linux_wayland_integration.h"
+#include "base/platform/linux/base_linux_xdp_utilities.h"
+
+#include <QtGui/QGuiApplication>
 
 #include <giomm.h>
 
@@ -45,6 +48,16 @@ static void desktop_app_app_launch_context_init(
 				G_APP_LAUNCH_CONTEXT(ctx),
 				"XDG_ACTIVATION_TOKEN",
 				token.toUtf8().constData());
+		}
+	}
+	if (const auto window = QGuiApplication::focusWindow()) {
+		const auto parentWindowId = base::Platform::XDP::ParentWindowID(
+			window);
+		if (!parentWindowId.empty()) {
+			g_app_launch_context_setenv(
+				G_APP_LAUNCH_CONTEXT(ctx),
+				"PARENT_WINDOW_ID",
+				parentWindowId.c_str());
 		}
 	}
 }
