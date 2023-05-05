@@ -7,22 +7,17 @@
 #include "base/platform/linux/base_last_input_linux.h"
 
 #include "base/platform/base_platform_info.h"
+#include "base/platform/linux/base_linux_glibmm_helper.h"
 #include "base/debug_log.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-#include "base/platform/linux/base_linux_glibmm_helper.h"
+#include <xcb/screensaver.h>
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <glibmm.h>
 #include <giomm.h>
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-#include <xcb/screensaver.h>
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 namespace base::Platform {
 namespace {
@@ -61,7 +56,6 @@ std::optional<crl::time> XCBLastUserInputTime() {
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 	static auto NotSupported = false;
 
@@ -186,7 +180,6 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 
 	return std::nullopt;
 }
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 } // namespace
 
@@ -200,7 +193,6 @@ std::optional<crl::time> LastUserInputTime() {
 	}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	const auto freedesktopResult = FreedesktopDBusLastUserInputTime();
 	if (freedesktopResult.has_value()) {
 		return freedesktopResult;
@@ -210,7 +202,6 @@ std::optional<crl::time> LastUserInputTime() {
 	if (mutterResult.has_value()) {
 		return mutterResult;
 	}
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 	return std::nullopt;
 }

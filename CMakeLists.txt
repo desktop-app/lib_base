@@ -18,7 +18,6 @@ target_precompile_headers(lib_base PRIVATE $<$<COMPILE_LANGUAGE:CXX,OBJCXX>:${sr
 nice_target_sources(lib_base ${src_loc}
 PRIVATE
     base/platform/linux/base_battery_saving_linux.cpp
-    base/platform/linux/base_battery_saving_linux_dummy.cpp
     base/platform/linux/base_battery_saving_linux.h
     base/platform/linux/base_file_utilities_linux.cpp
     base/platform/linux/base_file_utilities_linux.h
@@ -53,7 +52,6 @@ PRIVATE
     base/platform/linux/base_power_save_blocker_linux.h
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
-    base/platform/linux/base_system_media_controls_linux_dummy.cpp
     base/platform/linux/base_system_media_controls_linux.cpp
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
@@ -220,25 +218,6 @@ PRIVATE
     base/base_pch.h
 )
 
-if (DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
-    remove_target_sources(lib_base ${src_loc}
-        base/platform/linux/base_linux_app_launch_context.cpp
-        base/platform/linux/base_linux_app_launch_context.h
-        base/platform/linux/base_battery_saving_linux.cpp
-        base/platform/linux/base_linux_dbus_utilities.cpp
-        base/platform/linux/base_linux_dbus_utilities.h
-        base/platform/linux/base_linux_glibmm_helper.h
-        base/platform/linux/base_linux_xdp_utilities.cpp
-        base/platform/linux/base_linux_xdp_utilities.h
-        base/platform/linux/base_system_media_controls_linux.cpp
-    )
-else()
-    remove_target_sources(lib_base ${src_loc}
-        base/platform/linux/base_battery_saving_linux_dummy.cpp
-        base/platform/linux/base_system_media_controls_linux_dummy.cpp
-    )
-endif()
-
 if (DESKTOP_APP_DISABLE_X11_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_xcb_utilities.cpp
@@ -282,15 +261,9 @@ if (WIN32)
 elseif (LINUX)
     target_link_libraries(lib_base
     PUBLIC
+        desktop-app::external_glibmm
         desktop-app::external_kcoreaddons
     )
-
-    if (NOT DESKTOP_APP_DISABLE_DBUS_INTEGRATION)
-        target_link_libraries(lib_base
-        PUBLIC
-            desktop-app::external_glibmm
-        )
-    endif()
 
     if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
         target_link_libraries(lib_base

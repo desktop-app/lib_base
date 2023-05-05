@@ -7,22 +7,17 @@
 #include "base/platform/linux/base_file_utilities_linux.h"
 
 #include "base/platform/base_platform_file_utilities.h"
+#include "base/platform/linux/base_linux_app_launch_context.h"
 #include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/algorithm.h"
-
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-#include "base/platform/linux/base_linux_app_launch_context.h"
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QStandardPaths>
 #include <QtGui/QDesktopServices>
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <glibmm.h>
 #include <giomm.h>
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -34,7 +29,6 @@
 namespace base::Platform {
 namespace {
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 bool PortalShowInFolder(const QString &filepath) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
@@ -120,12 +114,10 @@ bool DBusShowInFolder(const QString &filepath) {
 
 	return false;
 }
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 } // namespace
 
 bool ShowInFolder(const QString &filepath) {
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	if (DBusShowInFolder(filepath)) {
 		return true;
 	}
@@ -143,7 +135,6 @@ bool ShowInFolder(const QString &filepath) {
 		}
 	} catch (...) {
 	}
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 	return QDesktopServices::openUrl(
 		QUrl::fromLocalFile(QFileInfo(filepath).absolutePath()));
