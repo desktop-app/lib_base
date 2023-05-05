@@ -7,6 +7,7 @@
 #include "base/platform/linux/base_power_save_blocker_linux.h"
 
 #include "base/platform/base_platform_info.h"
+#include "base/platform/linux/base_linux_xdp_utilities.h"
 #include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/timer_rpl.h"
 #include "base/random.h"
@@ -15,13 +16,9 @@
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-#include "base/platform/linux/base_linux_xdp_utilities.h"
+#include <QtGui/QWindow>
 
 #include <giomm.h>
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
-
-#include <QtGui/QWindow>
 
 namespace base::Platform {
 namespace {
@@ -52,7 +49,6 @@ void XCBPreventDisplaySleep(bool prevent) {
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 void PortalPreventAppSuspension(
 	bool prevent,
 	const QString &description = {},
@@ -117,7 +113,6 @@ void PortalPreventAppSuspension(
 	} catch (...) {
 	}
 }
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 } // namespace
 
@@ -127,9 +122,7 @@ void BlockPowerSave(
 	QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		PortalPreventAppSuspension(true, description, window);
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		break;
 	case PowerSaveBlockType::PreventDisplaySleep:
 		if (const auto integration = WaylandIntegration::Instance()) {
@@ -146,9 +139,7 @@ void BlockPowerSave(
 void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		PortalPreventAppSuspension(false);
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 		break;
 	case PowerSaveBlockType::PreventDisplaySleep:
 		if (const auto integration = WaylandIntegration::Instance()) {

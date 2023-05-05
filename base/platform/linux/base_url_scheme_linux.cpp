@@ -8,10 +8,7 @@
 
 #include "base/const_string.h"
 #include "base/debug_log.h"
-
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include "base/platform/linux/base_linux_glibmm_helper.h"
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QWidget>
@@ -19,15 +16,12 @@
 #include <kshell.h>
 #include <ksandbox.h>
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 #include <glibmm.h>
 #include <giomm.h>
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 namespace base::Platform {
 namespace {
 
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 constexpr auto kSnapcraftSettingsService = "io.snapcraft.Settings"_cs;
 constexpr auto kSnapcraftSettingsObjectPath = "/io/snapcraft/Settings"_cs;
 constexpr auto kSnapcraftSettingsInterface = kSnapcraftSettingsService;
@@ -86,12 +80,10 @@ void SnapDefaultHandler(const QString &protocol) {
 			.arg(QString::fromStdString(e.what())));
 	}
 }
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 } // namespace
 
 bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	const auto handlerType = "x-scheme-handler/"
 		+ descriptor.protocol.toStdString();
 
@@ -109,13 +101,11 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	if (currentAppInfo) {
 		return currentAppInfo->get_commandline() == neededCommandline;
 	}
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 
 	return false;
 }
 
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	if (KSandbox::isSnap()) {
 		SnapDefaultHandler(descriptor.protocol);
 		return;
@@ -158,11 +148,9 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		LOG(("Register Url Scheme Error: %1").arg(
 			QString::fromStdString(e.what())));
 	}
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 }
 
 void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
-#ifndef DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 	const auto handlerType = "x-scheme-handler/"
 		+ descriptor.protocol.toStdString();
 
@@ -182,7 +170,6 @@ void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 			appInfo->do_delete();
 		}
 	}
-#endif // !DESKTOP_APP_DISABLE_DBUS_INTEGRATION
 }
 
 } // namespace base::Platform
