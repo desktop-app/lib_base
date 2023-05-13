@@ -10,14 +10,16 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/platform/base_platform_info.h"
 #include "base/qt_signal_producer.h"
 #include "base/flat_map.h"
-#include "qwayland-xdg-activation-v1.h"
 #include "qwayland-xdg-foreign-unstable-v2.h"
 #include "qwayland-idle-inhibit-unstable-v1.h"
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
-#include <qpa/qplatformnativeinterface.h>
+#include <qpa/qplatformwindow_p.h>
 #include <wayland-client.h>
+
+using namespace QNativeInterface;
+using namespace QNativeInterface::Private;
 
 namespace base {
 namespace Platform {
@@ -58,24 +60,23 @@ public:
 	}
 };
 
-class XdgExported
-	: public QObject
-	, public QtWayland::zxdg_exported_v2 {
+class XdgExported : public QtWayland::zxdg_exported_v2 {
 public:
 	XdgExported(
 		struct ::wl_display *display,
-		struct ::zxdg_exported_v2 *object,
-		QObject *parent = nullptr)
-	: QObject(parent)
-	, zxdg_exported_v2(object) {
+		struct ::zxdg_exported_v2 *object)
+	: zxdg_exported_v2(object) {
 		wl_display_roundtrip(display);
 	}
+
+	XdgExported(const XdgExported &other) = delete;
+	XdgExported &operator=(const XdgExported &other) = delete;
 
 	~XdgExported() {
 		destroy();
 	}
 
-	QString handle() {
+	[[nodiscard]] QString handle() const {
 		return _handle;
 	}
 
@@ -88,51 +89,16 @@ private:
 	QString _handle;
 };
 
-class XdgActivationToken : public QtWayland::xdg_activation_token_v1 {
-public:
-	XdgActivationToken(
-		struct ::wl_display *display,
-		struct ::xdg_activation_token_v1 *object,
-		struct ::wl_surface *surface,
-		struct ::wl_seat *seat,
-		uint32_t serial,
-		const QString &appId)
-	: xdg_activation_token_v1(object) {
-		set_surface(surface);
-		set_serial(serial, seat);
-		set_app_id(appId);
-		commit();
-		wl_display_roundtrip(display);
-	}
-
-	~XdgActivationToken() {
-		destroy();
-	}
-
-	QString token() {
-		return _token;
-	}
-
-protected:
-	void xdg_activation_token_v1_done(const QString &token) override {
-		_token = token;
-	}
-
-private:
-	QString _token;
-};
-
 } // namespace
 
 struct WaylandIntegration::Private {
 	std::unique_ptr<wl_registry, WlRegistryDeleter> registry;
 	QtWaylandAutoDestroyer<QtWayland::zxdg_exporter_v2> xdgExporter;
 	uint32_t xdgExporterName = 0;
-	QtWaylandAutoDestroyer<QtWayland::xdg_activation_v1> xdgActivation;
-	uint32_t xdgActivationName = 0;
 	QtWaylandAutoDestroyer<
 		QtWayland::zwp_idle_inhibit_manager_v1> idleInhibitManager;
 	uint32_t idleInhibitManagerName = 0;
+	base::flat_map<wl_surface*, std::unique_ptr<XdgExported>> xdgExporteds;
 	base::flat_map<QWindow*, std::unique_ptr<
 		zwp_idle_inhibitor_v1,
 		IdleInhibitorDeleter>> idleInhibitors;
@@ -151,9 +117,6 @@ const struct wl_registry_listener WaylandIntegration::Private::RegistryListener 
 		if (interface == qstr("zxdg_exporter_v2")) {
 			data->xdgExporter.init(registry, name, version);
 			data->xdgExporterName = name;
-		} else if (interface == qstr("xdg_activation_v1")) {
-			data->xdgActivation.init(registry, name, version);
-			data->xdgActivationName = name;
 		} else if (interface == qstr("zwp_idle_inhibit_manager_v1")) {
 			data->idleInhibitManager.init(registry, name, version);
 			data->idleInhibitManagerName = name;
@@ -167,10 +130,6 @@ const struct wl_registry_listener WaylandIntegration::Private::RegistryListener 
 			free(data->xdgExporter.object());
 			data->xdgExporter.init(nullptr);
 			data->xdgExporterName = 0;
-		} else if (name == data->xdgActivationName) {
-			free(data->xdgActivation.object());
-			data->xdgActivation.init(nullptr);
-			data->xdgActivationName = 0;
 		} else if (name == data->idleInhibitManagerName) {
 			free(data->idleInhibitManager.object());
 			data->idleInhibitManager.init(nullptr);
@@ -181,14 +140,12 @@ const struct wl_registry_listener WaylandIntegration::Private::RegistryListener 
 
 WaylandIntegration::WaylandIntegration()
 : _private(std::make_unique<Private>()) {
-	const auto native = QGuiApplication::platformNativeInterface();
+	const auto native = qApp->nativeInterface<QWaylandApplication>();
 	if (!native) {
 		return;
 	}
 
-	const auto display = reinterpret_cast<wl_display*>(
-		native->nativeResourceForIntegration(QByteArray("wl_display")));
-
+	const auto display = native->display();
 	if (!display) {
 		return;
 	}
@@ -200,7 +157,7 @@ WaylandIntegration::WaylandIntegration()
 		_private.get());
 
 	base::qt_signal_producer(
-		native,
+		qApp,
 		&QObject::destroyed
 	) | rpl::start_with_next([=] {
 		// too late for standard destructors, just free
@@ -212,8 +169,6 @@ WaylandIntegration::WaylandIntegration()
 		}
 		free(_private->idleInhibitManager.object());
 		_private->idleInhibitManager.init(nullptr);
-		free(_private->xdgActivation.object());
-		_private->xdgActivation.init(nullptr);
 		free(_private->xdgExporter.object());
 		_private->xdgExporter.init(nullptr);
 		free(_private->registry.release());
@@ -235,65 +190,69 @@ QString WaylandIntegration::nativeHandle(QWindow *window) {
 		return {};
 	}
 
-	const auto native = QGuiApplication::platformNativeInterface();
-	if (!native) {
+	const auto native = qApp->nativeInterface<QWaylandApplication>();
+	const auto nativeWindow = window->nativeInterface<QWaylandWindow>();
+	if (!native || !nativeWindow) {
 		return {};
 	}
 
-	const auto display = reinterpret_cast<wl_display*>(
-		native->nativeResourceForIntegration(QByteArray("wl_display")));
-
-	const auto surface = reinterpret_cast<wl_surface*>(
-		native->nativeResourceForWindow(QByteArray("surface"), window));
+	const auto display = native->display();
+	const auto surface = nativeWindow->surface();
 
 	if (!display || !surface) {
 		return {};
 	}
 
-	return (new XdgExported(
-		display,
-		_private->xdgExporter.export_toplevel(surface),
-		window))->handle();
+	const auto it = _private->xdgExporteds.find(surface);
+	if (it != _private->xdgExporteds.cend()) {
+		return it->second->handle();
+	}
+
+	const auto result = _private->xdgExporteds.emplace(
+		surface,
+		std::make_unique<XdgExported>(
+			display,
+			_private->xdgExporter.export_toplevel(surface)));
+
+	base::qt_signal_producer(
+		nativeWindow,
+		&QWaylandWindow::surfaceDestroyed
+	) | rpl::start_with_next([=] {
+		auto it = _private->xdgExporteds.find(surface);
+		if (it != _private->xdgExporteds.cend()) {
+			_private->xdgExporteds.erase(it);
+		}
+	}, _private->lifetime);
+
+	return result.first->second->handle();
 }
 
 QString WaylandIntegration::activationToken() {
-	if (!_private->xdgActivation.isInitialized()) {
-		return {};
-	}
-
-	const auto native = QGuiApplication::platformNativeInterface();
-	if (!native) {
-		return {};
-	}
-
 	const auto window = QGuiApplication::focusWindow();
 	if (!window) {
 		return {};
 	}
 
-	const auto display = reinterpret_cast<wl_display*>(
-		native->nativeResourceForIntegration(QByteArray("wl_display")));
-
-	const auto surface = reinterpret_cast<wl_surface*>(
-		native->nativeResourceForWindow(QByteArray("surface"), window));
-
-	const auto seat = reinterpret_cast<wl_seat*>(
-		native->nativeResourceForIntegration(QByteArray("wl_seat")));
-
-	const auto serial = uint32_t(reinterpret_cast<quintptr>(
-		native->nativeResourceForIntegration(QByteArray("serial"))));
-
-	if (!display || !surface || !seat) {
+	const auto native = qApp->nativeInterface<QWaylandApplication>();
+	const auto nativeWindow = window->nativeInterface<QWaylandWindow>();
+	if (!native || !nativeWindow) {
 		return {};
 	}
 
-	return XdgActivationToken(
-		display,
-		_private->xdgActivation.get_activation_token(),
-		surface,
-		seat,
-		serial,
-		QGuiApplication::desktopFileName().chopped(8)).token();
+	QEventLoop loop;
+	QString token;
+
+	base::qt_signal_producer(
+		nativeWindow,
+		&QWaylandWindow::xdgActivationTokenCreated
+	) | rpl::start_with_next([&](const QString &tokenArg) {
+		token = tokenArg;
+		loop.quit();
+	}, _private->lifetime);
+
+	nativeWindow->requestXdgActivationToken(native->lastInputSerial());
+	loop.exec();
+	return token;
 }
 
 void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
@@ -317,14 +276,12 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
-	const auto native = QGuiApplication::platformNativeInterface();
+	const auto native = window->nativeInterface<QWaylandWindow>();
 	if (!native) {
 		return;
 	}
 
-	const auto surface = reinterpret_cast<wl_surface*>(
-		native->nativeResourceForWindow(QByteArray("surface"), window));
-
+	const auto surface = native->surface();
 	if (!surface) {
 		return;
 	}
@@ -339,8 +296,8 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 	_private->idleInhibitors.emplace(window, inhibitor);
 
 	base::qt_signal_producer(
-		window,
-		&QObject::destroyed
+		native,
+		&QWaylandWindow::surfaceDestroyed
 	) | rpl::start_with_next(deleter, _private->lifetime);
 }
 
