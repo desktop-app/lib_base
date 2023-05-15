@@ -7,10 +7,12 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #pragma once
 
-#include <giomm/applaunchcontext.h>
+namespace Gio {
+class AppLaunchContext;
+} // namespace Gio
 
 namespace base::Platform {
 
-Glib::RefPtr<Gio::AppLaunchContext> AppLaunchContext();
+std::shared_ptr<Gio::AppLaunchContext> AppLaunchContext();
 
 } // namespace base::Platform
