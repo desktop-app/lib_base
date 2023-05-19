@@ -162,7 +162,7 @@ private:
 	gi::ref_ptr<Player> _player;
 
 	struct {
-		gi::result<Gio::DBusConnection> connection;
+		Gio::DBusConnection connection;
 		Mpris::ObjectSkeleton object;
 		Gio::DBusObjectManagerServer objectManager;
 		uint ownId = 0;
@@ -179,7 +179,9 @@ private:
 SystemMediaControls::Private::Private()
 : Mpris::MediaPlayer2(Mpris::MediaPlayer2Skeleton::new_())
 , _player(gi::make_ref<Player>(this))
-, _dbus({ .connection = Gio::bus_get_sync(Gio::BusType::SESSION_) }) {
+, _dbus({
+	.connection = Gio::bus_get_sync(Gio::BusType::SESSION_, nullptr)
+}) {
 	set_can_quit(true);
 	set_can_raise(!::Platform::IsWayland());
 	set_desktop_entry(
@@ -262,9 +264,9 @@ void SystemMediaControls::Private::init() {
 	_dbus.object.set_media_player2_player(player());
 	_dbus.objectManager = Gio::DBusObjectManagerServer::new_("/org/mpris");
 	_dbus.objectManager.export_(_dbus.object);
-	_dbus.objectManager.set_connection(*_dbus.connection);
+	_dbus.objectManager.set_connection(_dbus.connection);
 	_dbus.ownId = Gio::bus_own_name_on_connection(
-		*_dbus.connection,
+		_dbus.connection,
 		"org.mpris.MediaPlayer2." + (KSandbox::isFlatpak()
 			? qEnvironmentVariable("FLATPAK_ID").toStdString()
 			: KSandbox::isSnap()
