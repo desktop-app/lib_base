@@ -416,7 +416,7 @@ void SystemMediaControls::clearThumbnail() {
 }
 
 void SystemMediaControls::clearMetadata() {
-	auto metadata = std::array{
+	const auto metadata = std::array{
 		GLib::Variant::new_dict_entry(
 			GLib::Variant::new_string("mpris:trackid"),
 			// fake path
