@@ -7,6 +7,7 @@
 #include "base/platform/linux/base_file_utilities_linux.h"
 
 #include "base/platform/base_platform_file_utilities.h"
+#include "base/platform/linux/base_linux_xdp_utilities.h"
 #include "base/platform/linux/base_linux_app_launch_context.h"
 #include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/algorithm.h"
@@ -57,25 +58,22 @@ bool PortalShowInFolder(const QString &filepath) {
 		auto outFdList = Glib::RefPtr<Gio::UnixFDList>();
 
 		connection->call_sync(
-			"/org/freedesktop/portal/desktop",
+			std::string(XDP::kObjectPath),
 			"org.freedesktop.portal.OpenURI",
 			"OpenDirectory",
-			Glib::VariantContainerBase::create_tuple({
-				Glib::Variant<Glib::ustring>::create({}),
-				Glib::Variant<int>::create_handle(0),
-				Glib::Variant<std::map<
-					Glib::ustring,
-					Glib::VariantBase
-				>>::create({
+			Glib::create_variant(std::tuple{
+				Glib::ustring(),
+				Glib::DBusHandle(),
+				std::map<Glib::ustring, Glib::VariantBase>{
 					{
 						"activation_token",
-						Glib::Variant<Glib::ustring>::create(activationToken)
+						Glib::create_variant(activationToken)
 					},
-				}),
+				},
 			}),
 			Gio::UnixFDList::create(std::vector<int>{ fd }),
 			outFdList,
-			"org.freedesktop.portal.Desktop");
+			std::string(XDP::kService));
 
 		return true;
 	} catch (...) {
@@ -100,11 +98,11 @@ bool DBusShowInFolder(const QString &filepath) {
 			"/org/freedesktop/FileManager1",
 			"org.freedesktop.FileManager1",
 			"ShowItems",
-			Glib::VariantContainerBase::create_tuple({
-				Glib::Variant<std::vector<Glib::ustring>>::create({
+			Glib::create_variant(std::tuple{
+				std::vector<Glib::ustring>{
 					Glib::filename_to_uri(filepath.toStdString())
-				}),
-				Glib::Variant<Glib::ustring>::create(startupId),
+				},
+				startupId,
 			}),
 			"org.freedesktop.FileManager1");
 

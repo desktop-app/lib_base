@@ -6,7 +6,6 @@
 //
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 
-#include "base/platform/linux/base_linux_glibmm_helper.h"
 #include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/platform/base_platform_info.h"
 
@@ -39,21 +38,21 @@ std::optional<Glib::VariantBase> ReadSetting(
 		const Glib::ustring &group,
 		const Glib::ustring &key) {
 	try {
-		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::SESSION);
-
-		auto reply = connection->call_sync(
+		return Gio::DBus::Connection::get_sync(
+			Gio::DBus::BusType::SESSION
+		)->call_sync(
 			std::string(kObjectPath),
 			std::string(kSettingsInterface),
 			"Read",
-			MakeGlibVariant(std::tuple{
+			Glib::create_variant(std::tuple{
 				group,
 				key,
 			}),
-			std::string(kService));
-
-		return GlibVariantCast<Glib::VariantBase>(
-			GlibVariantCast<Glib::VariantBase>(reply.get_child(0)));
+			std::string(kService)
+		).get_child(
+			0
+		).get_dynamic<Glib::Variant<Glib::VariantBase>>(
+		).get();
 	} catch (...) {
 	}
 
@@ -86,16 +85,19 @@ SettingWatcher::SettingWatcher(
 				const Glib::ustring &object_path,
 				const Glib::ustring &interface_name,
 				const Glib::ustring &signal_name,
-				Glib::VariantContainerBase parameters) {
+				const Glib::VariantContainerBase &parameters) {
 				try {
-					const auto group = GlibVariantCast<Glib::ustring>(
-						parameters.get_child(0));
+					const auto group = parameters.get_child(
+						0
+					).get_dynamic<Glib::ustring>();
 
-					const auto key = GlibVariantCast<Glib::ustring>(
-						parameters.get_child(1));
+					const auto key = parameters.get_child(
+						1
+					).get_dynamic<Glib::ustring>();
 
-					const auto value = GlibVariantCast<Glib::VariantBase>(
-						parameters.get_child(2));
+					const auto value = parameters.get_child(
+						2
+					).get_dynamic<Glib::VariantBase>();
 
 					callback(group, key, value);
 				} catch (...) {

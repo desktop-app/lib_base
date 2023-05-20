@@ -6,47 +6,43 @@
 //
 #include "base/platform/linux/base_linux_dbus_utilities.h"
 
-#include "base/platform/linux/base_linux_glibmm_helper.h"
-
 namespace base::Platform::DBus {
 
 bool NameHasOwner(
 		const Glib::RefPtr<Gio::DBus::Connection> &connection,
 		const Glib::ustring &name) {
-	auto reply = connection->call_sync(
+	return connection->call_sync(
 		std::string(kDBusObjectPath),
 		std::string(kDBusInterface),
 		"NameHasOwner",
-		MakeGlibVariant(std::tuple{name}),
-		std::string(kDBusService));
-
-	return GlibVariantCast<bool>(reply.get_child(0));
+		Glib::create_variant(std::tuple{name}),
+		std::string(kDBusService)
+	).get_child(0).get_dynamic<bool>();
 }
 
 std::vector<Glib::ustring> ListActivatableNames(
 		const Glib::RefPtr<Gio::DBus::Connection> &connection) {
-	auto reply = connection->call_sync(
+	return connection->call_sync(
 		std::string(kDBusObjectPath),
 		std::string(kDBusInterface),
 		"ListActivatableNames",
 		{},
-		std::string(kDBusService));
-
-	return GlibVariantCast<std::vector<Glib::ustring>>(
-		reply.get_child(0));
+		std::string(kDBusService)
+	).get_child(0).get_dynamic<std::vector<Glib::ustring>>();
 }
 
 StartReply StartServiceByName(
 		const Glib::RefPtr<Gio::DBus::Connection> &connection,
 		const Glib::ustring &name) {
-	auto reply = connection->call_sync(
-		std::string(kDBusObjectPath),
-		std::string(kDBusInterface),
-		"StartServiceByName",
-		MakeGlibVariant(std::tuple{ name, uint(0) }),
-		std::string(kDBusService));
-
-	return StartReply(GlibVariantCast<uint>(reply.get_child(0)));
+	return StartReply(
+		connection->call_sync(
+			std::string(kDBusObjectPath),
+			std::string(kDBusInterface),
+			"StartServiceByName",
+			Glib::create_variant(std::tuple{ name, uint(0) }),
+			std::string(kDBusService)
+		).get_child(0).get_dynamic<uint>()
+	);
 }
 
 void StartServiceByNameAsync(
@@ -57,11 +53,16 @@ void StartServiceByNameAsync(
 		std::string(kDBusObjectPath),
 		std::string(kDBusInterface),
 		"StartServiceByName",
-		MakeGlibVariant(std::tuple{ name, uint(0) }),
+		Glib::create_variant(std::tuple{ name, uint(0) }),
 		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
 			callback([=] {
-				auto reply = connection->call_finish(result);
-				return StartReply(GlibVariantCast<uint>(reply.get_child(0)));
+				return StartReply(
+					connection->call_finish(
+						result
+					).get_child(
+						0
+					).get_dynamic<uint>()
+				);
 			});
 		},
 		std::string(kDBusService));
@@ -81,16 +82,19 @@ uint RegisterServiceWatcher(
 			const Glib::ustring &object_path,
 			const Glib::ustring &interface_name,
 			const Glib::ustring &signal_name,
-			Glib::VariantContainerBase parameters) {
+			const Glib::VariantContainerBase &parameters) {
 			try {
-				const auto name = GlibVariantCast<Glib::ustring>(
-					parameters.get_child(0));
+				const auto name = parameters.get_child(
+					0
+				).get_dynamic<Glib::ustring>();
 
-				const auto oldOwner = GlibVariantCast<Glib::ustring>(
-					parameters.get_child(1));
+				const auto oldOwner =  parameters.get_child(
+					1
+				).get_dynamic<Glib::ustring>();
 
-				const auto newOwner = GlibVariantCast<Glib::ustring>(
-					parameters.get_child(2));
+				const auto newOwner =  parameters.get_child(
+					2
+				).get_dynamic<Glib::ustring>();
 
 				if (name != service) {
 					return;
