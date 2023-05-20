@@ -8,7 +8,6 @@
 
 #include "base/const_string.h"
 #include "base/debug_log.h"
-#include "base/platform/linux/base_linux_glibmm_helper.h"
 
 #include <QtGui/QGuiApplication>
 #include <QtWidgets/QWidget>
@@ -31,18 +30,16 @@ void SnapDefaultHandler(const QString &protocol) {
 		const auto connection = Gio::DBus::Connection::get_sync(
 			Gio::DBus::BusType::SESSION);
 
-		auto reply = connection->call_sync(
+		const auto currentHandler = connection->call_sync(
 			std::string(kSnapcraftSettingsObjectPath),
 			std::string(kSnapcraftSettingsInterface),
 			"GetSub",
-			MakeGlibVariant(std::tuple{
+			Glib::create_variant(std::tuple{
 				Glib::ustring("default-url-scheme-handler"),
 				Glib::ustring(protocol.toStdString()),
 			}),
-			std::string(kSnapcraftSettingsService));
-
-		const auto currentHandler = GlibVariantCast<Glib::ustring>(
-			reply.get_child(0));
+			std::string(kSnapcraftSettingsService)
+		).get_child(0).get_dynamic<Glib::ustring>();
 
 		const auto expectedHandler = qEnvironmentVariable("SNAP_NAME")
 			+ ".desktop";
@@ -60,7 +57,7 @@ void SnapDefaultHandler(const QString &protocol) {
 			std::string(kSnapcraftSettingsObjectPath),
 			std::string(kSnapcraftSettingsInterface),
 			"SetSub",
-			MakeGlibVariant(std::tuple{
+			Glib::create_variant(std::tuple{
 				Glib::ustring("default-url-scheme-handler"),
 				Glib::ustring(protocol.toStdString()),
 				Glib::ustring(expectedHandler.toStdString()),

@@ -7,7 +7,6 @@
 #include "base/platform/linux/base_last_input_linux.h"
 
 #include "base/platform/base_platform_info.h"
-#include "base/platform/linux/base_linux_glibmm_helper.h"
 #include "base/debug_log.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -78,14 +77,14 @@ std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
 			return std::nullopt;
 		}
 
-		auto reply = connection->call_sync(
+		const auto value = connection->call_sync(
 			"/org/freedesktop/ScreenSaver",
 			"org.freedesktop.ScreenSaver",
 			"GetSessionIdleTime",
 			{},
-			"org.freedesktop.ScreenSaver");
+			"org.freedesktop.ScreenSaver"
+		).get_child(0).get_dynamic<uint>();
 
-		const auto value = GlibVariantCast<uint>(reply.get_child(0));
 		return (crl::now() - static_cast<crl::time>(value));
 	} catch (const Glib::Error &e) {
 		static const auto NotSupportedErrors = {
@@ -141,14 +140,14 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 			return std::nullopt;
 		}
 
-		auto reply = connection->call_sync(
+		const auto value = connection->call_sync(
 			"/org/gnome/Mutter/IdleMonitor/Core",
 			"org.gnome.Mutter.IdleMonitor",
 			"GetIdletime",
 			{},
-			"org.gnome.Mutter.IdleMonitor");
+			"org.gnome.Mutter.IdleMonitor"
+		).get_child(0).get_dynamic<uint64>();
 
-		const auto value = GlibVariantCast<uint64>(reply.get_child(0));
 		return (crl::now() - static_cast<crl::time>(value));
 	} catch (const Glib::Error &e) {
 		static const auto NotSupportedErrors = {
