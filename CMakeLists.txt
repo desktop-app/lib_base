@@ -41,6 +41,7 @@ PRIVATE
     base/platform/linux/base_linux_wayland_integration.cpp
     base/platform/linux/base_linux_wayland_integration_dummy.cpp
     base/platform/linux/base_linux_wayland_integration.h
+    base/platform/linux/base_linux_wayland_utilities.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_linux_xdp_utilities.cpp
@@ -230,6 +231,7 @@ endif()
 if (DESKTOP_APP_DISABLE_WAYLAND_INTEGRATION)
     remove_target_sources(lib_base ${src_loc}
         base/platform/linux/base_linux_wayland_integration.cpp
+        base/platform/linux/base_linux_wayland_utilities.h
     )
 else()
     remove_target_sources(lib_base ${src_loc}
