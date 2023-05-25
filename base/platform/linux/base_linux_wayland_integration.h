@@ -14,6 +14,9 @@ namespace Platform {
 
 class WaylandIntegration {
 public:
+	WaylandIntegration();
+	~WaylandIntegration();
+
 	[[nodiscard]] static WaylandIntegration *Instance();
 
 	[[nodiscard]] QString nativeHandle(QWindow *window);
@@ -21,9 +24,6 @@ public:
 	void preventDisplaySleep(bool prevent, QWindow *window);
 
 private:
-	WaylandIntegration();
-	~WaylandIntegration();
-
 	struct Private;
 	const std::unique_ptr<Private> _private;
 };

@@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
+#include <qpa/qplatformnativeinterface.h>
 #include <qpa/qplatformwindow_p.h>
 #include <wayland-client.h>
 
@@ -156,24 +157,6 @@ WaylandIntegration::WaylandIntegration()
 		&Private::RegistryListener,
 		_private.get());
 
-	base::qt_signal_producer(
-		qApp,
-		&QObject::destroyed
-	) | rpl::start_with_next([=] {
-		// too late for standard destructors, just free
-		for (auto it = _private->idleInhibitors.begin()
-			; it != _private->idleInhibitors.cend()
-			; ++it) {
-			free(it->second.release());
-			_private->idleInhibitors.erase(it);
-		}
-		free(_private->idleInhibitManager.object());
-		_private->idleInhibitManager.init(nullptr);
-		free(_private->xdgExporter.object());
-		_private->xdgExporter.init(nullptr);
-		free(_private->registry.release());
-	}, _private->lifetime);
-
 	wl_display_roundtrip(display);
 }
 
@@ -181,8 +164,15 @@ WaylandIntegration::~WaylandIntegration() = default;
 
 WaylandIntegration *WaylandIntegration::Instance() {
 	if (!::Platform::IsWayland()) return nullptr;
-	static WaylandIntegration instance;
-	return &instance;
+	static std::optional<WaylandIntegration> instance(std::in_place);
+	base::qt_signal_producer(
+		QGuiApplication::platformNativeInterface(),
+		&QObject::destroyed
+	) | rpl::start_with_next([&] {
+		instance = std::nullopt;
+	}, instance->_private->lifetime);
+	if (!instance) return nullptr;
+	return &*instance;
 }
 
 QString WaylandIntegration::nativeHandle(QWindow *window) {
