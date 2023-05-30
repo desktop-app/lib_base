@@ -51,18 +51,27 @@ private:
 	QString _handle;
 };
 
+class XdgExporter : public Global<QtWayland::zxdg_exporter_v2> {
+public:
+	using Global::Global;
+
+	base::flat_map<wl_surface*, XdgExported> exporteds;
+};
+
+class IdleInhibitManager
+	: public Global<QtWayland::zwp_idle_inhibit_manager_v1> {
+public:
+	using Global::Global;
+
+	using Inhibitor = AutoDestroyer<QtWayland::zwp_idle_inhibitor_v1>;
+	base::flat_map<QWindow*, Inhibitor> inhibitors;
+};
+
 } // namespace
 
 struct WaylandIntegration::Private : public AutoDestroyer<QtWayland::wl_registry> {
-	AutoDestroyer<QtWayland::zxdg_exporter_v2> xdgExporter;
-	uint32_t xdgExporterName = 0;
-	base::flat_map<wl_surface*, XdgExported> xdgExporteds;
-	AutoDestroyer<QtWayland::zwp_idle_inhibit_manager_v1> idleInhibitManager;
-	uint32_t idleInhibitManagerName = 0;
-	base::flat_map<
-		QWindow*,
-		AutoDestroyer<QtWayland::zwp_idle_inhibitor_v1>
-	> idleInhibitors;
+	std::optional<XdgExporter> xdgExporter;
+	std::optional<IdleInhibitManager> idleInhibitManager;
 	rpl::lifetime lifetime;
 
 protected:
@@ -71,21 +80,17 @@ protected:
 			const QString &interface,
 			uint32_t version) override {
 		if (interface == qstr("zxdg_exporter_v2")) {
-			xdgExporter.init(object(), name, version);
-			xdgExporterName = name;
+			xdgExporter.emplace(object(), name, version);
 		} else if (interface == qstr("zwp_idle_inhibit_manager_v1")) {
-			idleInhibitManager.init(object(), name, version);
-			idleInhibitManagerName = name;
+			idleInhibitManager.emplace(object(), name, version);
 		}
 	}
 
 	void registry_global_remove(uint32_t name) override {
-		if (name == xdgExporterName) {
-			xdgExporter = {};
-			xdgExporterName = 0;
-		} else if (name == idleInhibitManagerName) {
-			idleInhibitManager = {};
-			idleInhibitManagerName = 0;
+		if (xdgExporter && name == xdgExporter->id()) {
+			xdgExporter = std::nullopt;
+		} else if (idleInhibitManager && name == idleInhibitManager->id()) {
+			idleInhibitManager = std::nullopt;
 		}
 	}
 };
@@ -122,7 +127,7 @@ WaylandIntegration *WaylandIntegration::Instance() {
 }
 
 QString WaylandIntegration::nativeHandle(QWindow *window) {
-	if (!_private->xdgExporter.isInitialized()) {
+	if (!_private->xdgExporter) {
 		return {};
 	}
 
@@ -139,24 +144,24 @@ QString WaylandIntegration::nativeHandle(QWindow *window) {
 		return {};
 	}
 
-	const auto it = _private->xdgExporteds.find(surface);
-	if (it != _private->xdgExporteds.cend()) {
+	const auto it = _private->xdgExporter->exporteds.find(surface);
+	if (it != _private->xdgExporter->exporteds.cend()) {
 		return it->second.handle();
 	}
 
-	const auto result = _private->xdgExporteds.emplace(
+	const auto result = _private->xdgExporter->exporteds.emplace(
 		surface,
 		XdgExported(
 			display,
-			_private->xdgExporter.export_toplevel(surface)));
+			_private->xdgExporter->export_toplevel(surface)));
 
 	base::qt_signal_producer(
 		nativeWindow,
 		&QWaylandWindow::surfaceDestroyed
 	) | rpl::start_with_next([=] {
-		auto it = _private->xdgExporteds.find(surface);
-		if (it != _private->xdgExporteds.cend()) {
-			_private->xdgExporteds.erase(it);
+		auto it = _private->xdgExporter->exporteds.find(surface);
+		if (it != _private->xdgExporter->exporteds.cend()) {
+			_private->xdgExporter->exporteds.erase(it);
 		}
 	}, _private->lifetime);
 
@@ -192,10 +197,14 @@ QString WaylandIntegration::activationToken() {
 }
 
 void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
+	if (!_private->idleInhibitManager) {
+		return;
+	}
+
 	const auto deleter = [=] {
-		auto it = _private->idleInhibitors.find(window);
-		if (it != _private->idleInhibitors.cend()) {
-			_private->idleInhibitors.erase(it);
+		auto it = _private->idleInhibitManager->inhibitors.find(window);
+		if (it != _private->idleInhibitManager->inhibitors.cend()) {
+			_private->idleInhibitManager->inhibitors.erase(it);
 		}
 	};
 
@@ -204,11 +213,7 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
-	if (_private->idleInhibitors.contains(window)) {
-		return;
-	}
-
-	if (!_private->idleInhibitManager.isInitialized()) {
+	if (_private->idleInhibitManager->inhibitors.contains(window)) {
 		return;
 	}
 
@@ -222,14 +227,14 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
-	const auto inhibitor = _private->idleInhibitManager.create_inhibitor(
+	const auto inhibitor = _private->idleInhibitManager->create_inhibitor(
 		surface);
 
 	if (!inhibitor) {
 		return;
 	}
 
-	_private->idleInhibitors.emplace(window, inhibitor);
+	_private->idleInhibitManager->inhibitors.emplace(window, inhibitor);
 
 	base::qt_signal_producer(
 		native,
