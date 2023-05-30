@@ -31,9 +31,7 @@ namespace {
 
 class XdgExported : public AutoDestroyer<QtWayland::zxdg_exported_v2> {
 public:
-	XdgExported(
-		struct ::wl_display *display,
-		struct ::zxdg_exported_v2 *object)
+	XdgExported(::wl_display *display, ::zxdg_exported_v2 *object)
 	: AutoDestroyer(object) {
 		wl_display_roundtrip(display);
 	}
