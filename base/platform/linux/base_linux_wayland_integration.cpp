@@ -64,7 +64,7 @@ public:
 	using Global::Global;
 
 	using Inhibitor = AutoDestroyer<QtWayland::zwp_idle_inhibitor_v1>;
-	base::flat_map<QWindow*, Inhibitor> inhibitors;
+	base::flat_map<wl_surface*, Inhibitor> inhibitors;
 };
 
 } // namespace
@@ -201,22 +201,6 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
-	const auto deleter = [=] {
-		auto it = _private->idleInhibitManager->inhibitors.find(window);
-		if (it != _private->idleInhibitManager->inhibitors.cend()) {
-			_private->idleInhibitManager->inhibitors.erase(it);
-		}
-	};
-
-	if (!prevent) {
-		deleter();
-		return;
-	}
-
-	if (_private->idleInhibitManager->inhibitors.contains(window)) {
-		return;
-	}
-
 	const auto native = window->nativeInterface<QWaylandWindow>();
 	if (!native) {
 		return;
@@ -227,6 +211,22 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
+	const auto deleter = [=] {
+		auto it = _private->idleInhibitManager->inhibitors.find(surface);
+		if (it != _private->idleInhibitManager->inhibitors.cend()) {
+			_private->idleInhibitManager->inhibitors.erase(it);
+		}
+	};
+
+	if (!prevent) {
+		deleter();
+		return;
+	}
+
+	if (_private->idleInhibitManager->inhibitors.contains(surface)) {
+		return;
+	}
+
 	const auto inhibitor = _private->idleInhibitManager->create_inhibitor(
 		surface);
 
@@ -234,7 +234,7 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
-	_private->idleInhibitManager->inhibitors.emplace(window, inhibitor);
+	_private->idleInhibitManager->inhibitors.emplace(surface, inhibitor);
 
 	base::qt_signal_producer(
 		native,
