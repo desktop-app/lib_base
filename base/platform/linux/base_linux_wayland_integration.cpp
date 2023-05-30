@@ -11,6 +11,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/platform/base_platform_info.h"
 #include "base/qt_signal_producer.h"
 #include "base/flat_map.h"
+
+#include "qwayland-wayland.h"
 #include "qwayland-xdg-foreign-unstable-v2.h"
 #include "qwayland-idle-inhibit-unstable-v1.h"
 
@@ -18,7 +20,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QWindow>
 #include <qpa/qplatformnativeinterface.h>
 #include <qpa/qplatformwindow_p.h>
-#include <wayland-client.h>
 
 using namespace QNativeInterface;
 using namespace QNativeInterface::Private;
@@ -52,8 +53,7 @@ private:
 
 } // namespace
 
-struct WaylandIntegration::Private {
-	std::unique_ptr<wl_registry, RegistryDeleter> registry;
+struct WaylandIntegration::Private : public AutoDestroyer<QtWayland::wl_registry> {
 	AutoDestroyer<QtWayland::zxdg_exporter_v2> xdgExporter;
 	uint32_t xdgExporterName = 0;
 	base::flat_map<wl_surface*, XdgExported> xdgExporteds;
@@ -65,36 +65,29 @@ struct WaylandIntegration::Private {
 	> idleInhibitors;
 	rpl::lifetime lifetime;
 
-	static const wl_registry_listener RegistryListener;
-};
-
-const wl_registry_listener WaylandIntegration::Private::RegistryListener = {
-	decltype(wl_registry_listener::global)(+[](
-			Private *data,
-			wl_registry *registry,
+protected:
+	void registry_global(
 			uint32_t name,
-			const char *interface,
-			uint32_t version) {
+			const QString &interface,
+			uint32_t version) override {
 		if (interface == qstr("zxdg_exporter_v2")) {
-			data->xdgExporter.init(registry, name, version);
-			data->xdgExporterName = name;
+			xdgExporter.init(object(), name, version);
+			xdgExporterName = name;
 		} else if (interface == qstr("zwp_idle_inhibit_manager_v1")) {
-			data->idleInhibitManager.init(registry, name, version);
-			data->idleInhibitManagerName = name;
+			idleInhibitManager.init(object(), name, version);
+			idleInhibitManagerName = name;
 		}
-	}),
-	decltype(wl_registry_listener::global_remove)(+[](
-			Private *data,
-			wl_registry *registry,
-			uint32_t name) {
-		if (name == data->xdgExporterName) {
-			data->xdgExporter = {};
-			data->xdgExporterName = 0;
-		} else if (name == data->idleInhibitManagerName) {
-			data->idleInhibitManager = {};
-			data->idleInhibitManagerName = 0;
+	}
+
+	void registry_global_remove(uint32_t name) override {
+		if (name == xdgExporterName) {
+			xdgExporter = {};
+			xdgExporterName = 0;
+		} else if (name == idleInhibitManagerName) {
+			idleInhibitManager = {};
+			idleInhibitManagerName = 0;
 		}
-	}),
+	}
 };
 
 WaylandIntegration::WaylandIntegration()
@@ -109,12 +102,7 @@ WaylandIntegration::WaylandIntegration()
 		return;
 	}
 
-	_private->registry.reset(wl_display_get_registry(display));
-	wl_registry_add_listener(
-		_private->registry.get(),
-		&Private::RegistryListener,
-		_private.get());
-
+	_private->init(wl_display_get_registry(display));
 	wl_display_roundtrip(display);
 }
 

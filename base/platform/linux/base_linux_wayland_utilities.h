@@ -6,15 +6,9 @@
 //
 #pragma once
 
-#include <wayland-client.h>
+#include <wayland-client-core.h>
 
 namespace base::Platform::Wayland {
-
-struct RegistryDeleter {
-	void operator()(wl_registry *value) {
-		wl_registry_destroy(value);
-	}
-};
 
 template <typename T>
 class AutoDestroyer : public T {

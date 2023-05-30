@@ -283,6 +283,7 @@ elseif (LINUX)
     if (NOT DESKTOP_APP_DISABLE_WAYLAND_INTEGRATION)
         qt_generate_wayland_protocol_client_sources(lib_base
         FILES
+            ${third_party_loc}/wayland/protocol/wayland.xml
             ${third_party_loc}/wayland-protocols/staging/xdg-activation/xdg-activation-v1.xml
             ${third_party_loc}/wayland-protocols/unstable/xdg-foreign/xdg-foreign-unstable-v2.xml
             ${third_party_loc}/wayland-protocols/unstable/idle-inhibit/idle-inhibit-unstable-v1.xml
