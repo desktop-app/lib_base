@@ -25,18 +25,13 @@ public:
 	}
 
 	AutoDestroyer &operator=(AutoDestroyer &&other) {
-		destroy();
+		this->~AutoDestroyer();
 		static_cast<T&>(*this) = other;
 		other._moved = true;
 		return *this;
 	}
 
 	~AutoDestroyer() {
-		destroy();
-	}
-
-private:
-	void destroy() {
 		if (!this->isInitialized() || _moved) {
 			return;
 		}
@@ -46,12 +41,13 @@ private:
 		};
 
 		if constexpr (HasDestroy) {
-			static_cast<T*>(this)->destroy();
+			this->destroy();
 		} else {
 			wl_proxy_destroy(reinterpret_cast<wl_proxy*>(this->object()));
 		}
 	}
 
+private:
 	bool _moved = false;
 };
 
