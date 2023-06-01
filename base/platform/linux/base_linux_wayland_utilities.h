@@ -28,6 +28,7 @@ public:
 		destroy();
 		static_cast<T&>(*this) = other;
 		other._moved = true;
+		_moved = false;
 		return *this;
 	}
 
