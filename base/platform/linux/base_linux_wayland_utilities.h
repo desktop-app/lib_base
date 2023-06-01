@@ -20,15 +20,17 @@ public:
 	AutoDestroyer(const AutoDestroyer &other) = delete;
 	AutoDestroyer &operator=(const AutoDestroyer &other) = delete;
 
-	AutoDestroyer(AutoDestroyer &&other) {
-		*this = std::move(other);
+	AutoDestroyer(AutoDestroyer &&other) : T(static_cast<T&&>(other)) {
+		other._moved = true;
 	}
 
 	AutoDestroyer &operator=(AutoDestroyer &&other) {
-		destroy();
-		static_cast<T&>(*this) = other;
-		other._moved = true;
-		_moved = false;
+		if (this != &other) {
+			destroy();
+			static_cast<T&>(*this) = static_cast<T&&>(other);
+			other._moved = true;
+			_moved = false;
+		}
 		return *this;
 	}
 
