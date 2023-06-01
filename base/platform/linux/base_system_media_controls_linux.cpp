@@ -183,9 +183,8 @@ SystemMediaControls::Private::Private()
 }) {
 	set_can_quit(true);
 	set_can_raise(!::Platform::IsWayland());
-	set_desktop_entry(
-		QGuiApplication::desktopFileName().chopped(8).toStdString());
-	set_identity(QGuiApplication::desktopFileName().chopped(8).toStdString());
+	set_desktop_entry(QGuiApplication::desktopFileName().toStdString());
+	set_identity(QGuiApplication::desktopFileName().toStdString());
 	player().set_can_control(true);
 	player().set_can_seek(true);
 	player().set_maximum_rate(1.0);
