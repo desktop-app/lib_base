@@ -125,9 +125,10 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		"--",
 	}).toStdString();
 
-	const auto desktopId = QGuiApplication::desktopFileName().toStdString();
-	if (!desktopId.empty()) {
-		if (const auto appInfo = Gio::DesktopAppInfo::create(desktopId)) {
+	const auto appId = QGuiApplication::desktopFileName().toStdString();
+	if (!appId.empty()) {
+		if (const auto appInfo = Gio::DesktopAppInfo::create(
+			appId + ".desktop")) {
 			if (appInfo->get_commandline() == commandlineForCreator + " %u") {
 				appInfo->set_as_default_for_type(handlerType);
 				return;
