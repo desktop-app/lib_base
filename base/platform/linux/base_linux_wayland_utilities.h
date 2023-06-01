@@ -37,7 +37,7 @@ public:
 
 private:
 	void destroy() {
-		if (!this->isInitialized() || _moved) {
+		if (!T::isInitialized() || _moved) {
 			return;
 		}
 
@@ -46,9 +46,9 @@ private:
 		};
 
 		if constexpr (HasDestroy) {
-			static_cast<T*>(this)->destroy();
+			T::destroy();
 		} else {
-			wl_proxy_destroy(reinterpret_cast<wl_proxy*>(this->object()));
+			wl_proxy_destroy(reinterpret_cast<wl_proxy*>(T::object()));
 		}
 	}
 
