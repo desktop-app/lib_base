@@ -13,6 +13,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/flat_map.h"
 
 #include "qwayland-wayland.h"
+#include "qwayland-xdg-activation-v1.h"
 #include "qwayland-xdg-foreign-unstable-v2.h"
 #include "qwayland-idle-inhibit-unstable-v1.h"
 
@@ -56,6 +57,35 @@ public:
 	base::flat_map<wl_surface*, XdgExported> exporteds;
 };
 
+class XdgActivationToken
+	: public AutoDestroyer<QtWayland::xdg_activation_token_v1> {
+public:
+	XdgActivationToken(
+		::wl_display *display,
+		::xdg_activation_token_v1 *object,
+		::wl_surface *surface,
+		::wl_seat *seat,
+		uint32_t serial)
+	: AutoDestroyer(object) {
+		set_surface(surface);
+		set_serial(serial, seat);
+		commit();
+		wl_display_roundtrip(display);
+	}
+
+	QString token() {
+		return _token;
+	}
+
+protected:
+	void xdg_activation_token_v1_done(const QString &token) override {
+		_token = token;
+	}
+
+private:
+	QString _token;
+};
+
 class IdleInhibitManager
 	: public Global<QtWayland::zwp_idle_inhibit_manager_v1> {
 public:
@@ -69,6 +99,7 @@ public:
 
 struct WaylandIntegration::Private : public AutoDestroyer<QtWayland::wl_registry> {
 	std::optional<XdgExporter> xdgExporter;
+	std::optional<Global<QtWayland::xdg_activation_v1>> xdgActivation;
 	std::optional<IdleInhibitManager> idleInhibitManager;
 	rpl::lifetime lifetime;
 
@@ -79,6 +110,8 @@ protected:
 			uint32_t version) override {
 		if (interface == qstr("zxdg_exporter_v2")) {
 			xdgExporter.emplace(object(), name, version);
+		} else if (interface == qstr("xdg_activation_v1")) {
+			xdgActivation.emplace(object(), name, version);
 		} else if (interface == qstr("zwp_idle_inhibit_manager_v1")) {
 			idleInhibitManager.emplace(object(), name, version);
 		}
@@ -87,6 +120,8 @@ protected:
 	void registry_global_remove(uint32_t name) override {
 		if (xdgExporter && name == xdgExporter->id()) {
 			xdgExporter = std::nullopt;
+		} else if (xdgActivation && name == xdgActivation->id()) {
+			xdgActivation = std::nullopt;
 		} else if (idleInhibitManager && name == idleInhibitManager->id()) {
 			idleInhibitManager = std::nullopt;
 		}
@@ -167,6 +202,10 @@ QString WaylandIntegration::nativeHandle(QWindow *window) {
 }
 
 QString WaylandIntegration::activationToken() {
+	if (!_private->xdgActivation) {
+		return {};
+	}
+
 	const auto window = QGuiApplication::focusWindow();
 	if (!window) {
 		return {};
@@ -178,20 +217,20 @@ QString WaylandIntegration::activationToken() {
 		return {};
 	}
 
-	QEventLoop loop;
-	QString token;
+	const auto display = native->display();
+	const auto surface = nativeWindow->surface();
+	const auto seat = native->lastInputSeat();
+	if (!display || !surface || !seat) {
+		return {};
+	}
 
-	base::qt_signal_producer(
-		nativeWindow,
-		&QWaylandWindow::xdgActivationTokenCreated
-	) | rpl::start_with_next([&](const QString &tokenArg) {
-		token = tokenArg;
-		loop.quit();
-	}, _private->lifetime);
-
-	nativeWindow->requestXdgActivationToken(native->lastInputSerial());
-	loop.exec();
-	return token;
+	return XdgActivationToken(
+		display,
+		_private->xdgActivation->get_activation_token(),
+		surface,
+		seat,
+		native->lastInputSerial()
+	).token();
 }
 
 void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
