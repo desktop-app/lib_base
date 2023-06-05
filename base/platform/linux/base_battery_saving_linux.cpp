@@ -37,7 +37,7 @@ BatterySaving::BatterySaving(Fn<void()> changedCallback)
 		return;
 	}
 
-	// glib 2.70+, we keep glib 2.40+ compatibility
+	// glib 2.70+, we keep glib 2.56+ compatibility
 	static const auto dup_default = [] {
 		// reset dlerror after dlsym call
 		const auto guard = gsl::finally([] { dlerror(); });
