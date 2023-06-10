@@ -195,7 +195,7 @@ SystemMediaControls::Private::Private()
 	player().set_loop_status("None");
 	player().set_rate(1.0);
 	const auto executeCommand = [=](
-			GObject::Object,
+			gi::repository::GObject::Object,
 			Gio::DBusMethodInvocation invocation) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_commandRequests.fire_copy(
@@ -232,23 +232,23 @@ SystemMediaControls::Private::Private()
 		return true;
 	});
 	player().property_loop_status().signal_notify().connect([=](
-			GObject::Object,
-			GObject::ParamSpec) {
+			gi::repository::GObject::Object,
+			gi::repository::GObject::ParamSpec) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_commandRequests.fire_copy(
 				LoopStatusToCommand(player().get_loop_status()));
 		});
 	});
 	player().property_shuffle().signal_notify().connect([=](
-			GObject::Object,
-			GObject::ParamSpec) {
+			gi::repository::GObject::Object,
+			gi::repository::GObject::ParamSpec) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_commandRequests.fire_copy(Command::Shuffle);
 		});
 	});
 	player().property_volume().signal_notify().connect([=](
-			GObject::Object,
-			GObject::ParamSpec) {
+			gi::repository::GObject::Object,
+			gi::repository::GObject::ParamSpec) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_volumeChangeRequests.fire_copy(player().get_volume());
 		});
