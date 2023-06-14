@@ -164,13 +164,13 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 	// Fallback to the first command line argument.
 	if (argc) {
 		const auto argv0 = QFile::decodeName(argv[0]);
-		if (!argv0.isEmpty() && !QFileInfo::exists(argv0)) {
+		if (!argv0.isEmpty() && !argv0.contains(QLatin1Char('/'))) {
 			const auto argv0InPath = QStandardPaths::findExecutable(argv0);
 			if (!argv0InPath.isEmpty()) {
 				return argv0InPath;
 			}
 		}
-		return argv0;
+		return QFileInfo(argv0).absoluteFilePath();
 	}
 
 	return QString();
