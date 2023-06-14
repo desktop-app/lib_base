@@ -40,13 +40,11 @@ Integration::Integration(int argc, char *argv[]) {
 		return;
 	}
 	auto info = QFileInfo(path);
-	if (info.isSymLink()) {
-		info = QFileInfo(info.symLinkTarget());
-	}
 	if (!info.exists()) {
 		return;
 	}
-	const auto dir = info.absoluteDir().absolutePath();
+	info = QFileInfo(info.canonicalFilePath());
+	const auto dir = info.path();
 	_executableDir = dir.endsWith('/') ? dir : (dir + '/');
 	_executableName = info.fileName();
 }
