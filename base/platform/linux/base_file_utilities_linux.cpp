@@ -141,21 +141,6 @@ bool ShowInFolder(const QString &filepath) {
 }
 
 QString CurrentExecutablePath(int argc, char *argv[]) {
-	if (qEnvironmentVariableIsSet("APPIMAGE")) {
-		const auto appimagePath = qEnvironmentVariable("APPIMAGE");
-		const auto appimagePathList = appimagePath.split('/');
-
-		if (qEnvironmentVariableIsSet("ARGV0")
-			&& appimagePathList.size() >= 5
-			&& appimagePathList[1] == qstr("run")
-			&& appimagePathList[2] == qstr("user")
-			&& appimagePathList[4] == qstr("appimagelauncherfs")) {
-			return qEnvironmentVariable("ARGV0");
-		}
-
-		return appimagePath;
-	}
-
 	const auto exeLink = QFileInfo(u"/proc/%1/exe"_q.arg(getpid()));
 	if (exeLink.exists() && exeLink.isSymLink()) {
 		return exeLink.canonicalFilePath();
