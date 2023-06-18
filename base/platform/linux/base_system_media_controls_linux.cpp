@@ -16,11 +16,11 @@
 #include <QtGui/QImage>
 #include <ksandbox.h>
 
-using namespace gi::repository;
-
 namespace base::Platform {
-
 namespace {
+
+using namespace gi::repository;
+namespace GObject = gi::repository::GObject;
 
 // QString to GLib::Variant.
 inline auto Q2V(const QString &s) {
