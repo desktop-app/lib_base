@@ -8,6 +8,8 @@
 
 #include "base/integration.h"
 
+#include <rpl/rpl.h>
+
 #include <QtCore/QCoreApplication>
 #include <QtCore/QPointer>
 
