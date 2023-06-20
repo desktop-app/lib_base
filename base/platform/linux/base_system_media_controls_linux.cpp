@@ -201,6 +201,7 @@ SystemMediaControls::Private::Private()
 			_commandRequests.fire_copy(
 				EventToCommand(invocation.get_method_name()));
 		});
+		invocation.return_value();
 		return true;
 	};
 	signal_handle_quit().connect(executeCommand);
@@ -213,22 +214,24 @@ SystemMediaControls::Private::Private()
 	player().signal_handle_stop().connect(executeCommand);
 	player().signal_handle_seek().connect([=](
 			Mpris::MediaPlayer2Player,
-			Gio::DBusMethodInvocation,
+			Gio::DBusMethodInvocation invocation,
 			int64 offset) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_seekRequests.fire_copy(
 				player().property_position().get() + offset);
 		});
+		player().complete_seek(invocation);
 		return true;
 	});
 	player().signal_handle_set_position().connect([=](
 			Mpris::MediaPlayer2Player,
-			Gio::DBusMethodInvocation,
+			Gio::DBusMethodInvocation invocation,
 			const std::string &trackId,
 			int64 position) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_seekRequests.fire_copy(position);
 		});
+		player().complete_set_position(invocation);
 		return true;
 	});
 	player().property_loop_status().signal_notify().connect([=](
