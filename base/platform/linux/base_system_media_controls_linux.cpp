@@ -163,7 +163,6 @@ private:
 
 	struct {
 		Gio::DBusConnection connection;
-		Mpris::ObjectSkeleton object;
 		Gio::DBusObjectManagerServer objectManager;
 		uint ownId = 0;
 	} _dbus;
@@ -262,11 +261,11 @@ void SystemMediaControls::Private::init() {
 	if (!_dbus.connection || _dbus.ownId) {
 		return;
 	}
-	_dbus.object = Mpris::ObjectSkeleton::new_("/org/mpris/MediaPlayer2");
-	_dbus.object.set_media_player2(*this);
-	_dbus.object.set_media_player2_player(player());
+	auto object = Mpris::ObjectSkeleton::new_("/org/mpris/MediaPlayer2");
+	object.set_media_player2(*this);
+	object.set_media_player2_player(player());
 	_dbus.objectManager = Gio::DBusObjectManagerServer::new_("/org/mpris");
-	_dbus.objectManager.export_(_dbus.object);
+	_dbus.objectManager.export_(object);
 	_dbus.objectManager.set_connection(_dbus.connection);
 	_dbus.ownId = Gio::bus_own_name_on_connection(
 		_dbus.connection,
@@ -284,7 +283,6 @@ void SystemMediaControls::Private::deinit() {
 		_dbus.ownId = 0;
 	}
 	_dbus.objectManager = {};
-	_dbus.object = {};
 }
 
 SystemMediaControls::SystemMediaControls()
