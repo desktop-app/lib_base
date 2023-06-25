@@ -8,11 +8,13 @@
 
 namespace base::Platform {
 
-[[nodiscard]] std::optional<bool> NetworkAvailable();
-[[nodiscard]] rpl::producer<> NetworkAvailableChanged();
-void NotifyNetworkAvailableChanged();
-[[nodiscard]] inline bool NetworkAvailableSupported() {
-	return NetworkAvailable().has_value();
-}
+class NetworkReachability {
+public:
+	virtual ~NetworkReachability() = default;
+
+	static std::unique_ptr<NetworkReachability> Create();
+
+	[[nodiscard]] virtual rpl::producer<bool> availableValue() const = 0;
+};
 
 } // namespace base::Platform

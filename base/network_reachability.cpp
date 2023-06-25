@@ -34,20 +34,23 @@ std::weak_ptr<NetworkReachability> GlobalNetworkReachability;
 #endif // __GNUC__ || __clang__ || _MSC_VER
 
 struct NetworkReachability::Private {
+	Private() : platformHelper(Platform::NetworkReachability::Create()) {
+	}
+
 	rpl::variable<bool> available = true;
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	QNetworkConfigurationManager configurationManager;
 #endif // Qt < 6.0.0
+	std::unique_ptr<Platform::NetworkReachability> platformHelper;
 	rpl::lifetime lifetime;
 };
 
 NetworkReachability::NetworkReachability()
 : _private(std::make_unique<Private>()) {
-	if (Platform::NetworkAvailableSupported()) {
-		_private->available = *Platform::NetworkAvailable();
-		Platform::NetworkAvailableChanged(
-		) | rpl::start_with_next([=] {
-			_private->available = *Platform::NetworkAvailable();
+	if (_private->platformHelper) {
+		_private->platformHelper->availableValue(
+		) | rpl::start_with_next([=](bool available) {
+			_private->available = available;
 		}, _private->lifetime);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
 	} else if (QNetworkInformation::load(
