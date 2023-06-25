@@ -18,8 +18,6 @@ using namespace Microsoft::WRL;
 namespace base::Platform {
 namespace {
 
-std::optional<bool> Available;
-
 QString ErrorStringFromHResult(HRESULT hr) {
 	_com_error error(hr);
 	return QString::fromWCharArray(error.ErrorMessage());
@@ -40,7 +38,7 @@ public:
 	NetworkListManagerEvents() = default;
 	virtual ~NetworkListManagerEvents() = default;
 
-	void start();
+	bool start();
 	void finish();
 
 	HRESULT STDMETHODCALLTYPE QueryInterface(
@@ -59,6 +57,8 @@ public:
 	HRESULT STDMETHODCALLTYPE ConnectivityChanged(
 		NLM_CONNECTIVITY newConnectivity) override;
 
+	rpl::variable<bool> available;
+
 private:
 	ComPtr<INetworkListManager> _networkListManager = nullptr;
 	ComPtr<IConnectionPoint> _connectionPoint = nullptr;
@@ -68,7 +68,7 @@ private:
 
 };
 
-void NetworkListManagerEvents::start() {
+bool NetworkListManagerEvents::start() {
 	auto hr = CoCreateInstance(
 		CLSID_NetworkListManager,
 		nullptr,
@@ -80,7 +80,7 @@ void NetworkListManagerEvents::start() {
 		LOG(("NetworkListManagerEvents: "
 				"Could not get a NetworkListManager instance: %1").arg(
 			ErrorStringFromHResult(hr)));
-		return;
+		return false;
 	}
 
 	ComPtr<IConnectionPointContainer> connectionPointContainer;
@@ -94,7 +94,7 @@ void NetworkListManagerEvents::start() {
 		LOG(("NetworkListManagerEvents: Failed to get connection point for "
 				"network list manager events: %1").arg(
 			ErrorStringFromHResult(hr)));
-		return;
+		return false;
 	}
 
 	hr = _connectionPoint->Advise(this, &_cookie);
@@ -102,7 +102,7 @@ void NetworkListManagerEvents::start() {
 		LOG(("NetworkListManagerEvents: "
 			"Failed to subscribe to network connectivity events: %1").arg(
 			ErrorStringFromHResult(hr)));
-		return;
+		return false;
 	}
 
 	// Update connectivity since it might have
@@ -112,9 +112,10 @@ void NetworkListManagerEvents::start() {
 	if (FAILED(hr)) {
 		LOG(("NetworkListManagerEvents: Could not get connectivity: %1").arg(
 			ErrorStringFromHResult(hr)));
-		return;
+		return false;
 	}
-	Available = connectivity != NLM_CONNECTIVITY_DISCONNECTED;
+	available = connectivity != NLM_CONNECTIVITY_DISCONNECTED;
+	return true;
 }
 
 void NetworkListManagerEvents::finish() {
@@ -151,28 +152,26 @@ HRESULT STDMETHODCALLTYPE NetworkListManagerEvents::ConnectivityChanged(
 		NLM_CONNECTIVITY newConnectivity) {
 	// This function is run on a different thread than 'monitor'
 	// is created on, so we need to run it on that thread
-	Available = newConnectivity != NLM_CONNECTIVITY_DISCONNECTED;
-	NotifyNetworkAvailableChanged();
+	available = newConnectivity != NLM_CONNECTIVITY_DISCONNECTED;
 	return S_OK;
 }
 
-class NetworkListManagerEventsInitializer {
+class NetworkReachabilityImpl : public NetworkReachability {
 public:
-	NetworkListManagerEventsInitializer() {
+	NetworkReachabilityImpl() {
 		const auto hr = CoInitialize(nullptr);
 		if (FAILED(hr)) {
-			LOG(("NetworkListManagerEventsInitializer: "
-					"Failed to initialize COM: %1").arg(
+			LOG(("NetworkReachabilityImpl: Failed to initialize COM: %1").arg(
 				ErrorStringFromHResult(hr)));
 			_comInitFailed = true;
 			return;
 		}
 
 		_managerEvents = new NetworkListManagerEvents();
-		_managerEvents->start();
+		_valid = _managerEvents->start();
 	}
 
-	~NetworkListManagerEventsInitializer() {
+	~NetworkReachabilityImpl() {
 		if (!_comInitFailed) {
 			_managerEvents->finish();
 			_managerEvents = nullptr;
@@ -180,17 +179,29 @@ public:
 		}
 	}
 
+	bool valid() const {
+		return _valid;
+	}
+
+	rpl::producer<bool> availableValue() const override {
+		return _managerEvents->available.value();
+	}
+
 private:
 	ComPtr<NetworkListManagerEvents> _managerEvents = nullptr;
 	bool _comInitFailed = false;
+	bool _valid = false;
 
 };
 
 } // namespace
 
-std::optional<bool> NetworkAvailable() {
-	static const NetworkListManagerEventsInitializer Initializer;
-	return Available;
+std::unique_ptr<NetworkReachability> NetworkReachability::Create() {
+	auto result = std::make_unique<NetworkReachabilityImpl>();
+	if (!result->valid()) {
+		return nullptr;
+	}
+	return result;
 }
 
 } // namespace base::Platform

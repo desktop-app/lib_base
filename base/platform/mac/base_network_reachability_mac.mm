@@ -8,8 +8,8 @@
 
 namespace base::Platform {
 
-std::optional<bool> NetworkAvailable() {
-	return std::nullopt;
+std::unique_ptr<NetworkReachability> NetworkReachability::Create() {
+	return nullptr;
 }
 
 } // namespace base::Platform

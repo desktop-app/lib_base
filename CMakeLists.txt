@@ -118,7 +118,6 @@ PRIVATE
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
     base/platform/base_platform_layout_switch.h
-    base/platform/base_platform_network_reachability.cpp
     base/platform/base_platform_network_reachability.h
     base/platform/base_platform_file_utilities.h
     base/platform/base_platform_power_save_blocker.h
