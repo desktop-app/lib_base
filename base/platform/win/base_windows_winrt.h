@@ -8,6 +8,9 @@
 
 #include "base/debug_log.h"
 
+// winrt::guid defines a constructor from GUID only if knows IUnknown.
+#include <Unknwnbase.h>
+
 // class has virtual functions, but destructor is not virtual
 #pragma warning(push)
 #pragma warning(disable:4265)
