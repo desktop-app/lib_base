@@ -119,6 +119,12 @@ inline QString FromUtf8Safe(const QByteArray &string) {
 
 [[nodiscard]] QString CleanAndSimplify(QString text);
 
+template <typename T>
+[[nodiscard]] bool OppositeSigns(T a, T b) {
+	// For zero returns false!
+	return (a < 0 && b > 0) || (a > 0 && b < 0);
+}
+
 } // namespace base
 
 template <typename T>
