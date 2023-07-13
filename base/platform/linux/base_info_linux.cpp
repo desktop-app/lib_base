@@ -283,17 +283,20 @@ QString GetWindowManager() {
 }
 
 bool IsX11() {
-	return QGuiApplication::instance()
-		? QGuiApplication::platformName() == "xcb"
-		: qEnvironmentVariableIsSet("DISPLAY");
+	if (!QGuiApplication::instance()) {
+		return qEnvironmentVariableIsSet("DISPLAY");
+	}
+	static const auto result = (QGuiApplication::platformName() == "xcb");
+	return result;
 }
 
 bool IsWayland() {
-	return QGuiApplication::instance()
-		? QGuiApplication::platformName().startsWith(
-			"wayland",
-			Qt::CaseInsensitive)
-		: qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
+	if (!QGuiApplication::instance()) {
+		return qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
+	}
+	static const auto result
+		= QGuiApplication::platformName().startsWith("wayland");
+	return result;
 }
 
 void Start(QJsonObject options) {
