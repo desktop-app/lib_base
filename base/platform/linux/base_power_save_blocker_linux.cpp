@@ -61,11 +61,11 @@ void PortalPreventAppSuspension(
 		if (!prevent && !requestPath.empty()) {
 			connection->call(
 				requestPath,
-				std::string(XDP::kRequestInterface),
+				XDP::kRequestInterface,
 				"Close",
 				{},
 				{},
-				std::string(XDP::kService));
+				XDP::kService);
 			requestPath = "";
 			return;
 		} else if (!(prevent && requestPath.empty())) {
@@ -86,7 +86,7 @@ void PortalPreventAppSuspension(
 			+ handleToken;
 
 		connection->call(
-			std::string(XDP::kObjectPath),
+			XDP::kObjectPath,
 			"org.freedesktop.portal.Inhibit",
 			"Inhibit",
 			Glib::create_variant(std::tuple{
@@ -105,7 +105,7 @@ void PortalPreventAppSuspension(
 				},
 			}),
 			{},
-			std::string(XDP::kService));
+			XDP::kService);
 	} catch (...) {
 	}
 }

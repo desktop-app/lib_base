@@ -7,16 +7,15 @@
 #pragma once
 
 #include "base/basic_types.h"
-#include "base/const_string.h"
 
 #include <glibmm.h>
 #include <giomm.h>
 
 namespace base::Platform::DBus {
 
-inline constexpr auto kDBusService = "org.freedesktop.DBus"_cs;
-inline constexpr auto kDBusObjectPath = "/org/freedesktop/DBus"_cs;
-inline constexpr auto kDBusInterface = kDBusService;
+inline constexpr auto kService = "org.freedesktop.DBus";
+inline constexpr auto kObjectPath = "/org/freedesktop/DBus";
+inline constexpr auto kInterface = kService;
 
 enum class StartReply {
 	Success,

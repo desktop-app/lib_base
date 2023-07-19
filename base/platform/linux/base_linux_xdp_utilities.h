@@ -6,8 +6,6 @@
 //
 #pragma once
 
-#include "base/const_string.h"
-
 namespace Glib {
 class ustring;
 class VariantBase;
@@ -17,10 +15,10 @@ class QWindow;
 
 namespace base::Platform::XDP {
 
-inline constexpr auto kService = "org.freedesktop.portal.Desktop"_cs;
-inline constexpr auto kObjectPath = "/org/freedesktop/portal/desktop"_cs;
-inline constexpr auto kRequestInterface = "org.freedesktop.portal.Request"_cs;
-inline constexpr auto kSettingsInterface = "org.freedesktop.portal.Settings"_cs;
+inline constexpr auto kService = "org.freedesktop.portal.Desktop";
+inline constexpr auto kObjectPath = "/org/freedesktop/portal/desktop";
+inline constexpr auto kRequestInterface = "org.freedesktop.portal.Request";
+inline constexpr auto kSettingsInterface = "org.freedesktop.portal.Settings";
 
 Glib::ustring ParentWindowID(QWindow *window);
 
