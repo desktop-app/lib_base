@@ -58,7 +58,7 @@ bool PortalShowInFolder(const QString &filepath) {
 		auto outFdList = Glib::RefPtr<Gio::UnixFDList>();
 
 		connection->call_sync(
-			std::string(XDP::kObjectPath),
+			XDP::kObjectPath,
 			"org.freedesktop.portal.OpenURI",
 			"OpenDirectory",
 			Glib::create_variant(std::tuple{
@@ -73,7 +73,7 @@ bool PortalShowInFolder(const QString &filepath) {
 			}),
 			Gio::UnixFDList::create(std::vector<int>{ fd }),
 			outFdList,
-			std::string(XDP::kService));
+			XDP::kService);
 
 		return true;
 	} catch (...) {
