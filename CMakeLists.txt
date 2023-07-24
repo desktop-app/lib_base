@@ -213,6 +213,8 @@ PRIVATE
     base/qt/qt_compare.h
     base/qt/qt_key_modifiers.h
     base/qt/qt_string_view.h
+    base/qt/qt_tab_key.cpp
+    base/qt/qt_tab_key.h
 
     base/base_pch.h
 )
