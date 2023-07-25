@@ -10,6 +10,8 @@ class QWidget;
 
 namespace base {
 
+bool FocusNextPrevChildBlocked(not_null<QWidget*> widget, bool next);
+
 void DisableTabKey(QWidget *widget);
 
 } // namespace base

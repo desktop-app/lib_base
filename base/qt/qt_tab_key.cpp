@@ -8,11 +8,30 @@
 
 #include "base/event_filter.h"
 
-#include <QEvent>
+#include <QApplication>
 #include <QKeyEvent>
 #include <QWidget>
 
 namespace base {
+
+bool FocusNextPrevChildBlocked(not_null<QWidget*> widget, bool next) {
+	const auto skip = [&](QWidget *w) {
+		return next ? w->nextInFocusChain() : w->previousInFocusChain();
+	};
+	const auto focused = QApplication::focusWidget();
+	const auto start = focused ? focused : widget.get();
+	auto w = skip(start);
+	while (w && w != start) {
+		if ((w->focusPolicy() & Qt::TabFocus) && widget->isAncestorOf(w)) {
+			break;
+		}
+		w = skip(w);
+	}
+	if (w && w != start) {
+		w->setFocus(next ? Qt::TabFocusReason : Qt::BacktabFocusReason);
+	}
+	return true;
+}
 
 void DisableTabKey(QWidget *widget) {
 	if (!widget) {
