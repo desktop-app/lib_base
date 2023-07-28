@@ -19,6 +19,8 @@ nice_target_sources(lib_base ${src_loc}
 PRIVATE
     base/platform/linux/base_battery_saving_linux.cpp
     base/platform/linux/base_battery_saving_linux.h
+    base/platform/linux/base_caps_lock_linux.cpp
+    base/platform/linux/base_caps_lock_linux.h
     base/platform/linux/base_file_utilities_linux.cpp
     base/platform/linux/base_file_utilities_linux.h
     base/platform/linux/base_global_shortcuts_linux.cpp
@@ -55,8 +57,10 @@ PRIVATE
     base/platform/linux/base_system_media_controls_linux.cpp
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
-    base/platform/mac/base_battery_saving_mac.mm
     base/platform/mac/base_battery_saving_mac.h
+    base/platform/mac/base_battery_saving_mac.mm
+    base/platform/mac/base_caps_lock_mac.h
+    base/platform/mac/base_caps_lock_mac.mm
     base/platform/mac/base_confirm_quit.h
     base/platform/mac/base_confirm_quit.mm
     base/platform/mac/base_custom_app_icon_mac.h
@@ -83,6 +87,8 @@ PRIVATE
     base/platform/mac/base_utilities_mac.mm
     base/platform/win/base_battery_saving_win.cpp
     base/platform/win/base_battery_saving_win.h
+    base/platform/win/base_caps_lock_win.cpp
+    base/platform/win/base_caps_lock_win.h
     base/platform/win/base_file_utilities_win.cpp
     base/platform/win/base_file_utilities_win.h
     base/platform/win/base_global_shortcuts_win.cpp
@@ -139,6 +145,7 @@ PRIVATE
     base/bytes.h
     base/call_delayed.cpp
     base/call_delayed.h
+    base/caps_lock.h
     base/crc32hash.cpp
     base/crc32hash.h
     base/concurrent_timer.cpp

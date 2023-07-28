@@ -92,6 +92,12 @@ QByteArray GlobalShortcutValueGeneric::serialize() {
 	return result;
 }
 
+std::vector<uint64> GlobalShortcutValueGeneric::nativeKeys() {
+	static_assert(std::is_same_v<GlobalShortcutKeyGeneric, uint64>);
+
+	return _descriptors;
+}
+
 GlobalShortcutManagerGeneric::GlobalShortcutManagerGeneric() {
 	std::unique_lock lock{ GlobalMutex };
 	const auto start = Managers.empty();
@@ -163,6 +169,11 @@ void GlobalShortcutManagerGeneric::stopWatching(GlobalShortcut shortcut) {
 	_pressed.erase(ranges::find(_pressed, shortcut), end(_pressed));
 }
 
+void GlobalShortcutManagerGeneric::startWatchingAll(
+		Fn<void(GlobalShortcut)> callback) {
+	_watchAll = std::move(callback);
+}
+
 GlobalShortcut GlobalShortcutManagerGeneric::shortcutFromSerialized(
 		QByteArray serialized) {
 	const auto single = sizeof(GlobalShortcutKeyGeneric);
@@ -221,6 +232,11 @@ void GlobalShortcutManagerGeneric::process(
 				i = _pressed.erase(i);
 			}
 		}
+	}
+	if (_watchAll) {
+		_watchAll(_down.empty()
+			? nullptr
+			: MakeShortcut(_down | ranges::to_vector));
 	}
 	for (const auto &callback : scheduled) {
 		callback(down);

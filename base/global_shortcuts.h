@@ -12,6 +12,7 @@ class GlobalShortcutValue {
 public:
 	[[nodiscard]] virtual QString toDisplayString() = 0;
 	[[nodiscard]] virtual QByteArray serialize() = 0;
+	[[nodiscard]] virtual std::vector<uint64> nativeKeys() = 0;
 
 	virtual ~GlobalShortcutValue() = default;
 };
@@ -29,6 +30,7 @@ public:
 		GlobalShortcut shortcut,
 		Fn<void(bool pressed)> callback) = 0;
 	virtual void stopWatching(GlobalShortcut shortcut) = 0;
+	virtual void startWatchingAll(Fn<void(GlobalShortcut)> callback) = 0;
 
 	[[nodiscard]] virtual GlobalShortcut shortcutFromSerialized(
 		QByteArray serialized) = 0;

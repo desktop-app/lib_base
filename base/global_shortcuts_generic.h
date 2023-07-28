@@ -19,6 +19,7 @@ public:
 
 	QString toDisplayString() override;
 	QByteArray serialize() override;
+	std::vector<uint64> nativeKeys() override;
 
 	const std::vector<GlobalShortcutKeyGeneric> &descriptors() const {
 		return _descriptors;
@@ -44,6 +45,7 @@ public:
 		GlobalShortcut shortcut,
 		Fn<void(bool pressed)> callback) override;
 	void stopWatching(GlobalShortcut shortcut) override;
+	void startWatchingAll(Fn<void(GlobalShortcut)> callback) override;
 
 	GlobalShortcut shortcutFromSerialized(QByteArray serialized) override;
 
@@ -69,6 +71,7 @@ private:
 	flat_set<GlobalShortcutKeyGeneric> _down;
 	std::vector<Watch> _watchlist;
 	std::vector<GlobalShortcut> _pressed;
+	Fn<void(GlobalShortcut)> _watchAll;
 
 	bool _recording = false;
 
