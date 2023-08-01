@@ -13,63 +13,50 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <QtGui/QGuiApplication>
 
 #include <giomm.h>
-
-typedef GAppLaunchContext DesktopAppAppLaunchContext;
-typedef GAppLaunchContextClass DesktopAppAppLaunchContextClass;
-
-G_DEFINE_TYPE(
-	DesktopAppAppLaunchContext,
-	desktop_app_app_launch_context,
-	G_TYPE_APP_LAUNCH_CONTEXT)
-
-static void desktop_app_app_launch_context_class_init(
-		DesktopAppAppLaunchContextClass *klass) {
-	const auto ctx_class = G_APP_LAUNCH_CONTEXT_CLASS(klass);
-	ctx_class->get_startup_notify_id = [](
-			GAppLaunchContext *context,
-			GAppInfo*,
-			GList*) -> char* {
-		if (const auto token = g_environ_getenv(
-			g_app_launch_context_get_environment(context),
-			"XDG_ACTIVATION_TOKEN")) {
-			return strdup(token);
-		}
-		return nullptr;
-	};
-}
-
-static void desktop_app_app_launch_context_init(
-		DesktopAppAppLaunchContext *ctx) {
-	using base::Platform::WaylandIntegration;
-	if (const auto integration = WaylandIntegration::Instance()) {
-		if (const auto token = integration->activationToken()
-			; !token.isNull()) {
-			g_app_launch_context_setenv(
-				G_APP_LAUNCH_CONTEXT(ctx),
-				"XDG_ACTIVATION_TOKEN",
-				token.toUtf8().constData());
-		}
-	}
-	if (const auto window = QGuiApplication::focusWindow()) {
-		const auto parentWindowId = base::Platform::XDP::ParentWindowID(
-			window);
-		if (!parentWindowId.empty()) {
-			g_app_launch_context_setenv(
-				G_APP_LAUNCH_CONTEXT(ctx),
-				"PARENT_WINDOW_ID",
-				parentWindowId.c_str());
-		}
-	}
-}
+#include <gio/gio.hpp>
 
 namespace base::Platform {
+namespace internal {
+namespace {
 
-Glib::RefPtr<Gio::AppLaunchContext> AppLaunchContext() {
-	return Glib::wrap(
-		G_APP_LAUNCH_CONTEXT(
-			g_object_new(
-				desktop_app_app_launch_context_get_type(),
-				nullptr)));
+using namespace gi::repository;
+namespace Gio = gi::repository::Gio;
+
+class AppLaunchContext : public Gio::impl::AppLaunchContextImpl {
+public:
+	AppLaunchContext() : Gio::impl::AppLaunchContextImpl(typeid(*this)) {
+		using base::Platform::WaylandIntegration;
+		if (const auto integration = WaylandIntegration::Instance()) {
+			if (const auto token = integration->activationToken()
+				; !token.isNull()) {
+				setenv("XDG_ACTIVATION_TOKEN", token.toStdString());
+			}
+		}
+		if (const auto window = QGuiApplication::focusWindow()) {
+			const auto parentWindowId = base::Platform::XDP::ParentWindowID(
+				window);
+			if (!parentWindowId.empty()) {
+				setenv("PARENT_WINDOW_ID", parentWindowId);
+			}
+		}
+	}
+
+protected:
+	char *get_startup_notify_id_(GAppInfo*, GList*) noexcept override {
+		if (const auto token = GLib::environ_getenv(
+			get_environment(),
+			"XDG_ACTIVATION_TOKEN"); !token.empty()) {
+			return strdup(token.c_str());
+		}
+		return nullptr;
+	}
+};
+
+} // namespace
+} // namespace internal
+
+gi::repository::Gio::AppLaunchContext AppLaunchContext() {
+	return *gi::make_ref<internal::AppLaunchContext>();
 }
 
 } // namespace base::Platform

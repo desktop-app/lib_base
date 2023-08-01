@@ -17,8 +17,8 @@
 #include <QtCore/QStandardPaths>
 #include <QtGui/QDesktopServices>
 
-#include <glibmm.h>
 #include <giomm.h>
+#include <gio/gio.hpp>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -124,14 +124,17 @@ bool ShowInFolder(const QString &filepath) {
 		return true;
 	}
 
-	try {
+	{
+		using namespace gi::repository;
+		namespace Gio = gi::repository::Gio;
 		if (Gio::AppInfo::launch_default_for_uri(
-			Glib::filename_to_uri(
-				Glib::path_get_dirname(filepath.toStdString())),
-			AppLaunchContext())) {
+			GLib::filename_to_uri(
+				GLib::path_get_dirname(filepath.toStdString()),
+				nullptr),
+			AppLaunchContext(),
+			nullptr)) {
 			return true;
 		}
-	} catch (...) {
 	}
 
 	return QDesktopServices::openUrl(
