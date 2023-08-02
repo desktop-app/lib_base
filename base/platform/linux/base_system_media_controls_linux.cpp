@@ -88,6 +88,7 @@ struct SystemMediaControls::Private : public Mpris::MediaPlayer2 {
 public:
 	struct PlayerData {
 		int64 duration = 0;
+		bool inSetShuffle = false;
 	};
 
 	Private();
@@ -243,6 +244,9 @@ SystemMediaControls::Private::Private()
 	player().property_shuffle().signal_notify().connect([=](
 			GObject::Object,
 			GObject::ParamSpec) {
+		if (playerData().inSetShuffle) {
+			return;
+		}
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_commandRequests.fire_copy(Command::Shuffle);
 		});
@@ -340,9 +344,9 @@ void SystemMediaControls::setLoopStatus(LoopStatus status) {
 
 void SystemMediaControls::setShuffle(bool value) {
 	// prevent property update -> rpl event -> property update recursion
-	if (_private->player().get_shuffle() != value) {
-		_private->player().set_shuffle(value);
-	}
+	_private->playerData().inSetShuffle = true;
+	_private->player().set_shuffle(value);
+	_private->playerData().inSetShuffle = false;
 }
 
 void SystemMediaControls::setTitle(const QString &title) {
