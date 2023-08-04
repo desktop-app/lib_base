@@ -128,7 +128,7 @@ private:
 	class Player : public Mpris::impl::MediaPlayer2PlayerSkeletonImpl {
 	public:
 		Player(not_null<Private*> parent)
-		: Mpris::impl::MediaPlayer2PlayerSkeletonImpl(typeid(*this))
+		: Mpris::impl::MediaPlayer2PlayerSkeletonImpl(this)
 		, _parent(parent)
 		, _position(this) {
 		}

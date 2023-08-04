@@ -23,7 +23,7 @@ using namespace gi::repository;
 
 class AppLaunchContext : public Gio::impl::AppLaunchContextImpl {
 public:
-	AppLaunchContext() : Gio::impl::AppLaunchContextImpl(typeid(*this)) {
+	AppLaunchContext() : Gio::impl::AppLaunchContextImpl(this) {
 		using base::Platform::WaylandIntegration;
 		if (const auto integration = WaylandIntegration::Instance()) {
 			if (const auto token = integration->activationToken()
@@ -40,7 +40,6 @@ public:
 		}
 	}
 
-protected:
 	char *get_startup_notify_id_(GAppInfo*, GList*) noexcept override {
 		if (const auto token = GLib::environ_getenv(
 			get_environment(),
