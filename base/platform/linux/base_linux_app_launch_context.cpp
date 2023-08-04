@@ -12,7 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <QtGui/QGuiApplication>
 
-#include <giomm.h>
+#include <glibmm.h>
 #include <gio/gio.hpp>
 
 namespace base::Platform {
@@ -20,7 +20,6 @@ namespace internal {
 namespace {
 
 using namespace gi::repository;
-namespace Gio = gi::repository::Gio;
 
 class AppLaunchContext : public Gio::impl::AppLaunchContextImpl {
 public:
