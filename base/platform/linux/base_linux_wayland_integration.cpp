@@ -32,9 +32,11 @@ namespace {
 
 class XdgExported : public AutoDestroyer<QtWayland::zxdg_exported_v2> {
 public:
-	XdgExported(::wl_display *display, ::zxdg_exported_v2 *object)
-	: AutoDestroyer(object) {
-		wl_display_roundtrip(display);
+	XdgExported(
+		not_null<::wl_display*> display,
+		not_null<::zxdg_exported_v2*> object)
+	: AutoDestroyer(object.get()) {
+		wl_display_roundtrip(display.get());
 	}
 
 	[[nodiscard]] QString handle() const {
@@ -61,16 +63,20 @@ class XdgActivationToken
 	: public AutoDestroyer<QtWayland::xdg_activation_token_v1> {
 public:
 	XdgActivationToken(
-		::wl_display *display,
-		::xdg_activation_token_v1 *object,
+		not_null<::wl_display*> display,
+		not_null<::xdg_activation_token_v1*> object,
 		::wl_surface *surface,
 		::wl_seat *seat,
-		uint32_t serial)
-	: AutoDestroyer(object) {
-		set_surface(surface);
-		set_serial(serial, seat);
+		std::optional<uint32_t> serial)
+	: AutoDestroyer(object.get()) {
+		if (surface) {
+			set_surface(surface);
+		}
+		if (seat && serial) {
+			set_serial(*serial, seat);
+		}
 		commit();
-		wl_display_roundtrip(display);
+		wl_display_roundtrip(display.get());
 	}
 
 	QString token() {
