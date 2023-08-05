@@ -67,13 +67,17 @@ public:
 		not_null<::xdg_activation_token_v1*> object,
 		::wl_surface *surface,
 		::wl_seat *seat,
-		std::optional<uint32_t> serial)
+		std::optional<uint32_t> serial,
+		const QString &appId)
 	: AutoDestroyer(object.get()) {
 		if (surface) {
 			set_surface(surface);
 		}
 		if (seat && serial) {
 			set_serial(*serial, seat);
+		}
+		if (!appId.isNull()) {
+			set_app_id(appId);
 		}
 		commit();
 		wl_display_roundtrip(display.get());
@@ -210,7 +214,7 @@ QString WaylandIntegration::nativeHandle(QWindow *window) {
 	return result.first->second.handle();
 }
 
-QString WaylandIntegration::activationToken() {
+QString WaylandIntegration::activationToken(const QString &appId) {
 	if (!_private->xdgActivation) {
 		return {};
 	}
@@ -238,7 +242,8 @@ QString WaylandIntegration::activationToken() {
 		_private->xdgActivation->get_activation_token(),
 		surface,
 		seat,
-		native->lastInputSerial()
+		native->lastInputSerial(),
+		appId
 	).token();
 }
 
