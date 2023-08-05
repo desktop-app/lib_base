@@ -40,7 +40,16 @@ public:
 		}
 	}
 
-	char *get_startup_notify_id_(GAppInfo*, GList*) noexcept override {
+	char *get_startup_notify_id_(GAppInfo *info, GList*) noexcept override {
+		if (const auto desktopId = g_app_info_get_id(info)) {
+			if (const auto integration = WaylandIntegration::Instance()) {
+				if (const auto token = integration->activationToken(
+					QString::fromUtf8(desktopId).chopped(8)).toUtf8()
+					; !token.isNull()) {
+					return strdup(token.constData());
+				}
+			}
+		}
 		if (const auto token = GLib::environ_getenv(
 			get_environment(),
 			"XDG_ACTIVATION_TOKEN"); !token.empty()) {
