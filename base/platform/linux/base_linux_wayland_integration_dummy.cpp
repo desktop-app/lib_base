@@ -30,7 +30,7 @@ QString WaylandIntegration::nativeHandle(QWindow *window) {
 	return {};
 }
 
-QString WaylandIntegration::activationToken() {
+QString WaylandIntegration::activationToken(const QString &appId) {
 	return {};
 }
 
