@@ -238,7 +238,7 @@ SystemMediaControls::Private::Private()
 			GObject::ParamSpec) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_commandRequests.fire_copy(
-				LoopStatusToCommand(player().get_loop_status()));
+				LoopStatusToCommand(player().get_loop_status().value_or("")));
 		});
 	});
 	player().property_shuffle().signal_notify().connect([=](
