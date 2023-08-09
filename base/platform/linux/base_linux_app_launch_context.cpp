@@ -52,8 +52,8 @@ public:
 		}
 		if (const auto token = GLib::environ_getenv(
 			get_environment(),
-			"XDG_ACTIVATION_TOKEN"); !token.empty()) {
-			return strdup(token.c_str());
+			"XDG_ACTIVATION_TOKEN")) {
+			return strdup(token->c_str());
 		}
 		return nullptr;
 	}
