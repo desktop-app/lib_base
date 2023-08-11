@@ -118,7 +118,7 @@ public:
 		return &static_cast<FreePolicy*>(this)->count;
 	}
 	[[nodiscard]] int size() const {
-		return int(static_cast<FreePolicy*>(this)->count);
+		return int(static_cast<const FreePolicy*>(this)->count);
 	}
 
 private:
