@@ -31,14 +31,30 @@ namespace details {
 template <typename Signal>
 struct qt_signal_argument;
 
+template <
+	typename Class,
+	typename Return,
+	typename Value1,
+	typename Value2,
+	typename ...Other>
+struct qt_signal_argument<Return(Class::*)(Value1, Value2, Other...)> {
+	using type = std::tuple<Value1, Value2, Other...>;
+	static constexpr bool none = false;
+	static constexpr bool one = false;
+};
+
 template <typename Class, typename Return, typename Value>
 struct qt_signal_argument<Return(Class::*)(Value)> {
 	using type = Value;
+	static constexpr bool none = false;
+	static constexpr bool one = true;
 };
 
 template <typename Class, typename Return>
 struct qt_signal_argument<Return(Class::*)()> {
 	using type = void;
+	static constexpr bool none = true;
+	static constexpr bool one = false;
 };
 
 } // namespace details
@@ -46,9 +62,10 @@ struct qt_signal_argument<Return(Class::*)()> {
 template <typename Object, typename Signal>
 auto qt_signal_producer(Object *object, Signal signal) {
 	using Value = typename details::qt_signal_argument<Signal>::type;
-	static constexpr auto NoArgument = std::is_same_v<Value, void>;
+	static constexpr auto None = details::qt_signal_argument<Signal>::none;
+	static constexpr auto One = details::qt_signal_argument<Signal>::one;
 	using Produced = std::conditional_t<
-		NoArgument,
+		None,
 		rpl::empty_value,
 		std::remove_const_t<std::decay_t<Value>>>;
 	const auto guarded = QPointer<Object>(object);
@@ -79,10 +96,14 @@ auto qt_signal_producer(Object *object, Signal signal) {
 				consumer.put_next_copy(value);
 			}
 		};
-		if constexpr (NoArgument) {
+		if constexpr (None) {
 			return connect([put = std::move(put)] { put({}); });
-		} else {
+		} else if constexpr (One) {
 			return connect(std::move(put));
+		} else {
+			return connect([put = std::move(put)](auto &&...args) {
+				put(std::make_tuple(std::forward<decltype(args)>(args)...));
+			});
 		}
 	});
 }
