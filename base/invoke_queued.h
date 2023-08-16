@@ -15,10 +15,13 @@ namespace base {
 
 class InvokeQueuedEvent : public QEvent {
 public:
-	static constexpr auto kType = QEvent::Type(60666);
+	static auto Type() {
+		static const auto Result = QEvent::Type(QEvent::registerEventType());
+		return Result;
+	}
 
 	explicit InvokeQueuedEvent(FnMut<void()> &&method)
-	: QEvent(kType)
+	: QEvent(Type())
 	, _method(std::move(method)) {
 	}
 

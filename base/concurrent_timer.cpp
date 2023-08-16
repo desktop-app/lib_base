@@ -15,9 +15,15 @@ namespace base {
 namespace details {
 namespace {
 
-constexpr auto kCallDelayedEvent = QEvent::Type(QEvent::User + 1);
-constexpr auto kCancelTimerEvent = QEvent::Type(QEvent::User + 2);
-static_assert(kCancelTimerEvent < QEvent::MaxUser);
+auto CallDelayedEventType() {
+	static const auto Result = QEvent::Type(QEvent::registerEventType());
+	return Result;
+}
+
+auto CancelTimerEventType() {
+	static const auto Result = QEvent::Type(QEvent::registerEventType());
+	return Result;
+}
 
 ConcurrentTimerEnvironment *Environment/* = nullptr*/;
 QMutex EnvironmentMutex;
@@ -50,7 +56,7 @@ CallDelayedEvent::CallDelayedEvent(
 	crl::time timeout,
 	Qt::TimerType type,
 	FnMut<void()> method)
-: QEvent(kCallDelayedEvent)
+: QEvent(CallDelayedEventType())
 , _timeout(timeout)
 , _type(type)
 , _method(std::move(method)) {
@@ -69,7 +75,7 @@ FnMut<void()> CallDelayedEvent::takeMethod() {
 	return base::take(_method);
 }
 
-CancelTimerEvent::CancelTimerEvent() : QEvent(kCancelTimerEvent) {
+CancelTimerEvent::CancelTimerEvent() : QEvent(CancelTimerEventType()) {
 }
 
 } // namespace
@@ -112,14 +118,13 @@ TimerObject::TimerObject(
 
 bool TimerObject::event(QEvent *e) {
 	const auto type = e->type();
-	switch (type) {
-	case kCallDelayedEvent:
+	if (type == CallDelayedEventType()) {
 		callDelayed(static_cast<CallDelayedEvent*>(e));
 		return true;
-	case kCancelTimerEvent:
+	} else if (type == CancelTimerEventType()) {
 		cancel();
 		return true;
-	case QEvent::Timer:
+	} else if (type == QEvent::Timer) {
 		callNow();
 		return true;
 	}
