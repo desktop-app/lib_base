@@ -67,6 +67,18 @@ constexpr auto kMaxDeviceModelLength = 15;
 	}
 }
 
+[[nodiscard]] bool IsGlibcLess228() {
+	static const auto result = [] {
+		const auto libcName = GetLibcName();
+		const auto libcVersion = GetLibcVersion();
+		return (libcName == qstr("glibc"))
+			&& !libcVersion.isEmpty()
+			&& (QVersionNumber::fromString(libcVersion)
+				< QVersionNumber(2, 28));
+	}();
+	return result;
+}
+
 } // namespace
 
 QString DeviceModelPretty() {
@@ -185,16 +197,17 @@ QDate WhenSystemBecomesOutdated() {
 	const auto libcName = GetLibcName();
 	const auto libcVersion = GetLibcVersion();
 
-	if (libcName == qstr("glibc") && !libcVersion.isEmpty()) {
-		if (QVersionNumber::fromString(libcVersion) < QVersionNumber(2, 28)) {
-			return QDate(2023, 7, 1); // Older than CentOS 8.
-		}
+	if (IsGlibcLess228()) {
+		return QDate(2023, 7, 1); // Older than CentOS 8.
 	}
 	return QDate();
 }
 
 int AutoUpdateVersion() {
-	return 2;
+	if (IsGlibcLess228()) {
+		return 2;
+	}
+	return 4;
 }
 
 QString AutoUpdateKey() {

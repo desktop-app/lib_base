@@ -251,7 +251,7 @@ QDate WhenSystemBecomesOutdated() {
 }
 
 int AutoUpdateVersion() {
-	return 2;
+	return 4;
 }
 
 QString AutoUpdateKey() {
