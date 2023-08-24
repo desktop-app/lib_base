@@ -47,10 +47,7 @@ bool PortalShowInFolder(const QString &filepath) {
 
 		const auto activationToken = []() -> Glib::ustring {
 			if (const auto integration = WaylandIntegration::Instance()) {
-				if (const auto token = integration->activationToken()
-					; !token.isNull()) {
-					return token.toStdString();
-				}
+				return integration->activationToken().toStdString();
 			}
 			return {};
 		}();
