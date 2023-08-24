@@ -62,7 +62,7 @@ bool PortalShowInFolder(const QString &filepath) {
 			"org.freedesktop.portal.OpenURI",
 			"OpenDirectory",
 			Glib::create_variant(std::tuple{
-				Glib::ustring(),
+				XDP::ParentWindowID(),
 				Glib::DBusHandle(),
 				std::map<Glib::ustring, Glib::VariantBase>{
 					{
