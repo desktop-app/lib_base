@@ -12,9 +12,14 @@
 #include <glibmm.h>
 #include <giomm.h>
 
+#include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
 
 namespace base::Platform::XDP {
+
+Glib::ustring ParentWindowID() {
+	return ParentWindowID(QGuiApplication::focusWindow());
+}
 
 Glib::ustring ParentWindowID(QWindow *window) {
 	std::stringstream result;
