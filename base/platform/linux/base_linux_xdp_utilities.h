@@ -20,6 +20,7 @@ inline constexpr auto kObjectPath = "/org/freedesktop/portal/desktop";
 inline constexpr auto kRequestInterface = "org.freedesktop.portal.Request";
 inline constexpr auto kSettingsInterface = "org.freedesktop.portal.Settings";
 
+Glib::ustring ParentWindowID();
 Glib::ustring ParentWindowID(QWindow *window);
 
 std::optional<Glib::VariantBase> ReadSetting(

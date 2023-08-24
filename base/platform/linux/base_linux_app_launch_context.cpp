@@ -24,19 +24,15 @@ using namespace gi::repository;
 class AppLaunchContext : public Gio::impl::AppLaunchContextImpl {
 public:
 	AppLaunchContext() : Gio::impl::AppLaunchContextImpl(this) {
-		using base::Platform::WaylandIntegration;
 		if (const auto integration = WaylandIntegration::Instance()) {
 			if (const auto token = integration->activationToken()
 				; !token.isNull()) {
 				setenv("XDG_ACTIVATION_TOKEN", token.toStdString());
 			}
 		}
-		if (const auto window = QGuiApplication::focusWindow()) {
-			const auto parentWindowId = base::Platform::XDP::ParentWindowID(
-				window);
-			if (!parentWindowId.empty()) {
-				setenv("PARENT_WINDOW_ID", parentWindowId);
-			}
+		if (const auto parentWindowId = XDP::ParentWindowID()
+			; !parentWindowId.empty()) {
+			setenv("PARENT_WINDOW_ID", parentWindowId);
 		}
 	}
 
