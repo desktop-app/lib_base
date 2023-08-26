@@ -11,49 +11,23 @@
 namespace base {
 namespace Platform {
 
-bool LoadLibrary(
-		QLibrary &lib,
-		const char *name,
-		std::optional<int> version) {
-	const auto versionStr = version ? QString::number(*version) : "'nullopt'";
-	DEBUG_LOG(("Loading '%1' with version %2...")
-		.arg(QLatin1String(name))
-		.arg(versionStr));
-	if (version) {
-		lib.setFileNameAndVersion(QLatin1String(name), *version);
-	} else {
-		lib.setFileName(QLatin1String(name));
+LibraryHandle LoadLibrary(const char *name, int flags) {
+	DEBUG_LOG(("Loading '%1'...").arg(name));
+	if (auto lib = LibraryHandle(dlopen(name, RTLD_LAZY | flags))) {
+		DEBUG_LOG(("Loaded '%1'!").arg(name));
+		return lib;
 	}
-	if (lib.load()) {
-		DEBUG_LOG(("Loaded '%1' with version %2!")
-			.arg(QLatin1String(name))
-			.arg(versionStr));
-		return true;
-	} else {
-		DEBUG_LOG(("Could not load '%1' with version %2! Error: %3")
-			.arg(QLatin1String(name))
-			.arg(versionStr)
-			.arg(lib.errorString()));
-	}
-	lib.setFileNameAndVersion(QLatin1String(name), QString());
-	if (lib.load()) {
-		DEBUG_LOG(("Loaded '%1' without version!").arg(QLatin1String(name)));
-		return true;
-	} else {
-		LOG(("Could not load '%1' without version! Error: %2")
-			.arg(QLatin1String(name))
-			.arg(lib.errorString()));
-	}
-	return false;
+	LOG(("Could not load '%1'! Error: %2").arg(name).arg(dlerror()));
+	return nullptr;
 }
 
-QFunctionPointer LoadSymbolGeneric(QLibrary &lib, const char *name) {
-	if (!lib.isLoaded()) {
+void *LoadSymbolGeneric(const LibraryHandle &lib, const char *name) {
+	if (!lib) {
 		return nullptr;
-	} else if (const auto result = lib.resolve(name)) {
+	} else if (const auto result = dlsym(lib.get(), name)) {
 		return result;
 	}
-	LOG(("Error: failed to load '%1' function!").arg(name));
+	LOG(("Error: failed to load '%1' function: %2").arg(name).arg(dlerror()));
 	return nullptr;
 }
 
