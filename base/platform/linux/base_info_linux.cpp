@@ -79,6 +79,25 @@ constexpr auto kMaxDeviceModelLength = 15;
 	return result;
 }
 
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+[[nodiscard]] bool IsXwayland(xcb_connection_t *connection) {
+	if (connection && !xcb_connection_has_error(connection)) {
+		constexpr auto kXWAYLAND = "XWAYLAND";
+		if (const auto reply = base::Platform::XCB::MakeReplyPointer(
+			xcb_query_extension_reply(
+				connection,
+				xcb_query_extension(
+					connection,
+					strlen(kXWAYLAND),
+					kXWAYLAND),
+				nullptr))) {
+			return reply->present;
+		}
+	}
+	return false;
+}
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+
 } // namespace
 
 QString DeviceModelPretty() {
@@ -156,12 +175,10 @@ QString SystemVersionPretty() {
 
 		if (IsWayland()) {
 			resultList << "Wayland";
+		} else if (IsXwayland()) {
+			resultList << "Xwayland";
 		} else if (IsX11()) {
-			if (qEnvironmentVariableIsSet("WAYLAND_DISPLAY")) {
-				resultList << "XWayland";
-			} else {
-				resultList << "X11";
-			}
+			resultList << "X11";
 		}
 
 		const auto libcName = GetLibcName();
@@ -310,6 +327,20 @@ bool IsWayland() {
 	static const auto result
 		= QGuiApplication::platformName().startsWith("wayland");
 	return result;
+}
+
+bool IsXwayland() {
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+	namespace XCB = base::Platform::XCB;
+	if (!QGuiApplication::instance()) {
+		static const auto result = IsXwayland(XCB::CustomConnection());
+		return result;
+	}
+	static const auto result = IsXwayland(XCB::GetConnectionFromQt());
+	return result;
+#else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+	return IsX11() && qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
+#endif // DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 void Start(QJsonObject options) {
