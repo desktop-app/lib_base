@@ -12,15 +12,15 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/qt_signal_producer.h"
 #include "base/flat_map.h"
 
-#include "qwayland-wayland.h"
-#include "qwayland-xdg-activation-v1.h"
-#include "qwayland-xdg-foreign-unstable-v2.h"
-#include "qwayland-idle-inhibit-unstable-v1.h"
-
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
 #include <qpa/qplatformnativeinterface.h>
 #include <qpa/qplatformwindow_p.h>
+
+#include <qwayland-wayland.h>
+#include <qwayland-xdg-activation-v1.h>
+#include <qwayland-xdg-foreign-unstable-v2.h>
+#include <qwayland-idle-inhibit-unstable-v1.h>
 
 using namespace QNativeInterface;
 using namespace QNativeInterface::Private;
