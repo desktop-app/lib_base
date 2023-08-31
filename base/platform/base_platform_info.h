@@ -62,6 +62,7 @@ enum class OutdateReason {
 [[nodiscard]] constexpr bool IsLinux();
 [[nodiscard]] bool IsX11();
 [[nodiscard]] bool IsWayland();
+[[nodiscard]] bool IsXwayland();
 
 [[nodiscard]] QString GetLibcName();
 [[nodiscard]] QString GetLibcVersion();

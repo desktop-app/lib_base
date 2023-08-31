@@ -52,6 +52,7 @@ inline bool IsMac11_0OrGreater() { return false; }
 inline constexpr bool IsLinux() { return false; }
 inline bool IsX11() { return false; }
 inline bool IsWayland() { return false; }
+inline bool IsXwayland() { return false; }
 inline QString GetLibcName() { return QString(); }
 inline QString GetLibcVersion() { return QString(); }
 inline QString GetWindowManager() { return QString(); }
