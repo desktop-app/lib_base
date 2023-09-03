@@ -53,7 +53,7 @@ DWORD(__stdcall *RmEndSession)(
 
 } // namespace
 
-bool ShowInFolder(const QString &filepath) {
+void ShowInFolder(const QString &filepath) {
 	auto nativePath = QDir::toNativeSeparators(filepath);
 	const auto path = nativePath.toStdWString();
 	if (const auto pidl = ILCreateFromPathW(path.c_str())) {
@@ -63,14 +63,13 @@ bool ShowInFolder(const QString &filepath) {
 	}
 	const auto pathEscaped = nativePath.replace('"', QString("\"\""));
 	const auto command = ("/select," + pathEscaped).toStdWString();
-	const auto result = int64(ShellExecute(
+	ShellExecute(
 		0,
 		0,
 		L"explorer",
 		command.c_str(),
 		0,
-		SW_SHOWNORMAL));
-	return (result > 32);
+		SW_SHOWNORMAL);
 }
 
 QString FileNameFromUserString(QString name) {
