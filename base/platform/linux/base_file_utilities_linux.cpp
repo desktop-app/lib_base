@@ -8,7 +8,6 @@
 
 #include "base/platform/base_platform_file_utilities.h"
 #include "base/platform/linux/base_linux_xdp_utilities.h"
-#include "base/platform/linux/base_linux_app_launch_context.h"
 #include "base/platform/linux/base_linux_xdg_activation_token.h"
 #include "base/algorithm.h"
 
@@ -18,7 +17,6 @@
 #include <QtGui/QDesktopServices>
 
 #include <giomm.h>
-#include <gio/gio.hpp>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -125,17 +123,6 @@ void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
 void ShowInFolder(const QString &filepath) {
 	DBusShowInFolder(filepath, [=] {
 		PortalShowInFolder(filepath, [=] {
-			using namespace gi::repository;
-			namespace Gio = gi::repository::Gio;
-			if (Gio::AppInfo::launch_default_for_uri(
-				GLib::filename_to_uri(
-					GLib::path_get_dirname(filepath.toStdString()),
-					nullptr),
-				AppLaunchContext(),
-				nullptr)) {
-				return;
-			}
-
 			QDesktopServices::openUrl(
 				QUrl::fromLocalFile(QFileInfo(filepath).absolutePath()));
 		});
