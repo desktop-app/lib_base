@@ -30,112 +30,125 @@
 namespace base::Platform {
 namespace {
 
-bool PortalShowInFolder(const QString &filepath) {
-	try {
-		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::SESSION);
-
-		const auto fd = open(
-			QFile::encodeName(filepath).constData(),
-			O_RDONLY);
-
-		if (fd == -1) {
-			return false;
+void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
+	const auto connection = [] {
+		try {
+			return Gio::DBus::Connection::get_sync(
+				Gio::DBus::BusType::SESSION);
+		} catch (...) {
+			return Glib::RefPtr<Gio::DBus::Connection>();
 		}
+	}();
 
-		const auto guard = gsl::finally([&] { close(fd); });
-
-		const auto activationToken = []() -> Glib::ustring {
-			if (const auto integration = WaylandIntegration::Instance()) {
-				return integration->activationToken().toStdString();
-			}
-			return {};
-		}();
-
-		auto outFdList = Glib::RefPtr<Gio::UnixFDList>();
-
-		connection->call_sync(
-			XDP::kObjectPath,
-			"org.freedesktop.portal.OpenURI",
-			"OpenDirectory",
-			Glib::create_variant(std::tuple{
-				XDP::ParentWindowID(),
-				Glib::DBusHandle(),
-				std::map<Glib::ustring, Glib::VariantBase>{
-					{
-						"activation_token",
-						Glib::create_variant(activationToken)
-					},
-				},
-			}),
-			Gio::UnixFDList::create(std::vector<int>{ fd }),
-			outFdList,
-			XDP::kService);
-
-		return true;
-	} catch (...) {
+	if (!connection) {
+		fail();
+		return;
 	}
 
-	return false;
+	const auto fd = open(
+		QFile::encodeName(filepath).constData(),
+		O_RDONLY);
+
+	if (fd == -1) {
+		fail();
+		return;
+	}
+
+	const auto activationToken = []() -> Glib::ustring {
+		if (const auto integration = WaylandIntegration::Instance()) {
+			return integration->activationToken().toStdString();
+		}
+		return {};
+	}();
+
+	connection->call(
+		XDP::kObjectPath,
+		"org.freedesktop.portal.OpenURI",
+		"OpenDirectory",
+		Glib::create_variant(std::tuple{
+			XDP::ParentWindowID(),
+			Glib::DBusHandle(),
+			std::map<Glib::ustring, Glib::VariantBase>{
+				{
+					"activation_token",
+					Glib::create_variant(activationToken)
+				},
+			},
+		}),
+		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+			try {
+				connection->call_finish(result);
+			} catch (...) {
+				fail();
+			}
+			close(fd);
+		},
+		Gio::UnixFDList::create(std::vector<int>{ fd }),
+		XDP::kService);
 }
 
-bool DBusShowInFolder(const QString &filepath) {
-	try {
-		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::SESSION);
+void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
+	const auto connection = [] {
+		try {
+			return Gio::DBus::Connection::get_sync(
+				Gio::DBus::BusType::SESSION);
+		} catch (...) {
+			return Glib::RefPtr<Gio::DBus::Connection>();
+		}
+	}();
 
-		const auto startupId = []() -> Glib::ustring {
-			if (const auto integration = WaylandIntegration::Instance()) {
-				return integration->activationToken().toStdString();
-			}
-			return {};
-		}();
-
-		connection->call_sync(
-			"/org/freedesktop/FileManager1",
-			"org.freedesktop.FileManager1",
-			"ShowItems",
-			Glib::create_variant(std::tuple{
-				std::vector<Glib::ustring>{
-					Glib::filename_to_uri(filepath.toStdString())
-				},
-				startupId,
-			}),
-			"org.freedesktop.FileManager1");
-
-		return true;
-	} catch (...) {
+	if (!connection) {
+		fail();
+		return;
 	}
 
-	return false;
+	const auto startupId = []() -> Glib::ustring {
+		if (const auto integration = WaylandIntegration::Instance()) {
+			return integration->activationToken().toStdString();
+		}
+		return {};
+	}();
+
+	connection->call(
+		"/org/freedesktop/FileManager1",
+		"org.freedesktop.FileManager1",
+		"ShowItems",
+		Glib::create_variant(std::tuple{
+			std::vector<Glib::ustring>{
+				Glib::filename_to_uri(filepath.toStdString())
+			},
+			startupId,
+		}),
+		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+			try {
+				connection->call_finish(result);
+			} catch (...) {
+				fail();
+			}
+		},
+		"org.freedesktop.FileManager1");
 }
 
 } // namespace
 
-bool ShowInFolder(const QString &filepath) {
-	if (DBusShowInFolder(filepath)) {
-		return true;
-	}
+void ShowInFolder(const QString &filepath) {
+	DBusShowInFolder(filepath, [=] {
+		PortalShowInFolder(filepath, [=] {
+			using namespace gi::repository;
+			namespace Gio = gi::repository::Gio;
+			if (Gio::AppInfo::launch_default_for_uri(
+				GLib::filename_to_uri(
+					GLib::path_get_dirname(filepath.toStdString()),
+					nullptr),
+				AppLaunchContext(),
+				nullptr)) {
+				return;
+			}
 
-	if (PortalShowInFolder(filepath)) {
-		return true;
-	}
-
-	{
-		using namespace gi::repository;
-		namespace Gio = gi::repository::Gio;
-		if (Gio::AppInfo::launch_default_for_uri(
-			GLib::filename_to_uri(
-				GLib::path_get_dirname(filepath.toStdString()),
-				nullptr),
-			AppLaunchContext(),
-			nullptr)) {
-			return true;
-		}
-	}
-
-	return QDesktopServices::openUrl(
-		QUrl::fromLocalFile(QFileInfo(filepath).absolutePath()));
+			QDesktopServices::openUrl(
+				QUrl::fromLocalFile(QFileInfo(filepath).absolutePath()));
+		});
+	});
 }
 
 QString CurrentExecutablePath(int argc, char *argv[]) {

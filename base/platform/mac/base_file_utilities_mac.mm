@@ -17,17 +17,14 @@ namespace base::Platform {
 
 using namespace ::Platform;
 
-bool ShowInFolder(const QString &filepath) {
+void ShowInFolder(const QString &filepath) {
 	const auto folder = QFileInfo(filepath).absolutePath();
-	BOOL result = NO;
 
 	@autoreleasepool {
 
-	result = [[NSWorkspace sharedWorkspace] selectFile:Q2NSString(filepath) inFileViewerRootedAtPath:Q2NSString(folder)];
+	[[NSWorkspace sharedWorkspace] selectFile:Q2NSString(filepath) inFileViewerRootedAtPath:Q2NSString(folder)];
 
 	}
-
-	return (result != NO);
 }
 
 void RemoveQuarantine(const QString &path) {

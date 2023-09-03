@@ -11,7 +11,7 @@ class QFile;
 
 namespace base::Platform {
 
-bool ShowInFolder(const QString &filepath);
+void ShowInFolder(const QString &filepath);
 [[nodiscard]] QString FileNameFromUserString(QString name);
 
 bool DeleteDirectory(QString path);
