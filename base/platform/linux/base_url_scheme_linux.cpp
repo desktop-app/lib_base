@@ -25,56 +25,79 @@ constexpr auto kSnapcraftSettingsObjectPath = "/io/snapcraft/Settings";
 constexpr auto kSnapcraftSettingsInterface = kSnapcraftSettingsService;
 
 void SnapDefaultHandler(const QString &protocol) {
-	try {
-		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::SESSION);
-
-		const auto currentHandler = connection->call_sync(
-			kSnapcraftSettingsObjectPath,
-			kSnapcraftSettingsInterface,
-			"GetSub",
-			Glib::create_variant(std::tuple{
-				Glib::ustring("default-url-scheme-handler"),
-				Glib::ustring(protocol.toStdString()),
-			}),
-			kSnapcraftSettingsService
-		).get_child(0).get_dynamic<Glib::ustring>();
-
-		const auto expectedHandler = qEnvironmentVariable("SNAP_NAME")
-			+ ".desktop";
-
-		if (currentHandler.c_str() == expectedHandler) {
-			return;
+	const auto connection = [] {
+		try {
+			return Gio::DBus::Connection::get_sync(
+				Gio::DBus::BusType::SESSION);
+		} catch (const std::exception &e) {
+			LOG(("Snap Default Handler Error: %1")
+				.arg(QString::fromStdString(e.what())));
+			return Glib::RefPtr<Gio::DBus::Connection>();
 		}
+	}();
 
-		const auto window = std::make_shared<QWidget>();
-		window->setAttribute(Qt::WA_DontShowOnScreen);
-		window->setWindowModality(Qt::ApplicationModal);
-		window->show();
+	if (!connection) {
+		return;
+	}
 
-		connection->call(
-			kSnapcraftSettingsObjectPath,
-			kSnapcraftSettingsInterface,
-			"SetSub",
-			Glib::create_variant(std::tuple{
-				Glib::ustring("default-url-scheme-handler"),
-				Glib::ustring(protocol.toStdString()),
-				Glib::ustring(expectedHandler.toStdString()),
-			}),
-			[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-				(void)window; // don't destroy until finish
+	connection->call(
+		kSnapcraftSettingsObjectPath,
+		kSnapcraftSettingsInterface,
+		"GetSub",
+		Glib::create_variant(std::tuple{
+			Glib::ustring("default-url-scheme-handler"),
+			Glib::ustring(protocol.toStdString()),
+		}),
+		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+			const auto currentHandler = [&]() -> std::optional<Glib::ustring> {
 				try {
-					connection->call_finish(result);
+					return connection->call_finish(
+						result
+					).get_child(0).get_dynamic<Glib::ustring>();
 				} catch (const std::exception &e) {
 					LOG(("Snap Default Handler Error: %1")
 						.arg(QString::fromStdString(e.what())));
+					return std::nullopt;
 				}
-			},
-			kSnapcraftSettingsService);
-	} catch (const std::exception &e) {
-		LOG(("Snap Default Handler Error: %1")
-			.arg(QString::fromStdString(e.what())));
-	}
+			}();
+
+			if (!currentHandler) {
+				return;
+			}
+
+			const auto expectedHandler = qEnvironmentVariable("SNAP_NAME")
+				+ u".desktop"_q;
+
+			if (currentHandler->c_str() == expectedHandler) {
+				return;
+			}
+
+			const auto window = std::make_shared<QWidget>();
+			window->setAttribute(Qt::WA_DontShowOnScreen);
+			window->setWindowModality(Qt::ApplicationModal);
+			window->show();
+
+			connection->call(
+				kSnapcraftSettingsObjectPath,
+				kSnapcraftSettingsInterface,
+				"SetSub",
+				Glib::create_variant(std::tuple{
+					Glib::ustring("default-url-scheme-handler"),
+					Glib::ustring(protocol.toStdString()),
+					Glib::ustring(expectedHandler.toStdString()),
+				}),
+				[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+					(void)window; // don't destroy until finish
+					try {
+						connection->call_finish(result);
+					} catch (const std::exception &e) {
+						LOG(("Snap Default Handler Error: %1")
+							.arg(QString::fromStdString(e.what())));
+					}
+				},
+				kSnapcraftSettingsService);
+		},
+		kSnapcraftSettingsService);
 }
 
 } // namespace
