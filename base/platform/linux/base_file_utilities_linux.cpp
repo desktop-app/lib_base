@@ -9,7 +9,7 @@
 #include "base/platform/base_platform_file_utilities.h"
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 #include "base/platform/linux/base_linux_app_launch_context.h"
-#include "base/platform/linux/base_linux_wayland_integration.h"
+#include "base/platform/linux/base_linux_xdg_activation_token.h"
 #include "base/algorithm.h"
 
 #include <QtCore/QFile>
@@ -54,37 +54,33 @@ void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 		return;
 	}
 
-	const auto activationToken = []() -> Glib::ustring {
-		if (const auto integration = WaylandIntegration::Instance()) {
-			return integration->activationToken().toStdString();
-		}
-		return {};
-	}();
-
-	connection->call(
-		XDP::kObjectPath,
-		"org.freedesktop.portal.OpenURI",
-		"OpenDirectory",
-		Glib::create_variant(std::tuple{
-			XDP::ParentWindowID(),
-			Glib::DBusHandle(),
-			std::map<Glib::ustring, Glib::VariantBase>{
-				{
-					"activation_token",
-					Glib::create_variant(activationToken)
+	RunWithXdgActivationToken([=](const QString &activationToken) {
+		connection->call(
+			XDP::kObjectPath,
+			"org.freedesktop.portal.OpenURI",
+			"OpenDirectory",
+			Glib::create_variant(std::tuple{
+				XDP::ParentWindowID(),
+				Glib::DBusHandle(),
+				std::map<Glib::ustring, Glib::VariantBase>{
+					{
+						"activation_token",
+						Glib::create_variant(
+							Glib::ustring(activationToken.toStdString()))
+					},
 				},
+			}),
+			[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+				try {
+					connection->call_finish(result);
+				} catch (...) {
+					fail();
+				}
+				close(fd);
 			},
-		}),
-		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-			try {
-				connection->call_finish(result);
-			} catch (...) {
-				fail();
-			}
-			close(fd);
-		},
-		Gio::UnixFDList::create(std::vector<int>{ fd }),
-		XDP::kService);
+			Gio::UnixFDList::create(std::vector<int>{ fd }),
+			XDP::kService);
+	});
 }
 
 void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
@@ -102,31 +98,26 @@ void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
 		return;
 	}
 
-	const auto startupId = []() -> Glib::ustring {
-		if (const auto integration = WaylandIntegration::Instance()) {
-			return integration->activationToken().toStdString();
-		}
-		return {};
-	}();
-
-	connection->call(
-		"/org/freedesktop/FileManager1",
-		"org.freedesktop.FileManager1",
-		"ShowItems",
-		Glib::create_variant(std::tuple{
-			std::vector<Glib::ustring>{
-				Glib::filename_to_uri(filepath.toStdString())
+	RunWithXdgActivationToken([=](const QString &startupId) {
+		connection->call(
+			"/org/freedesktop/FileManager1",
+			"org.freedesktop.FileManager1",
+			"ShowItems",
+			Glib::create_variant(std::tuple{
+				std::vector<Glib::ustring>{
+					Glib::filename_to_uri(filepath.toStdString())
+				},
+				Glib::ustring(startupId.toStdString()),
+			}),
+			[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
+				try {
+					connection->call_finish(result);
+				} catch (...) {
+					fail();
+				}
 			},
-			startupId,
-		}),
-		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-			try {
-				connection->call_finish(result);
-			} catch (...) {
-				fail();
-			}
-		},
-		"org.freedesktop.FileManager1");
+			"org.freedesktop.FileManager1");
+	});
 }
 
 } // namespace
