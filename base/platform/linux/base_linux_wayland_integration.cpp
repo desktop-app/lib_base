@@ -19,7 +19,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include <qwayland-wayland.h>
 #include <qwayland-xdg-activation-v1.h>
-#include <qwayland-xdg-foreign-unstable-v2.h>
 #include <qwayland-idle-inhibit-unstable-v1.h>
 
 using namespace QNativeInterface;
@@ -29,35 +28,6 @@ using namespace base::Platform::Wayland;
 namespace base {
 namespace Platform {
 namespace {
-
-class XdgExported : public AutoDestroyer<QtWayland::zxdg_exported_v2> {
-public:
-	XdgExported(
-		not_null<::wl_display*> display,
-		not_null<::zxdg_exported_v2*> object)
-	: AutoDestroyer(object.get()) {
-		wl_display_roundtrip(display.get());
-	}
-
-	[[nodiscard]] QString handle() const {
-		return _handle;
-	}
-
-protected:
-	void zxdg_exported_v2_handle(const QString &handle) override {
-		_handle = handle;
-	}
-
-private:
-	QString _handle;
-};
-
-class XdgExporter : public Global<QtWayland::zxdg_exporter_v2> {
-public:
-	using Global::Global;
-
-	base::flat_map<wl_surface*, XdgExported> exporteds;
-};
 
 class XdgActivationToken
 	: public AutoDestroyer<QtWayland::xdg_activation_token_v1> {
@@ -108,7 +78,6 @@ public:
 } // namespace
 
 struct WaylandIntegration::Private : public AutoDestroyer<QtWayland::wl_registry> {
-	std::optional<XdgExporter> xdgExporter;
 	std::optional<Global<QtWayland::xdg_activation_v1>> xdgActivation;
 	std::optional<IdleInhibitManager> idleInhibitManager;
 	rpl::lifetime lifetime;
@@ -118,9 +87,7 @@ protected:
 			uint32_t name,
 			const QString &interface,
 			uint32_t version) override {
-		if (interface == qstr("zxdg_exporter_v2")) {
-			xdgExporter.emplace(object(), name, version);
-		} else if (interface == qstr("xdg_activation_v1")) {
+		if (interface == qstr("xdg_activation_v1")) {
 			xdgActivation.emplace(object(), name, version);
 		} else if (interface == qstr("zwp_idle_inhibit_manager_v1")) {
 			idleInhibitManager.emplace(object(), name, version);
@@ -128,9 +95,7 @@ protected:
 	}
 
 	void registry_global_remove(uint32_t name) override {
-		if (xdgExporter && name == xdgExporter->id()) {
-			xdgExporter = std::nullopt;
-		} else if (xdgActivation && name == xdgActivation->id()) {
+		if (xdgActivation && name == xdgActivation->id()) {
 			xdgActivation = std::nullopt;
 		} else if (idleInhibitManager && name == idleInhibitManager->id()) {
 			idleInhibitManager = std::nullopt;
@@ -170,48 +135,6 @@ WaylandIntegration *WaylandIntegration::Instance() {
 	}();
 	if (!instance) return nullptr;
 	return &*instance;
-}
-
-QString WaylandIntegration::nativeHandle(QWindow *window) {
-	if (!_private->xdgExporter) {
-		return {};
-	}
-
-	const auto native = qApp->nativeInterface<QWaylandApplication>();
-	const auto nativeWindow = window->nativeInterface<QWaylandWindow>();
-	if (!native || !nativeWindow) {
-		return {};
-	}
-
-	const auto display = native->display();
-	const auto surface = nativeWindow->surface();
-
-	if (!display || !surface) {
-		return {};
-	}
-
-	const auto it = _private->xdgExporter->exporteds.find(surface);
-	if (it != _private->xdgExporter->exporteds.cend()) {
-		return it->second.handle();
-	}
-
-	const auto result = _private->xdgExporter->exporteds.emplace(
-		surface,
-		XdgExported(
-			display,
-			_private->xdgExporter->export_toplevel(surface)));
-
-	base::qt_signal_producer(
-		nativeWindow,
-		&QWaylandWindow::surfaceDestroyed
-	) | rpl::start_with_next([=] {
-		auto it = _private->xdgExporter->exporteds.find(surface);
-		if (it != _private->xdgExporter->exporteds.cend()) {
-			_private->xdgExporter->exporteds.erase(it);
-		}
-	}, _private->lifetime);
-
-	return result.first->second.handle();
 }
 
 QString WaylandIntegration::activationToken(const QString &appId) {
