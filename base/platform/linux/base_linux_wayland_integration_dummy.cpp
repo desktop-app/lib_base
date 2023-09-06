@@ -26,10 +26,6 @@ WaylandIntegration *WaylandIntegration::Instance() {
 	return &instance;
 }
 
-QString WaylandIntegration::nativeHandle(QWindow *window) {
-	return {};
-}
-
 QString WaylandIntegration::activationToken(const QString &appId) {
 	return {};
 }

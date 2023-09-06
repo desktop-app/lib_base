@@ -6,7 +6,6 @@
 //
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 
-#include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/platform/base_platform_info.h"
 
 #include <glibmm.h>
@@ -14,6 +13,9 @@
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
+#include <qpa/qplatformintegration.h>
+#include <private/qguiapplication_p.h>
+#include <private/qgenericunixservices_p.h>
 
 namespace base::Platform::XDP {
 
@@ -22,21 +24,24 @@ Glib::ustring ParentWindowID() {
 }
 
 Glib::ustring ParentWindowID(QWindow *window) {
-	std::stringstream result;
 	if (!window) {
+		return {};
+	}
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+	if (const auto services = dynamic_cast<QGenericUnixServices*>(
+			QGuiApplicationPrivate::platformIntegration()->services())) {
+		return services->portalWindowIdentifier(window).toStdString();
+	}
+#endif // Qt >= 6.5.0
+
+	if (::Platform::IsX11()) {
+		std::stringstream result;
+		result << "x11:" << std::hex << window->winId();
 		return result.str();
 	}
 
-	if (const auto integration = WaylandIntegration::Instance()) {
-		if (const auto handle = integration->nativeHandle(window)
-			; !handle.isEmpty()) {
-			result << "wayland:" << handle.toStdString();
-		}
-	} else if (::Platform::IsX11()) {
-		result << "x11:" << std::hex << window->winId();
-	}
-
-	return result.str();
+	return {};
 }
 
 std::optional<Glib::VariantBase> ReadSetting(
