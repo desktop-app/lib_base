@@ -43,6 +43,8 @@ PRIVATE
     base/platform/linux/base_linux_wayland_utilities.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
+    base/platform/linux/base_linux_xdg_activation_token.cpp
+    base/platform/linux/base_linux_xdg_activation_token.h
     base/platform/linux/base_linux_xdp_utilities.cpp
     base/platform/linux/base_linux_xdp_utilities.h
     base/platform/linux/base_linux_xsettings.cpp
