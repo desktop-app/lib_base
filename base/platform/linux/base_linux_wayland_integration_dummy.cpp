@@ -26,10 +26,6 @@ WaylandIntegration *WaylandIntegration::Instance() {
 	return &instance;
 }
 
-QString WaylandIntegration::activationToken(const QString &appId) {
-	return {};
-}
-
 void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 }
 

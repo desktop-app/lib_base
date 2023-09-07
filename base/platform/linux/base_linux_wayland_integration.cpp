@@ -17,7 +17,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <qpa/qplatformwindow_p.h>
 
 #include <qwayland-wayland.h>
-#include <qwayland-xdg-activation-v1.h>
 #include <qwayland-idle-inhibit-unstable-v1.h>
 
 using QWlApp = QNativeInterface::QWaylandApplication;
@@ -27,43 +26,6 @@ using namespace base::Platform::Wayland;
 namespace base {
 namespace Platform {
 namespace {
-
-class XdgActivationToken
-	: public AutoDestroyer<QtWayland::xdg_activation_token_v1> {
-public:
-	XdgActivationToken(
-		not_null<::wl_display*> display,
-		not_null<::xdg_activation_token_v1*> object,
-		::wl_surface *surface,
-		::wl_seat *seat,
-		std::optional<uint32_t> serial,
-		const QString &appId)
-	: AutoDestroyer(object.get()) {
-		if (surface) {
-			set_surface(surface);
-		}
-		if (seat && serial) {
-			set_serial(*serial, seat);
-		}
-		if (!appId.isNull()) {
-			set_app_id(appId);
-		}
-		commit();
-		wl_display_roundtrip(display.get());
-	}
-
-	QString token() {
-		return _token;
-	}
-
-protected:
-	void xdg_activation_token_v1_done(const QString &token) override {
-		_token = token;
-	}
-
-private:
-	QString _token;
-};
 
 class IdleInhibitManager
 	: public Global<QtWayland::zwp_idle_inhibit_manager_v1> {
@@ -121,7 +83,6 @@ struct WaylandIntegration::Private
 	}
 
 	const not_null<wl_display*> display;
-	std::optional<Global<QtWayland::xdg_activation_v1>> xdgActivation;
 	std::optional<IdleInhibitManager> idleInhibitManager;
 
 protected:
@@ -129,17 +90,13 @@ protected:
 			uint32_t name,
 			const QString &interface,
 			uint32_t version) override {
-		if (interface == qstr("xdg_activation_v1")) {
-			xdgActivation.emplace(object(), name, version);
-		} else if (interface == qstr("zwp_idle_inhibit_manager_v1")) {
+		if (interface == qstr("zwp_idle_inhibit_manager_v1")) {
 			idleInhibitManager.emplace(object(), name, version);
 		}
 	}
 
 	void registry_global_remove(uint32_t name) override {
-		if (xdgActivation && name == xdgActivation->id()) {
-			xdgActivation = std::nullopt;
-		} else if (idleInhibitManager && name == idleInhibitManager->id()) {
+		if (idleInhibitManager && name == idleInhibitManager->id()) {
 			idleInhibitManager = std::nullopt;
 		}
 	}
@@ -168,39 +125,6 @@ WaylandIntegration *WaylandIntegration::Instance() {
 		}, instance->_private->lifetime());
 	}
 	return &*instance;
-}
-
-QString WaylandIntegration::activationToken(const QString &appId) {
-	if (!_private->xdgActivation) {
-		return {};
-	}
-
-	const auto window = QGuiApplication::focusWindow();
-	if (!window) {
-		return {};
-	}
-
-	const auto native = qApp->nativeInterface<QWlApp>();
-	const auto nativeWindow = window->nativeInterface<QWaylandWindow>();
-	if (!native || !nativeWindow) {
-		return {};
-	}
-
-	const auto display = native->display();
-	const auto surface = nativeWindow->surface();
-	const auto seat = native->lastInputSeat();
-	if (!display || !surface || !seat) {
-		return {};
-	}
-
-	return XdgActivationToken(
-		display,
-		_private->xdgActivation->get_activation_token(),
-		surface,
-		seat,
-		native->lastInputSerial(),
-		appId
-	).token();
 }
 
 void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
