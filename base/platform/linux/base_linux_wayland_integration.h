@@ -19,7 +19,6 @@ public:
 
 	[[nodiscard]] static WaylandIntegration *Instance();
 
-	[[nodiscard]] QString activationToken(const QString &appId = {});
 	void preventDisplaySleep(bool prevent, QWindow *window);
 
 private:
