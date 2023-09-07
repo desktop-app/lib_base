@@ -79,25 +79,6 @@ constexpr auto kMaxDeviceModelLength = 15;
 	return result;
 }
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-[[nodiscard]] bool IsXwayland(xcb_connection_t *connection) {
-	if (connection && !xcb_connection_has_error(connection)) {
-		constexpr auto kXWAYLAND = "XWAYLAND";
-		if (const auto reply = base::Platform::XCB::MakeReplyPointer(
-			xcb_query_extension_reply(
-				connection,
-				xcb_query_extension(
-					connection,
-					strlen(kXWAYLAND),
-					kXWAYLAND),
-				nullptr))) {
-			return reply->present;
-		}
-	}
-	return false;
-}
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-
 } // namespace
 
 QString DeviceModelPretty() {
@@ -331,12 +312,25 @@ bool IsWayland() {
 
 bool IsXwayland() {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	namespace XCB = base::Platform::XCB;
-	if (!QGuiApplication::instance()) {
-		static const auto result = IsXwayland(XCB::CustomConnection());
-		return result;
-	}
-	static const auto result = IsXwayland(XCB::GetConnectionFromQt());
+	static const auto result = []() -> bool {
+		const base::Platform::XCB::Connection connection;
+		if (!connection || xcb_connection_has_error(connection)) {
+			return false;
+		}
+		constexpr auto kXWAYLAND = "XWAYLAND";
+		const auto reply = base::Platform::XCB::MakeReplyPointer(
+			xcb_query_extension_reply(
+				connection,
+				xcb_query_extension(
+					connection,
+					strlen(kXWAYLAND),
+					kXWAYLAND),
+				nullptr));
+		if (!reply) {
+			return false;
+		}
+		return reply->present;
+	}();
 	return result;
 #else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 	return IsX11() && qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
