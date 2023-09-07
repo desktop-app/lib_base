@@ -23,8 +23,8 @@ namespace {
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 std::optional<crl::time> XCBLastUserInputTime() {
-	const auto connection = XCB::GetConnectionFromQt();
-	if (!connection) {
+	const XCB::Connection connection;
+	if (!connection || xcb_connection_has_error(connection)) {
 		return std::nullopt;
 	}
 
