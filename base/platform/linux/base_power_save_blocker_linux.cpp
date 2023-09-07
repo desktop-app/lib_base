@@ -39,8 +39,7 @@ void XCBPreventDisplaySleep(bool prevent) {
 
 	base::timer_each(
 		kResetScreenSaverTimeout
-	) | rpl::start_with_next([] {
-		const XCB::Connection connection;
+	) | rpl::start_with_next([connection = XCB::Connection()] {
 		if (!connection || xcb_connection_has_error(connection)) {
 			return;
 		}
