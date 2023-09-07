@@ -40,8 +40,8 @@ void XCBPreventDisplaySleep(bool prevent) {
 	base::timer_each(
 		kResetScreenSaverTimeout
 	) | rpl::start_with_next([] {
-		const auto connection = XCB::GetConnectionFromQt();
-		if (!connection) {
+		const XCB::Connection connection;
+		if (!connection || xcb_connection_has_error(connection)) {
 			return;
 		}
 		xcb_force_screen_saver(connection, XCB_SCREEN_SAVER_RESET);
@@ -123,11 +123,10 @@ void BlockPowerSave(
 	case PowerSaveBlockType::PreventDisplaySleep:
 		if (const auto integration = WaylandIntegration::Instance()) {
 			integration->preventDisplaySleep(true, window);
-		} else if (::Platform::IsX11()) {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-			XCBPreventDisplaySleep(true);
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 		}
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+		XCBPreventDisplaySleep(true);
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 		break;
 	}
 }
@@ -140,11 +139,10 @@ void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 	case PowerSaveBlockType::PreventDisplaySleep:
 		if (const auto integration = WaylandIntegration::Instance()) {
 			integration->preventDisplaySleep(false, window);
-		} else if (::Platform::IsX11()) {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-			XCBPreventDisplaySleep(false);
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 		}
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+		XCBPreventDisplaySleep(false);
+#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 		break;
 	}
 }
