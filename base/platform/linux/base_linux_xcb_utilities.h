@@ -44,6 +44,8 @@ ReplyPointer<T> MakeReplyPointer(T *reply) {
 	return ReplyPointer<T>(reply);
 }
 
+std::shared_ptr<CustomConnection> SharedConnection();
+
 xcb_connection_t *GetConnectionFromQt();
 
 std::optional<xcb_timestamp_t> GetTimestamp();
@@ -73,9 +75,7 @@ class Connection {
 public:
 	Connection()
 	: _qtConnection(GetConnectionFromQt())
-	, _customConnection(_qtConnection
-		? std::optional<CustomConnection>()
-		: std::optional<CustomConnection>(std::in_place)) {
+	, _customConnection(_qtConnection ? nullptr : SharedConnection()) {
 	}
 
 	[[nodiscard]] operator xcb_connection_t*() const {
@@ -84,7 +84,7 @@ public:
 
 private:
 	xcb_connection_t * const _qtConnection = nullptr;
-	const std::optional<CustomConnection> _customConnection;
+	const std::shared_ptr<CustomConnection> _customConnection;
 };
 
 } // namespace base::Platform::XCB
