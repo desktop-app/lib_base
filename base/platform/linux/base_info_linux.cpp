@@ -253,8 +253,8 @@ QString GetLibcVersion() {
 
 QString GetWindowManager() {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	base::Platform::XCB::CustomConnection connection;
-	if (xcb_connection_has_error(connection)) {
+	const base::Platform::XCB::Connection connection;
+	if (!connection || xcb_connection_has_error(connection)) {
 		return {};
 	}
 
