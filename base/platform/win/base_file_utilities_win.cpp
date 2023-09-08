@@ -57,9 +57,9 @@ void ShowInFolder(const QString &filepath) {
 	auto nativePath = QDir::toNativeSeparators(filepath);
 	const auto path = nativePath.toStdWString();
 	if (const auto pidl = ILCreateFromPathW(path.c_str())) {
-		const auto result = SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);
+		SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);
 		ILFree(pidl);
-		return (result == S_OK);
+		return;
 	}
 	const auto pathEscaped = nativePath.replace('"', QString("\"\""));
 	const auto command = ("/select," + pathEscaped).toStdWString();
