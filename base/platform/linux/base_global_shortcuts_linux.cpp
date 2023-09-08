@@ -246,13 +246,11 @@ void EnsureX11ShortcutManager() {
 
 bool Available() {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	if (::Platform::IsX11()) {
-		EnsureX11ShortcutManager();
-		return _x11Manager->available();
-	}
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-
+	EnsureX11ShortcutManager();
+	return _x11Manager->available();
+#else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 	return false;
+#endif // DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 bool Allowed() {
