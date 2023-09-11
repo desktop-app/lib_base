@@ -7,6 +7,7 @@
 #include "base/platform/linux/base_info_linux.h"
 
 #include "base/algorithm.h"
+#include "base/integration.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
@@ -18,7 +19,11 @@
 #include <QtCore/QDate>
 #include <QtCore/QFile>
 #include <QtCore/QProcess>
+#include <QtCore/QAbstractEventDispatcher>
 #include <QtGui/QGuiApplication>
+
+#include <glib/glib.hpp>
+#include <giomm.h>
 
 #include <sys/utsname.h>
 
@@ -28,6 +33,8 @@
 
 namespace Platform {
 namespace {
+
+using namespace gi::repository;
 
 constexpr auto kMaxDeviceModelLength = 15;
 
@@ -338,6 +345,16 @@ bool IsXwayland() {
 }
 
 void Start(QJsonObject options) {
+	GLib::set_prgname(
+		base::Integration::Instance().executableName().toStdString());
+	GLib::set_application_name(
+		QCoreApplication::applicationName().toStdString());
+	Gio::init();
+	if (!QCoreApplication::eventDispatcher()->inherits(
+		"QEventDispatcherGlib")) {
+		g_warning("Qt is running without GLib event loop integration, "
+			"expect various functionality to not to work.");
+	}
 }
 
 void Finish() {
