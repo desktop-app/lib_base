@@ -275,7 +275,7 @@ void SystemMediaControls::Private::init() {
 		"org.mpris.MediaPlayer2." + (KSandbox::isFlatpak()
 			? qEnvironmentVariable("FLATPAK_ID").toStdString()
 			: KSandbox::isSnap()
-			? qEnvironmentVariable("SNAP_NAME").toStdString()
+			? qEnvironmentVariable("SNAP_INSTANCE_NAME").toStdString()
 			: QCoreApplication::applicationName().toStdString()),
 		Gio::BusNameOwnerFlags::NONE_);
 }
