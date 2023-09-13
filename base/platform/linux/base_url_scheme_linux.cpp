@@ -6,6 +6,7 @@
 //
 #include "base/platform/linux/base_url_scheme_linux.h"
 
+#include "base/integration.h"
 #include "base/debug_log.h"
 
 #include <QtGui/QGuiApplication>
@@ -65,7 +66,8 @@ void SnapDefaultHandler(const QString &protocol) {
 				return;
 			}
 
-			const auto expectedHandler = qEnvironmentVariable("SNAP_NAME")
+			const auto &integration = Integration::Instance();
+			const auto expectedHandler = integration.executableName()
 				+ u".desktop"_q;
 
 			if (currentHandler->c_str() == expectedHandler) {
