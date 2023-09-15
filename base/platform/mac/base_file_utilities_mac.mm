@@ -53,6 +53,10 @@ QString BundledResourcesPath() {
 	}
 }
 
+QString FileNameFromUserString(QString name) {
+	return name;
+}
+
 bool DeleteDirectory(QString path) {
 	if (path.endsWith('/')) {
 		path.chop(1);
