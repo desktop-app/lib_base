@@ -57,8 +57,7 @@ void XCBPreventDisplaySleep(bool prevent) {
 void PortalInhibit(
 	Glib::ustring &requestPath,
 	uint flags = 0,
-	const QString &description = {},
-	QPointer<QWindow> window = {}) {
+	const QString &description = {}) {
 	try {
 		const auto connection = Gio::DBus::Connection::get_sync(
 			Gio::DBus::BusType::SESSION);
@@ -93,7 +92,7 @@ void PortalInhibit(
 			"org.freedesktop.portal.Inhibit",
 			"Inhibit",
 			Glib::create_variant(std::tuple{
-				XDP::ParentWindowID(window),
+				XDP::ParentWindowID(),
 				flags,
 				std::map<Glib::ustring, Glib::VariantBase>{
 					{
@@ -115,24 +114,22 @@ void PortalInhibit(
 
 void PortalPreventDisplaySleep(
 	bool prevent,
-	const QString &description = {},
-	QPointer<QWindow> window = {}) {
+	const QString &description = {}) {
 	static Glib::ustring requestPath;
 	if (prevent && !requestPath.empty()) {
 		return;
 	}
-	PortalInhibit(requestPath, 8 /* Idle */, description, window);
+	PortalInhibit(requestPath, 8 /* Idle */, description);
 }
 
 void PortalPreventAppSuspension(
 	bool prevent,
-	const QString &description = {},
-	QPointer<QWindow> window = {}) {
+	const QString &description = {}) {
 	static Glib::ustring requestPath;
 	if (prevent && !requestPath.empty()) {
 		return;
 	}
-	PortalInhibit(requestPath, 4 /* Suspend */, description, window);
+	PortalInhibit(requestPath, 4 /* Suspend */, description);
 }
 
 } // namespace
@@ -143,7 +140,7 @@ void BlockPowerSave(
 	QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
-		PortalPreventAppSuspension(true, description, window);
+		PortalPreventAppSuspension(true, description);
 		break;
 	case PowerSaveBlockType::PreventDisplaySleep:
 		if (const auto integration = WaylandIntegration::Instance()) {
@@ -152,7 +149,7 @@ void BlockPowerSave(
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 		XCBPreventDisplaySleep(true);
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-		PortalPreventDisplaySleep(true, description, window);
+		PortalPreventDisplaySleep(true, description);
 		break;
 	}
 }
