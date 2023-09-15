@@ -170,6 +170,10 @@ QString BundledResourcesPath() {
 	Unexpected("BundledResourcesPath not implemented.");
 }
 
+QString FileNameFromUserString(QString name) {
+	return name;
+}
+
 // From http://stackoverflow.com/questions/2256945/removing-a-non-empty-directory-programmatically-in-c-or-c
 bool DeleteDirectory(QString path) {
 	if (path.endsWith('/')) {

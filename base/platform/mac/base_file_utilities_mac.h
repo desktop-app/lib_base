@@ -5,11 +5,3 @@
 // https://github.com/desktop-app/legal/blob/master/LEGAL
 //
 #pragma once
-
-namespace base::Platform {
-
-inline QString FileNameFromUserString(QString name) {
-	return name;
-}
-
-} // namespace base::Platform
