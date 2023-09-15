@@ -71,8 +71,46 @@ class IdleInhibitManager
 public:
 	using Global::Global;
 
-	using Inhibitor = AutoDestroyer<QtWayland::zwp_idle_inhibitor_v1>;
-	base::flat_map<wl_surface*, Inhibitor> inhibitors;
+	class Inhibitor;
+	base::flat_map<QWaylandWindow*, Inhibitor> inhibitors;
+};
+
+class IdleInhibitManager::Inhibitor {
+public:
+	Inhibitor(
+			not_null<IdleInhibitManager*> manager,
+			not_null<QWaylandWindow*> window) {
+		if (const auto surface = window->surface()) {
+			_object = manager->create_inhibitor(surface);
+		}
+
+		// _object stores some garbage in this lambda
+		// and crashes when replacing the value.
+		// Perhaps a memory corruption, needs investigation.
+		/*
+		base::qt_signal_producer(
+			window.get(),
+			&QWaylandWindow::surfaceCreated
+		) | rpl::start_with_next([=] {
+			_object = manager->create_inhibitor(window->surface());
+		}, _lifetime);
+		*/
+
+		base::qt_signal_producer(
+			window.get(),
+			&QWaylandWindow::surfaceDestroyed
+		) | rpl::start_with_next([=] {
+			_object = {};
+		}, _lifetime);
+	}
+
+	[[nodiscard]] rpl::lifetime &lifetime() {
+		return _lifetime;
+	}
+
+private:
+	AutoDestroyer<QtWayland::zwp_idle_inhibitor_v1> _object;
+	rpl::lifetime _lifetime;
 };
 
 } // namespace
@@ -179,13 +217,8 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
-	const auto surface = native->surface();
-	if (!surface) {
-		return;
-	}
-
 	const auto deleter = [=] {
-		auto it = _private->idleInhibitManager->inhibitors.find(surface);
+		auto it = _private->idleInhibitManager->inhibitors.find(native);
 		if (it != _private->idleInhibitManager->inhibitors.cend()) {
 			_private->idleInhibitManager->inhibitors.erase(it);
 		}
@@ -196,23 +229,18 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 		return;
 	}
 
-	if (_private->idleInhibitManager->inhibitors.contains(surface)) {
+	if (_private->idleInhibitManager->inhibitors.contains(native)) {
 		return;
 	}
 
-	const auto inhibitor = _private->idleInhibitManager->create_inhibitor(
-		surface);
-
-	if (!inhibitor) {
-		return;
-	}
-
-	_private->idleInhibitManager->inhibitors.emplace(surface, inhibitor);
+	const auto result = _private->idleInhibitManager->inhibitors.emplace(
+		native,
+		IdleInhibitManager::Inhibitor(&*_private->idleInhibitManager, native));
 
 	base::qt_signal_producer(
 		native,
-		&QWaylandWindow::surfaceDestroyed
-	) | rpl::start_with_next(deleter, _private->lifetime);
+		&QObject::destroyed
+	) | rpl::start_with_next(deleter, result.first->second.lifetime());
 }
 
 } // namespace Platform
