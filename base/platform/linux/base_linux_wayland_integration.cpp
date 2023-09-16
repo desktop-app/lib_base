@@ -80,7 +80,6 @@ public:
 struct WaylandIntegration::Private : public AutoDestroyer<QtWayland::wl_registry> {
 	std::optional<Global<QtWayland::xdg_activation_v1>> xdgActivation;
 	std::optional<IdleInhibitManager> idleInhibitManager;
-	rpl::lifetime lifetime;
 
 protected:
 	void registry_global(
@@ -130,7 +129,7 @@ WaylandIntegration *WaylandIntegration::Instance() {
 			&QObject::destroyed
 		) | rpl::start_with_next([] {
 			instance = std::nullopt;
-		}, instance->_private->lifetime);
+		}, instance->_private->lifetime());
 		return true;
 	}();
 	if (!instance) return nullptr;
