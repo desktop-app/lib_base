@@ -8,7 +8,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/platform/linux/base_linux_wayland_integration.h"
 
 #include "base/platform/linux/base_linux_wayland_utilities.h"
-#include "base/platform/base_platform_info.h"
 #include "base/qt_signal_producer.h"
 #include "base/flat_map.h"
 
@@ -21,7 +20,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include <qwayland-xdg-activation-v1.h>
 #include <qwayland-idle-inhibit-unstable-v1.h>
 
-using namespace QNativeInterface;
+using QWlApp = QNativeInterface::QWaylandApplication;
 using namespace QNativeInterface::Private;
 using namespace base::Platform::Wayland;
 
@@ -113,7 +112,15 @@ private:
 
 } // namespace
 
-struct WaylandIntegration::Private : public AutoDestroyer<QtWayland::wl_registry> {
+struct WaylandIntegration::Private
+		: public AutoDestroyer<QtWayland::wl_registry> {
+	Private(not_null<QWlApp*> native)
+	: AutoDestroyer(wl_display_get_registry(native->display()))
+	, display(native->display()) {
+		wl_display_roundtrip(display);
+	}
+
+	const not_null<wl_display*> display;
 	std::optional<Global<QtWayland::xdg_activation_v1>> xdgActivation;
 	std::optional<IdleInhibitManager> idleInhibitManager;
 
@@ -139,36 +146,27 @@ protected:
 };
 
 WaylandIntegration::WaylandIntegration()
-: _private(std::make_unique<Private>()) {
-	const auto native = qApp->nativeInterface<QWaylandApplication>();
-	if (!native) {
-		return;
-	}
-
-	const auto display = native->display();
-	if (!display) {
-		return;
-	}
-
-	_private->init(wl_display_get_registry(display));
-	wl_display_roundtrip(display);
+: _private(std::make_unique<Private>(qApp->nativeInterface<QWlApp>())) {
 }
 
 WaylandIntegration::~WaylandIntegration() = default;
 
 WaylandIntegration *WaylandIntegration::Instance() {
-	if (!::Platform::IsWayland()) return nullptr;
-	static std::optional<WaylandIntegration> instance(std::in_place);
-	[[maybe_unused]] static const auto Inited = [] {
+	const auto native = qApp->nativeInterface<QWlApp>();
+	if (!native) return nullptr;
+	static std::optional<WaylandIntegration> instance;
+	if (instance && native->display() != instance->_private->display) {
+		instance.reset();
+	}
+	if (!instance) {
+		instance.emplace();
 		base::qt_signal_producer(
 			QGuiApplication::platformNativeInterface(),
 			&QObject::destroyed
 		) | rpl::start_with_next([] {
 			instance = std::nullopt;
 		}, instance->_private->lifetime());
-		return true;
-	}();
-	if (!instance) return nullptr;
+	}
 	return &*instance;
 }
 
@@ -182,7 +180,7 @@ QString WaylandIntegration::activationToken(const QString &appId) {
 		return {};
 	}
 
-	const auto native = qApp->nativeInterface<QWaylandApplication>();
+	const auto native = qApp->nativeInterface<QWlApp>();
 	const auto nativeWindow = window->nativeInterface<QWaylandWindow>();
 	if (!native || !nativeWindow) {
 		return {};
