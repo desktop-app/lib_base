@@ -20,7 +20,9 @@ public:
 	AutoDestroyer(const AutoDestroyer &other) = delete;
 	AutoDestroyer &operator=(const AutoDestroyer &other) = delete;
 
-	AutoDestroyer(AutoDestroyer &&other) : T(static_cast<T&&>(other)) {
+	AutoDestroyer(AutoDestroyer &&other)
+	: T(static_cast<T&&>(other))
+	, _lifetime(std::move(other._lifetime)) {
 		other._moved = true;
 	}
 
@@ -28,6 +30,7 @@ public:
 		if (this != &other) {
 			destroy();
 			static_cast<T&>(*this) = static_cast<T&&>(other);
+			_lifetime = std::move(other._lifetime);
 			other._moved = true;
 			_moved = false;
 		}
@@ -36,6 +39,10 @@ public:
 
 	~AutoDestroyer() {
 		destroy();
+	}
+
+	[[nodiscard]] rpl::lifetime &lifetime() {
+		return _lifetime;
 	}
 
 private:
@@ -56,6 +63,7 @@ private:
 	}
 
 	bool _moved = false;
+	rpl::lifetime _lifetime;
 };
 
 template <typename T>
