@@ -72,7 +72,7 @@ public:
 	using Global::Global;
 
 	class Inhibitor;
-	base::flat_map<QWaylandWindow*, Inhibitor> inhibitors;
+	base::flat_map<QWaylandWindow*, std::unique_ptr<Inhibitor>> inhibitors;
 };
 
 class IdleInhibitManager::Inhibitor {
@@ -84,17 +84,12 @@ public:
 			_object = manager->create_inhibitor(surface);
 		}
 
-		// _object stores some garbage in this lambda
-		// and crashes when replacing the value.
-		// Perhaps a memory corruption, needs investigation.
-		/*
 		base::qt_signal_producer(
 			window.get(),
 			&QWaylandWindow::surfaceCreated
 		) | rpl::start_with_next([=] {
 			_object = manager->create_inhibitor(window->surface());
 		}, _lifetime);
-		*/
 
 		base::qt_signal_producer(
 			window.get(),
@@ -103,6 +98,9 @@ public:
 			_object = {};
 		}, _lifetime);
 	}
+
+	Inhibitor(Inhibitor &&other) = delete;
+	Inhibitor &operator=(Inhibitor &&other) = delete;
 
 	[[nodiscard]] rpl::lifetime &lifetime() {
 		return _lifetime;
@@ -235,12 +233,14 @@ void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
 
 	const auto result = _private->idleInhibitManager->inhibitors.emplace(
 		native,
-		IdleInhibitManager::Inhibitor(&*_private->idleInhibitManager, native));
+		std::make_unique<IdleInhibitManager::Inhibitor>(
+			&*_private->idleInhibitManager,
+			native));
 
 	base::qt_signal_producer(
 		native,
 		&QObject::destroyed
-	) | rpl::start_with_next(deleter, result.first->second.lifetime());
+	) | rpl::start_with_next(deleter, result.first->second->lifetime());
 }
 
 } // namespace Platform
