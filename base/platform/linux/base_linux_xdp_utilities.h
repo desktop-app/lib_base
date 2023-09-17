@@ -6,10 +6,7 @@
 //
 #pragma once
 
-namespace Glib {
-class ustring;
-class VariantBase;
-} // namespace Glib
+#include <glibmm.h>
 
 class QWindow;
 
@@ -34,6 +31,78 @@ public:
 			const Glib::ustring &,
 			const Glib::ustring &,
 			const Glib::VariantBase &)> callback);
+
+	template <typename ...Args>
+	SettingWatcher(
+		Fn<void(
+			const Glib::ustring &,
+			const Glib::ustring &,
+			Args...)> callback)
+	: SettingWatcher([=](
+			const Glib::ustring &group,
+			const Glib::ustring &key,
+			const Glib::VariantBase &value) {
+		using Tuple = std::tuple<std::decay_t<Args>...>;
+		using NonEmptyTuple = std::conditional_t<
+			bool(std::tuple_size_v<Tuple>),
+			Tuple,
+			std::tuple<std::monostate>>;
+		using Arg0 = std::tuple_element_t<0, NonEmptyTuple>;
+		if constexpr (sizeof...(Args) == 0) {
+			callback(group, key);
+			return;
+		}
+		try {
+			if constexpr (sizeof...(Args) == 1) {
+				callback(group, key, value.get_dynamic<Arg0>());
+			} else {
+				std::apply(
+					callback,
+					std::tuple_cat(
+						std::forward_as_tuple(group, key),
+						value.get_dynamic<Tuple>()));
+			}
+		} catch (...) {
+			if constexpr (sizeof...(Args) == 1) {
+				callback(group, key, Arg0());
+			} else {
+				std::apply(
+					callback,
+					std::tuple_cat(
+						std::forward_as_tuple(group, key),
+						Tuple()));
+			}
+		}
+	}) {
+	}
+
+	template <typename Callback>
+	SettingWatcher(Callback callback)
+	: SettingWatcher(Fn(callback)) {
+	}
+
+	template <typename ...Args>
+	SettingWatcher(
+		const Glib::ustring &group,
+		const Glib::ustring &key,
+		Fn<void(Args...)> callback)
+	: SettingWatcher([=](
+			const Glib::ustring &group2,
+			const Glib::ustring &key2,
+			Args &&...value) {
+		if (group == group2 && key == key2) {
+			callback(std::forward<decltype(value)>(value)...);
+		}
+	}) {
+	}
+
+	template <typename Callback>
+	SettingWatcher(
+		const Glib::ustring &group,
+		const Glib::ustring &key,
+		Callback callback)
+	: SettingWatcher(group, key, Fn(callback)) {
+	}
 
 	~SettingWatcher();
 
