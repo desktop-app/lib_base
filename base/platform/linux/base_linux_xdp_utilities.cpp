@@ -8,7 +8,6 @@
 
 #include "base/platform/base_platform_info.h"
 
-#include <glibmm.h>
 #include <giomm.h>
 
 #include <QtGui/QGuiApplication>
