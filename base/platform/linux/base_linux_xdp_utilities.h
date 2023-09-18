@@ -24,6 +24,19 @@ std::optional<Glib::VariantBase> ReadSetting(
 	const Glib::ustring &group,
 	const Glib::ustring &key);
 
+template <typename T>
+std::optional<T> ReadSetting(
+		const Glib::ustring &group,
+		const Glib::ustring &key) {
+	try {
+		if (const auto value = ReadSetting(group, key)) {
+			return value->get_dynamic<T>();
+		}
+	} catch (...) {
+	}
+	return std::nullopt;
+}
+
 class SettingWatcher {
 public:
 	SettingWatcher(
