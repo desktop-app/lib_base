@@ -31,8 +31,7 @@ void SnapDefaultHandler(const QString &protocol) {
 			return Gio::DBus::Connection::get_sync(
 				Gio::DBus::BusType::SESSION);
 		} catch (const std::exception &e) {
-			LOG(("Snap Default Handler Error: %1")
-				.arg(QString::fromStdString(e.what())));
+			LOG(("Snap Default Handler Error: %1").arg(e.what()));
 			return Glib::RefPtr<Gio::DBus::Connection>();
 		}
 	}();
@@ -56,8 +55,7 @@ void SnapDefaultHandler(const QString &protocol) {
 						result
 					).get_child(0).get_dynamic<Glib::ustring>();
 				} catch (const std::exception &e) {
-					LOG(("Snap Default Handler Error: %1")
-						.arg(QString::fromStdString(e.what())));
+					LOG(("Snap Default Handler Error: %1").arg(e.what()));
 					return std::nullopt;
 				}
 			}();
@@ -93,8 +91,7 @@ void SnapDefaultHandler(const QString &protocol) {
 					try {
 						connection->call_finish(result);
 					} catch (const std::exception &e) {
-						LOG(("Snap Default Handler Error: %1")
-							.arg(QString::fromStdString(e.what())));
+						LOG(("Snap Default Handler Error: %1").arg(e.what()));
 					}
 				},
 				kSnapcraftSettingsService);
@@ -167,8 +164,7 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 			newAppInfo->set_as_default_for_type(handlerType);
 		}
 	} catch (const std::exception &e) {
-		LOG(("Register Url Scheme Error: %1").arg(
-			QString::fromStdString(e.what())));
+		LOG(("Register Url Scheme Error: %1").arg(e.what()));
 	}
 }
 
