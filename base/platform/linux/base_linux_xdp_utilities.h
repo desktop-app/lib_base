@@ -55,18 +55,14 @@ public:
 			const Glib::ustring &group,
 			const Glib::ustring &key,
 			const Glib::VariantBase &value) {
-		using Tuple = std::tuple<std::decay_t<Args>...>;
-		using NonEmptyTuple = std::conditional_t<
-			bool(std::tuple_size_v<Tuple>),
-			Tuple,
-			std::tuple<std::monostate>>;
-		using Arg0 = std::tuple_element_t<0, NonEmptyTuple>;
 		if constexpr (sizeof...(Args) == 0) {
 			callback(group, key);
 			return;
 		}
 		try {
+			using Tuple = std::tuple<std::decay_t<Args>...>;
 			if constexpr (sizeof...(Args) == 1) {
+				using Arg0 = std::tuple_element_t<0, Tuple>;
 				callback(group, key, value.get_dynamic<Arg0>());
 			} else {
 				std::apply(
@@ -76,15 +72,6 @@ public:
 						value.get_dynamic<Tuple>()));
 			}
 		} catch (...) {
-			if constexpr (sizeof...(Args) == 1) {
-				callback(group, key, Arg0());
-			} else {
-				std::apply(
-					callback,
-					std::tuple_cat(
-						std::forward_as_tuple(group, key),
-						Tuple()));
-			}
 		}
 	}) {
 	}
