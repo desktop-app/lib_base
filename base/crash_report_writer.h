@@ -6,8 +6,6 @@
 //
 #pragma once
 
-#ifndef DESKTOP_APP_DISABLE_CRASH_REPORTS
-
 #include "base/file_lock.h"
 
 namespace base {
@@ -38,5 +36,3 @@ private:
 };
 
 } // namespace base
-
-#endif // DESKTOP_APP_DISABLE_CRASH_REPORTS

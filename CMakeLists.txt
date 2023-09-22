@@ -314,4 +314,11 @@ PRIVATE
     base/crash_report_writer.h
 )
 
+if (DESKTOP_APP_DISABLE_CRASH_REPORTS)
+    remove_target_sources(lib_base_crash_report_writer ${src_loc}
+        base/crash_report_writer.cpp
+        base/crash_report_writer.h
+    )
+endif()
+
 target_link_libraries(lib_base_crash_report_writer PUBLIC desktop-app::lib_base)
