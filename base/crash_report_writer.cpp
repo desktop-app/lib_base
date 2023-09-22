@@ -6,8 +6,6 @@
 //
 #include "base/crash_report_writer.h"
 
-#ifndef DESKTOP_APP_DISABLE_CRASH_REPORTS
-
 #include "base/platform/base_platform_info.h"
 #include "base/integration.h"
 #include "base/crash_report_header.h"
@@ -460,5 +458,3 @@ std::optional<QByteArray> CrashReportWriter::readPreviousReport() {
 }
 
 } // namespace CrashReports
-
-#endif // DESKTOP_APP_DISABLE_CRASH_REPORTS
