@@ -7,6 +7,7 @@
 #pragma once
 
 #include <QtCore/QLatin1String>
+#include <QtCore/QString>
 #include <memory>
 
 namespace base {
