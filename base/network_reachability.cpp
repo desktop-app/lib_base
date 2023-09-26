@@ -7,7 +7,6 @@
 #include "base/network_reachability.h"
 
 #include "base/platform/base_platform_network_reachability.h"
-#include "base/platform/base_platform_info.h"
 #include "base/qt_signal_producer.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
@@ -20,16 +19,6 @@ namespace base {
 namespace {
 
 std::weak_ptr<NetworkReachability> GlobalNetworkReachability;
-
-#if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
-bool LoadQNetworkInformation() {
-	if (::Platform::IsLinux() && QNetworkInformation::load(u"glib"_q)) {
-		return true;
-	}
-	return QNetworkInformation::load(
-		QNetworkInformation::Feature::Reachability);
-}
-#endif // Qt >= 6.2.0
 
 } // namespace
 
@@ -64,7 +53,8 @@ NetworkReachability::NetworkReachability()
 			_private->available = available;
 		}, _private->lifetime);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
-	} else if (LoadQNetworkInformation()) {
+	} else if (QNetworkInformation::load(
+		QNetworkInformation::Feature::Reachability)) {
 		_private->available = QNetworkInformation::instance()->reachability()
 			!= QNetworkInformation::Reachability::Disconnected;
 		base::qt_signal_producer(
