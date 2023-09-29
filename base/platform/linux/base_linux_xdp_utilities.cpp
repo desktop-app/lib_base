@@ -12,9 +12,12 @@
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
 #include <private/qgenericunixservices_p.h>
+#endif // Qt >= 6.5.0
 
 namespace base::Platform::XDP {
 
