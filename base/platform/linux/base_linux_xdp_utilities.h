@@ -78,7 +78,7 @@ public:
 
 	template <typename Callback>
 	SettingWatcher(Callback callback)
-	: SettingWatcher(Fn(callback)) {
+	: SettingWatcher(std::function(callback)) {
 	}
 
 	template <typename ...Args>
@@ -101,7 +101,7 @@ public:
 		const Glib::ustring &group,
 		const Glib::ustring &key,
 		Callback callback)
-	: SettingWatcher(group, key, Fn(callback)) {
+	: SettingWatcher(group, key, std::function(callback)) {
 	}
 
 	~SettingWatcher();
