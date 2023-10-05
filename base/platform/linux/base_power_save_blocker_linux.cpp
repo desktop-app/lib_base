@@ -54,40 +54,35 @@ void XCBPreventDisplaySleep(bool prevent) {
  * 4: Suspend
  * 8: Idle
  */
-void PortalInhibit(
-	Glib::ustring &requestPath,
-	uint flags = 0,
-	const QString &description = {}) {
-	try {
-		const auto connection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::SESSION);
-
-		if (!requestPath.empty()) {
-			connection->call(
-				requestPath,
-				XDP::kRequestInterface,
-				"Close",
-				{},
-				{},
-				XDP::kService);
-			requestPath = "";
+class PortalInhibit final {
+public:
+	PortalInhibit(uint flags = 0, const QString &description = {})
+	: _dbusConnection([] {
+		try {
+			return Gio::DBus::Connection::get_sync(
+				Gio::DBus::BusType::SESSION);
+		} catch (...) {
+			return Glib::RefPtr<Gio::DBus::Connection>();
+		}
+	}()) {
+		if (!_dbusConnection) {
 			return;
 		}
 
 		const auto handleToken = Glib::ustring("desktop_app")
 			+ std::to_string(base::RandomValue<uint>());
 
-		auto uniqueName = connection->get_unique_name();
+		auto uniqueName = _dbusConnection->get_unique_name();
 		uniqueName.erase(0, 1);
 		uniqueName.replace(uniqueName.find('.'), 1, 1, '_');
 
-		requestPath = Glib::ustring(
+		_requestPath = Glib::ustring(
 				"/org/freedesktop/portal/desktop/request/")
 			+ uniqueName
 			+ '/'
 			+ handleToken;
 
-		connection->call(
+		_dbusConnection->call(
 			XDP::kObjectPath,
 			"org.freedesktop.portal.Inhibit",
 			"Inhibit",
@@ -108,36 +103,55 @@ void PortalInhibit(
 			}),
 			{},
 			XDP::kService);
-	} catch (...) {
 	}
-}
+
+	~PortalInhibit() {
+		if (!_dbusConnection) {
+			return;
+		}
+
+		_dbusConnection->call(
+			_requestPath,
+			XDP::kRequestInterface,
+			"Close",
+			{},
+			{},
+			XDP::kService);
+	}
+
+private:
+	Glib::RefPtr<Gio::DBus::Connection> _dbusConnection;
+	Glib::ustring _requestPath;
+};
 
 void PortalPreventDisplaySleep(
-	bool prevent,
-	const QString &description = {}) {
-	static Glib::ustring requestPath;
-	if (prevent && !requestPath.empty()) {
-		return;
+		bool prevent,
+		const QString &description = {}) {
+	static std::optional<PortalInhibit> instance;
+	if (prevent && !instance) {
+		instance.emplace(8 /* Idle */, description);
+	} else if (!prevent && instance) {
+		instance.reset();
 	}
-	PortalInhibit(requestPath, 8 /* Idle */, description);
 }
 
 void PortalPreventAppSuspension(
-	bool prevent,
-	const QString &description = {}) {
-	static Glib::ustring requestPath;
-	if (prevent && !requestPath.empty()) {
-		return;
+		bool prevent,
+		const QString &description = {}) {
+	static std::optional<PortalInhibit> instance;
+	if (prevent && !instance) {
+		instance.emplace(4 /* Suspend */, description);
+	} else if (!prevent && instance) {
+		instance.reset();
 	}
-	PortalInhibit(requestPath, 4 /* Suspend */, description);
 }
 
 } // namespace
 
 void BlockPowerSave(
-	PowerSaveBlockType type,
-	const QString &description,
-	QPointer<QWindow> window) {
+		PowerSaveBlockType type,
+		const QString &description,
+		QPointer<QWindow> window) {
 	switch (type) {
 	case PowerSaveBlockType::PreventAppSuspension:
 		PortalPreventAppSuspension(true, description);
