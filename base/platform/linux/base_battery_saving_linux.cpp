@@ -41,8 +41,7 @@ BatterySaving::BatterySaving(Fn<void()> changedCallback)
 	static const auto dup_default = [] {
 		// reset dlerror after dlsym call
 		const auto guard = gsl::finally([] { dlerror(); });
-		using T = decltype(&g_power_profile_monitor_dup_default);
-		return reinterpret_cast<T>(
+		return reinterpret_cast<GPowerProfileMonitor*(*)()>(
 			dlsym(RTLD_DEFAULT, "g_power_profile_monitor_dup_default"));
 	}();
 
@@ -83,8 +82,7 @@ std::optional<bool> BatterySaving::enabled() const {
 	static const auto get_power_saver_enabled = [] {
 		// reset dlerror after dlsym call
 		const auto guard = gsl::finally([] { dlerror(); });
-		using T = decltype(&g_power_profile_monitor_get_power_saver_enabled);
-		return reinterpret_cast<T>(
+		return reinterpret_cast<gboolean(*)(GPowerProfileMonitor*)>(
 			dlsym(
 				RTLD_DEFAULT,
 				"g_power_profile_monitor_get_power_saver_enabled"));
