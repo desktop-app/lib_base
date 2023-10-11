@@ -345,7 +345,9 @@ void SystemMediaControls::setLoopStatus(LoopStatus status) {
 void SystemMediaControls::setShuffle(bool value) {
 	// prevent property update -> rpl event -> property update recursion
 	_private->playerData().inSetShuffle = true;
-	_private->player().set_shuffle(value);
+	if (_private->player().get_shuffle() != value) {
+		_private->player().set_shuffle(value);
+	}
 	_private->playerData().inSetShuffle = false;
 }
 
