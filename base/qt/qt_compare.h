@@ -26,6 +26,23 @@ template <typename P>
 	return a.compare(b) <=> 0;
 }
 
+template <typename T>
+[[nodiscard]] inline std::strong_ordering operator<=>(
+		const QVector<T> &a,
+		const QVector<T> &b) noexcept {
+	const auto as = a.size();
+	const auto bs = b.size();
+	const auto s = int(std::min(as, bs));
+	for (auto i = 0; i != s; ++i) {
+		const auto result = (a[i] <=> b[i]);
+		if (result != std::strong_ordering::equal
+			&& result != std::strong_ordering::equivalent) {
+			return result;
+		}
+	}
+	return (as <=> bs);
+}
+
 #ifndef _MSC_VER
 namespace base::details {
 
