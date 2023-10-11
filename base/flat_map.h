@@ -430,6 +430,9 @@ public:
 	constexpr void reserve(size_type size) noexcept {
 		impl().reserve(size);
 	}
+	constexpr void shrink_to_fit() noexcept {
+		impl().shrink_to_fit();
+	}
 
 	constexpr iterator begin() noexcept {
 		return impl().begin();
@@ -821,6 +824,7 @@ public:
 	using parent::empty;
 	using parent::clear;
 	using parent::reserve;
+	using parent::shrink_to_fit;
 	using parent::begin;
 	using parent::end;
 	using parent::cbegin;
