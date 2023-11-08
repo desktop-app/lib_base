@@ -7,6 +7,7 @@
 #pragma once
 
 #include <compare>
+#include <variant>
 #include <gsl/pointers>
 
 #include <QString>
