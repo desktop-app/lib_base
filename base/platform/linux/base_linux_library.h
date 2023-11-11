@@ -6,6 +6,8 @@
 //
 #pragma once
 
+#include "base/custom_delete.h"
+
 #include <dlfcn.h>
 #include <memory>
 
@@ -15,13 +17,7 @@
 namespace base {
 namespace Platform {
 
-struct LibraryHandleDeleter {
-	void operator()(void *handle) {
-		dlclose(handle);
-	}
-};
-
-using LibraryHandle = std::unique_ptr<void, LibraryHandleDeleter>;
+using LibraryHandle = std::unique_ptr<void, custom_delete<dlclose>>;
 
 LibraryHandle LoadLibrary(const char *name, int flags = 0);
 
