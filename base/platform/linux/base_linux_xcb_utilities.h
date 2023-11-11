@@ -6,6 +6,8 @@
 //
 #pragma once
 
+#include "base/custom_delete.h"
+
 #include <xcb/xcb.h>
 
 namespace base::Platform::XCB {
@@ -85,6 +87,24 @@ public:
 private:
 	xcb_connection_t * const _qtConnection = nullptr;
 	const std::shared_ptr<CustomConnection> _customConnection;
+};
+
+template <typename Object, auto constructor, auto destructor>
+class ObjectWithConnection
+	: public std::unique_ptr<Object, custom_delete<destructor>> {
+public:
+	ObjectWithConnection() {
+		if (_connection && !xcb_connection_has_error(_connection)) {
+			this->reset(constructor(_connection));
+		}
+	}
+
+	~ObjectWithConnection() {
+		this->reset(nullptr);
+	}
+
+private:
+	const Connection _connection;
 };
 
 } // namespace base::Platform::XCB
