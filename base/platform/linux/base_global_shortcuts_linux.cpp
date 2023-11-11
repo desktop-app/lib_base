@@ -39,12 +39,6 @@ Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 using XcbReply = xcb_record_enable_context_reply_t;
 
-struct KeySymbolsDeleter {
-	void operator()(xcb_key_symbols_t *value) {
-		xcb_key_symbols_free(value);
-	}
-};
-
 bool IsKeypad(xcb_keysym_t keysym) {
 	return (xcb_is_keypad_key(keysym) || xcb_is_private_keypad_key(keysym));
 }
@@ -66,7 +60,10 @@ private:
 	xcb_keysym_t computeKeysym(xcb_keycode_t detail, uint16_t state);
 
 	XCB::CustomConnection _connection;
-	std::unique_ptr<xcb_key_symbols_t, KeySymbolsDeleter> _keySymbols;
+	std::unique_ptr<
+		xcb_key_symbols_t,
+		custom_delete<xcb_key_symbols_free>
+	> _keySymbols;
 	std::unique_ptr<QSocketNotifier> _notifier;
 	std::optional<xcb_record_context_t> _context;
 	std::optional<xcb_record_enable_context_cookie_t> _cookie;
