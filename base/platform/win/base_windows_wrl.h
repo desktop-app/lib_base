@@ -6,12 +6,11 @@
 //
 #pragma once
 
-#include "base/platform/win/base_windows_h.h"
-
 #define _ROAPI_ // we don't want them from .dll
 #include <roapi.h>
 #undef _ROAPI_
 
+#include <windows.h>
 #include <wrl/client.h>
 #include <winstring.h>
 #include <strsafe.h>

@@ -6,9 +6,9 @@
 //
 #include "base/platform/base_platform_network_reachability.h"
 
-#include "base/platform/win/base_windows_h.h"
 #include "base/debug_log.h"
 
+#include <windows.h>
 #include <wrl/client.h>
 #include <netlistmgr.h>
 #include <comdef.h>

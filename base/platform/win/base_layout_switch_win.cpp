@@ -6,8 +6,7 @@
 //
 #include "base/platform/win/base_layout_switch_win.h"
 
-#include "base/platform/win/base_windows_h.h"
-
+#include <windows.h>
 #include <WinUser.h>
 #include <minwindef.h>
 

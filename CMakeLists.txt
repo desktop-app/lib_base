@@ -102,9 +102,11 @@ PRIVATE
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
     base/platform/win/base_windows_co_task_mem.h
-    base/platform/win/base_windows_h.h
+    base/platform/win/base_windows_gdiplus_h.h
+    base/platform/win/base_windows_rpcndr_h.h
     base/platform/win/base_windows_safe_library.cpp
     base/platform/win/base_windows_safe_library.h
+    base/platform/win/base_windows_shlobj_h.h
     base/platform/win/base_windows_winrt.cpp
     base/platform/win/base_windows_winrt.h
     base/platform/win/base_windows_wrl.cpp

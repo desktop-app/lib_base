@@ -6,8 +6,20 @@
 //
 #pragma once
 
-#include <windows.h>
+#include <Unknwn.h>
 
-#ifdef small
-#undef small
-#endif // small
+#ifdef min
+#undef min
+#endif // min
+
+#ifdef max
+#undef max
+#endif // max
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) < (b) ? (b) : (a))
+
+#include <gdiplus.h>
+
+#undef min
+#undef max

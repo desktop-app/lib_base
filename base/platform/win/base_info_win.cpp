@@ -8,13 +8,13 @@
 
 #include "base/algorithm.h"
 #include "base/platform/base_platform_info.h"
-#include "base/platform/win/base_windows_h.h"
 
 #include <QtCore/QOperatingSystemVersion>
 #include <QtCore/QJsonObject>
 #include <QtCore/QDate>
 #include <QtCore/QSettings>
 
+#include <windows.h>
 #include <VersionHelpers.h>
 
 namespace Platform {

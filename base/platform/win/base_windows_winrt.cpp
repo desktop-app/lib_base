@@ -6,8 +6,9 @@
 //
 #include "base/platform/win/base_windows_winrt.h"
 
-#include "base/platform/win/base_windows_h.h"
 #include "base/platform/win/base_windows_safe_library.h"
+
+#include <windows.h>
 
 namespace base::WinRT {
 namespace {

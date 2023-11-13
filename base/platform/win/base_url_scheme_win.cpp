@@ -6,9 +6,9 @@
 //
 #include "base/platform/win/base_url_scheme_win.h"
 
-#include "base/platform/win/base_windows_h.h"
-
 #include <QtCore/QDir>
+
+#include <windows.h>
 #include <array>
 
 namespace base::Platform {

@@ -7,6 +7,7 @@
 #include "base/platform/win/base_file_utilities_win.h"
 
 #include "base/platform/win/base_windows_safe_library.h"
+#include "base/platform/win/base_windows_shlobj_h.h"
 #include "base/algorithm.h"
 
 #include <QtCore/QString>
@@ -16,7 +17,6 @@
 #include <string>
 #include <shellapi.h>
 #include <Shlwapi.h>
-#include <shlobj.h>
 #include <RestartManager.h>
 #include <io.h>
 

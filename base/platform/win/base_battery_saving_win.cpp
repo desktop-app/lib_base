@@ -6,7 +6,6 @@
 //
 #include "base/platform/win/base_battery_saving_win.h"
 
-#include "base/platform/win/base_windows_h.h"
 #include "base/battery_saving.h"
 #include "base/integration.h"
 
@@ -14,6 +13,8 @@
 #include <QtCore/QCoreApplication>
 #include <QtGui/QWindow>
 #include <QtWidgets/QWidget>
+
+#include <windows.h>
 
 namespace base::Platform {
 namespace {

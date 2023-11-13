@@ -6,7 +6,7 @@
 //
 #include "base/platform/win/base_process_win.h"
 
-#include "base/platform/win/base_windows_h.h"
+#include <windows.h>
 
 namespace base::Platform {
 namespace {

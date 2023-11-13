@@ -6,9 +6,10 @@
 //
 #include "base/platform/win/base_last_input_win.h"
 
-#include "base/platform/win/base_windows_h.h"
 #include "base/call_delayed.h"
 #include "base/integration.h"
+
+#include <windows.h>
 
 namespace base::Platform {
 namespace {

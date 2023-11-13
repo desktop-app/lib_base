@@ -6,8 +6,9 @@
 //
 #include "base/platform/win/base_power_save_blocker_win.h"
 
-#include "base/platform/win/base_windows_h.h"
 #include "base/platform/base_platform_info.h"
+
+#include <windows.h>
 
 // Thanks Chromium: services/device/wake_lock/power_save_blocker
 

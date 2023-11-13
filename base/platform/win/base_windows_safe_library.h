@@ -6,7 +6,7 @@
 //
 #pragma once
 
-#include "base/platform/win/base_windows_h.h"
+#include <windows.h>
 
 // We try to keep this module free of external dependencies.
 

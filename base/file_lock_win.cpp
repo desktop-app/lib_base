@@ -6,10 +6,11 @@
 //
 #include "base/file_lock.h"
 
-#include "base/platform/win/base_windows_h.h"
 #include "base/platform/win/base_file_utilities_win.h"
 
 #include <QtCore/QDir>
+
+#include <windows.h>
 #include <io.h>
 #include <fileapi.h>
 
