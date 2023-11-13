@@ -14,6 +14,7 @@
 
 #include <array>
 #include <string>
+#include <shellapi.h>
 #include <Shlwapi.h>
 #include <shlobj.h>
 #include <RestartManager.h>

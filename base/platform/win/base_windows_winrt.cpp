@@ -6,10 +6,8 @@
 //
 #include "base/platform/win/base_windows_winrt.h"
 
+#include "base/platform/win/base_windows_h.h"
 #include "base/platform/win/base_windows_safe_library.h"
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
 namespace base::WinRT {
 namespace {
