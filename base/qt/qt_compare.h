@@ -93,16 +93,16 @@ inline constexpr auto operator<=>(
 	const auto min = std::min(asize, bsize);
 	for (auto i = std::size_t(); i != min; ++i) {
 		const auto result = (a[i] <=> b[i]);
-		if (result != Result()) {
+		if (result != Result::equivalent) {
 			return result;
 		}
 	}
 	if (asize < bsize) {
-		return Result(-1);
+		return Result::less;
 	} else if (asize > bsize) {
-		return Result(1);
+		return Result::greater;
 	}
-	return Result();
+	return Result::equivalent;
 }
 
 #endif // _MSC_VER
