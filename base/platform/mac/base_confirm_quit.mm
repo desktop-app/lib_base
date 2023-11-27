@@ -86,7 +86,7 @@ constexpr auto kTimeDeltaFuzzFactor = crl::time(1000);
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-	const CGFloat kCornerRadius = 5.0;
+	const CGFloat kCornerRadius = 9.0;
 	NSBezierPath* path = [NSBezierPath
 		bezierPathWithRoundedRect:[self bounds]
 		xRadius:kCornerRadius
