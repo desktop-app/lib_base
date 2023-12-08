@@ -229,7 +229,7 @@ public:
 		weak_ptr) noexcept = default;
 
 	void reset(T *value = nullptr) {
-		if (get() != value) {
+		if ((!value && _alive) || (get() != value)) {
 			destroy();
 			_alive = value ? value->incrementAliveTracker() : nullptr;
 		}
