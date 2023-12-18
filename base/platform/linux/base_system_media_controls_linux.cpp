@@ -127,6 +127,13 @@ public:
 private:
 	class Player : public Mpris::impl::MediaPlayer2PlayerSkeletonImpl {
 	public:
+		struct DefinitionData {
+			GI_DEFINES_MEMBER(
+				Gio::impl::internal::DBusInterfaceSkeletonClassDef,
+				get_info,
+				true)
+		};
+
 		Player(not_null<Private*> parent)
 		: Mpris::impl::MediaPlayer2PlayerSkeletonImpl(this)
 		, _parent(parent)
@@ -238,7 +245,7 @@ SystemMediaControls::Private::Private()
 			GObject::ParamSpec) {
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_commandRequests.fire_copy(
-				LoopStatusToCommand(player().get_loop_status().value_or("")));
+				LoopStatusToCommand(player().get_loop_status()));
 		});
 	});
 	player().property_shuffle().signal_notify().connect([=](
@@ -424,16 +431,13 @@ void SystemMediaControls::clearThumbnail() {
 }
 
 void SystemMediaControls::clearMetadata() {
-	const auto metadata = std::array{
+	_private->player().set_metadata(GLib::Variant::new_array({
 		GLib::Variant::new_dict_entry(
 			GLib::Variant::new_string("mpris:trackid"),
 			// fake path
 			GLib::Variant::new_variant(
 				GLib::Variant::new_object_path("/org/desktop_app/track/0"))),
-	};
-
-	_private->player().set_metadata(
-		GLib::Variant::new_array(metadata.data(), metadata.size()));
+	}));
 }
 
 void SystemMediaControls::updateDisplay() {
