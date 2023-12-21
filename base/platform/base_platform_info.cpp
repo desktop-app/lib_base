@@ -26,7 +26,6 @@ QString SimplifyDeviceModel(QString model) {
 
 QString SimplifyGoodDeviceModel(QString model, std::vector<QString> remove) {
 	const auto limit = kMaxGoodDeviceModelLength;
-	const auto words = model.split(QChar(' '));
 	auto result = QString();
 	for (const auto &word : model.split(QChar(' '))) {
 		if (ranges::contains(remove, word.toLower())) {
