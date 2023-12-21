@@ -96,7 +96,7 @@ uint RegisterServiceWatcher(
 					2
 				).get_dynamic<Glib::ustring>();
 
-				if (name != service) {
+				if (name.raw() != service.raw()) {
 					return;
 				}
 
