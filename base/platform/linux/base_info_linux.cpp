@@ -29,8 +29,6 @@
 namespace Platform {
 namespace {
 
-constexpr auto kMaxDeviceModelLength = 15;
-
 [[nodiscard]] QString GetDesktopEnvironment() {
 	const auto value = qEnvironmentVariable("XDG_CURRENT_DESKTOP");
 	return value.contains(':')
@@ -192,9 +190,6 @@ QString SystemLanguage() {
 }
 
 QDate WhenSystemBecomesOutdated() {
-	const auto libcName = GetLibcName();
-	const auto libcVersion = GetLibcVersion();
-
 	if (IsGlibcLess228()) {
 		return QDate(2023, 7, 1); // Older than CentOS 8.
 	}
