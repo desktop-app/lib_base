@@ -9,6 +9,7 @@
 #include "base/algorithm.h"
 
 #include <QtCore/QPointer>
+#include <QtCore/QObject>
 
 namespace base {
 
