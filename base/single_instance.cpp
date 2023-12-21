@@ -137,9 +137,10 @@ void SingleInstance::send(const QByteArray &command, Fn<void()> done) {
 
 		received->append(_socket.readAll());
 		if (const auto response = DecodeMessage(*received)) {
-			const auto match = QRegularExpression(
+			static const auto RegExp = QRegularExpression(
 				"^PID:(\\d+);WND:(\\d+);$"
-			).match(QString::fromLatin1(*response));
+			);
+			const auto match = RegExp.match(QString::fromLatin1(*response));
 			if (const auto pid = match.captured(1).toULongLong()) {
 				Platform::ActivateProcessWindow(
 					static_cast<int64>(pid),
