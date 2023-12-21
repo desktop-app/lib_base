@@ -17,7 +17,7 @@ LibraryHandle LoadLibrary(const char *name, int flags) {
 		DEBUG_LOG(("Loaded '%1'!").arg(name));
 		return lib;
 	}
-	LOG(("Could not load '%1'! Error: %2").arg(name).arg(dlerror()));
+	LOG(("Could not load '%1'! Error: %2").arg(name, dlerror()));
 	return nullptr;
 }
 
@@ -27,7 +27,7 @@ void *LoadSymbolGeneric(const LibraryHandle &lib, const char *name) {
 	} else if (const auto result = dlsym(lib.get(), name)) {
 		return result;
 	}
-	LOG(("Error: failed to load '%1' function: %2").arg(name).arg(dlerror()));
+	LOG(("Error: failed to load '%1' function: %2").arg(name, dlerror()));
 	return nullptr;
 }
 
