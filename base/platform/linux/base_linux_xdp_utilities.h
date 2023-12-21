@@ -90,7 +90,7 @@ public:
 			const Glib::ustring &group2,
 			const Glib::ustring &key2,
 			Args &&...value) {
-		if (group == group2 && key == key2) {
+		if (group.raw() == group2.raw() && key.raw() == key2.raw()) {
 			callback(std::forward<decltype(value)>(value)...);
 		}
 	}) {
