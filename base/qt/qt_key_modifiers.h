@@ -18,4 +18,8 @@ namespace base {
 	return (QGuiApplication::keyboardModifiers() == Qt::AltModifier);
 }
 
+[[nodiscard]] inline bool IsShiftPressed() {
+	return (QGuiApplication::keyboardModifiers() == Qt::ShiftModifier);
+}
+
 } // namespace base
