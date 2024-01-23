@@ -18,13 +18,8 @@ namespace base::Platform {
 using namespace ::Platform;
 
 void ShowInFolder(const QString &filepath) {
-	const auto folder = QFileInfo(filepath).absolutePath();
-
-	@autoreleasepool {
-
-	[[NSWorkspace sharedWorkspace] selectFile:Q2NSString(filepath) inFileViewerRootedAtPath:Q2NSString(folder)];
-
-	}
+    NSURL *url = [NSURL fileURLWithPath:Q2NSString(filepath)];
+    [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[url]];
 }
 
 void RemoveQuarantine(const QString &path) {
