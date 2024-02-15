@@ -37,7 +37,7 @@ void XCBPreventDisplaySleep(bool prevent) {
 		return;
 	}
 
-	base::timer_each(
+	timer_each(
 		kResetScreenSaverTimeout
 	) | rpl::start_with_next([connection = XCB::Connection()] {
 		if (!connection || xcb_connection_has_error(connection)) {
@@ -70,7 +70,7 @@ public:
 		}
 
 		const auto handleToken = Glib::ustring("desktop_app")
-			+ std::to_string(base::RandomValue<uint>());
+			+ std::to_string(RandomValue<uint>());
 
 		auto uniqueName = _dbusConnection->get_unique_name();
 		uniqueName.erase(0, 1);
