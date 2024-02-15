@@ -181,41 +181,45 @@ void BlockPowerSave(
 		PowerSaveBlockType type,
 		const QString &description,
 		QPointer<QWindow> window) {
-	switch (type) {
-	case PowerSaveBlockType::PreventAppSuspension:
-		PortalPreventAppSuspension(true, description);
-		break;
-	case PowerSaveBlockType::PreventDisplaySleep:
-		if (window) {
-			if (const auto integration = WaylandIntegration::Instance()) {
-				integration->preventDisplaySleep(window, true);
+	crl::on_main([=] {
+		switch (type) {
+		case PowerSaveBlockType::PreventAppSuspension:
+			PortalPreventAppSuspension(true, description);
+			break;
+		case PowerSaveBlockType::PreventDisplaySleep:
+			if (window) {
+				if (const auto integration = WaylandIntegration::Instance()) {
+					integration->preventDisplaySleep(window, true);
+				}
 			}
-		}
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-		XCBPreventDisplaySleep(true);
+			XCBPreventDisplaySleep(true);
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-		PortalPreventDisplaySleep(true, description);
-		break;
-	}
+			PortalPreventDisplaySleep(true, description);
+			break;
+		}
+	});
 }
 
 void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
-	switch (type) {
-	case PowerSaveBlockType::PreventAppSuspension:
-		PortalPreventAppSuspension(false);
-		break;
-	case PowerSaveBlockType::PreventDisplaySleep:
-		if (window) {
-			if (const auto integration = WaylandIntegration::Instance()) {
-				integration->preventDisplaySleep(window, false);
+	crl::on_main([=] {
+		switch (type) {
+		case PowerSaveBlockType::PreventAppSuspension:
+			PortalPreventAppSuspension(false);
+			break;
+		case PowerSaveBlockType::PreventDisplaySleep:
+			if (window) {
+				if (const auto integration = WaylandIntegration::Instance()) {
+					integration->preventDisplaySleep(window, false);
+				}
 			}
-		}
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-		XCBPreventDisplaySleep(false);
+			XCBPreventDisplaySleep(false);
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-		PortalPreventDisplaySleep(false);
-		break;
-	}
+			PortalPreventDisplaySleep(false);
+			break;
+		}
+	});
 }
 
 } // namespace base::Platform
