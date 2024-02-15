@@ -10,6 +10,7 @@
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 #include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/timer_rpl.h"
+#include "base/weak_ptr.h"
 #include "base/random.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -54,7 +55,7 @@ void XCBPreventDisplaySleep(bool prevent) {
  * 4: Suspend
  * 8: Idle
  */
-class PortalInhibit final {
+class PortalInhibit final : public has_weak_ptr {
 public:
 	PortalInhibit(uint flags = 0, const QString &description = {})
 	: _dbusConnection([] {
@@ -81,6 +82,28 @@ public:
 			+ uniqueName
 			+ '/'
 			+ handleToken;
+
+		const auto weak = make_weak(this);
+		const auto connection = _dbusConnection; // take a ref
+		const auto requestPath = _requestPath;
+		const auto signalId = std::make_shared<uint>();
+		*signalId = _dbusConnection->signal_subscribe(
+			[=](
+					const Glib::RefPtr<Gio::DBus::Connection> &,
+					const Glib::ustring &,
+					const Glib::ustring &,
+					const Glib::ustring &,
+					const Glib::ustring &,
+					const Glib::VariantContainerBase &) {
+				if (!weak) {
+					Close(connection, requestPath);
+				}
+				connection->signal_unsubscribe(*signalId);
+			},
+			XDP::kService,
+			XDP::kRequestInterface,
+			"Response",
+			_requestPath);
 
 		_dbusConnection->call(
 			XDP::kObjectPath,
@@ -110,8 +133,15 @@ public:
 			return;
 		}
 
-		_dbusConnection->call(
-			_requestPath,
+		Close(_dbusConnection, _requestPath);
+	}
+
+private:
+	static void Close(
+			const Glib::RefPtr<Gio::DBus::Connection> &connection,
+			const Glib::ustring &requestPath) {
+		connection->call(
+			requestPath,
 			XDP::kRequestInterface,
 			"Close",
 			{},
@@ -119,7 +149,6 @@ public:
 			XDP::kService);
 	}
 
-private:
 	Glib::RefPtr<Gio::DBus::Connection> _dbusConnection;
 	Glib::ustring _requestPath;
 };
