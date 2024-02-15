@@ -7,6 +7,7 @@
 #include "base/platform/linux/base_info_linux.h"
 
 #include "base/algorithm.h"
+#include "base/platform/linux/base_linux_library.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
@@ -25,6 +26,10 @@
 #ifdef __GLIBC__
 #include <gnu/libc-version.h>
 #endif // __GLIBC__
+
+extern "C" {
+struct wl_display;
+} // extern "C"
 
 namespace Platform {
 namespace {
@@ -290,7 +295,15 @@ QString GetWindowManager() {
 
 bool IsX11() {
 	if (!QGuiApplication::instance()) {
-		return qEnvironmentVariableIsSet("DISPLAY");
+		static const auto result = []() -> bool {
+#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+			const base::Platform::XCB::Connection connection;
+			return connection && !xcb_connection_has_error(connection);
+#else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+			return qEnvironmentVariableIsSet("DISPLAY");
+#endif // DESKTOP_APP_DISABLE_X11_INTEGRATION
+		}();
+		return result;
 	}
 	static const auto result = (QGuiApplication::platformName() == "xcb");
 	return result;
@@ -298,7 +311,21 @@ bool IsX11() {
 
 bool IsWayland() {
 	if (!QGuiApplication::instance()) {
-		return qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
+		static const auto result = []() -> bool {
+			struct wl_display *(*wl_display_connect)(const char *name);
+			void (*wl_display_disconnect)(struct wl_display *display);
+			if (const auto lib = base::Platform::LoadLibrary(
+					"libwayland-client.so.0",
+					RTLD_NODELETE); lib
+					&& LOAD_LIBRARY_SYMBOL(lib, wl_display_connect)
+					&& LOAD_LIBRARY_SYMBOL(lib, wl_display_disconnect)) {
+				const auto display = wl_display_connect(nullptr);
+				wl_display_disconnect(display);
+				return display;
+			}
+			return qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
+		}();
+		return result;
 	}
 	static const auto result
 		= QGuiApplication::platformName().startsWith("wayland");
