@@ -18,7 +18,7 @@ public:
 
 	[[nodiscard]] static WaylandIntegration *Instance();
 
-	void preventDisplaySleep(bool prevent, QWindow *window);
+	void preventDisplaySleep(not_null<QWindow*> window, bool prevent);
 
 private:
 	struct Private;
