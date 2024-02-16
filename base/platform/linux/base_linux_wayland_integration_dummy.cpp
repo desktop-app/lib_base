@@ -25,7 +25,7 @@ WaylandIntegration *WaylandIntegration::Instance() {
 	return &instance;
 }
 
-void WaylandIntegration::preventDisplaySleep(bool prevent, QWindow *window) {
+void WaylandIntegration::preventDisplaySleep(not_null<QWindow*> window, bool prevent) {
 }
 
 } // namespace Platform
