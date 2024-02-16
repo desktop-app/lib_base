@@ -34,11 +34,8 @@ struct wl_display;
 namespace Platform {
 namespace {
 
-[[nodiscard]] QString GetDesktopEnvironment() {
-	const auto value = qEnvironmentVariable("XDG_CURRENT_DESKTOP");
-	return value.contains(':')
-		? value.left(value.indexOf(':'))
-		: value;
+[[nodiscard]] QStringList GetDesktopEnvironment() {
+	return qEnvironmentVariable("XDG_CURRENT_DESKTOP").trimmed().split(':');
 }
 
 [[nodiscard]] QString ChassisTypeToString(uint type) {
