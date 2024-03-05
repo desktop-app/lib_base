@@ -271,6 +271,8 @@ elseif (LINUX)
     )
 
     include(${cmake_helpers_loc}/external/glib/generate_dbus.cmake)
+    generate_dbus(lib_base org.freedesktop.portal. XdpOpenURI ${third_party_loc}/xdg-desktop-portal/data/org.freedesktop.portal.OpenURI.xml)
+    generate_dbus(lib_base org.freedesktop. XdgFileManager1 ${src_loc}/base/platform/linux/org.freedesktop.FileManager1.xml)
     generate_dbus(lib_base org.mpris. Mpris ${src_loc}/base/platform/linux/mpris.xml)
     generate_dbus(lib_base io.snapcraft. Snapcraft ${src_loc}/base/platform/linux/io.snapcraft.Settings.xml)
 
