@@ -6,10 +6,9 @@
 //
 #pragma once
 
-#include "base/basic_types.h"
+#include "base/expected.h"
 
-#include <glibmm.h>
-#include <giomm.h>
+typedef struct _GDBusConnection GDBusConnection;
 
 namespace base::Platform::DBus {
 
@@ -17,58 +16,45 @@ inline constexpr auto kService = "org.freedesktop.DBus";
 inline constexpr auto kObjectPath = "/org/freedesktop/DBus";
 inline constexpr auto kInterface = kService;
 
+template <typename T>
+using Result = expected<T, std::unique_ptr<std::exception>>;
+
 enum class StartReply {
 	Success,
 	AlreadyRunning,
 };
 
-bool NameHasOwner(
-	const Glib::RefPtr<Gio::DBus::Connection> &connection,
-	const Glib::ustring &name);
+Result<bool> NameHasOwner(
+	const GDBusConnection *connection,
+	const std::string &name);
 
-std::vector<Glib::ustring> ListActivatableNames(
-	const Glib::RefPtr<Gio::DBus::Connection> &connection);
+Result<std::vector<std::string>> ListActivatableNames(
+	const GDBusConnection *connection);
 
-StartReply StartServiceByName(
-	const Glib::RefPtr<Gio::DBus::Connection> &connection,
-	const Glib::ustring &name);
+Result<StartReply> StartServiceByName(
+	const GDBusConnection *connection,
+	const std::string &name);
 
 void StartServiceByNameAsync(
-	const Glib::RefPtr<Gio::DBus::Connection> &connection,
-	const Glib::ustring &name,
-	Fn<void(Fn<StartReply()>)> callback);
-
-uint RegisterServiceWatcher(
-	const Glib::RefPtr<Gio::DBus::Connection> &connection,
-	const Glib::ustring &service,
-	Fn<void(
-		const Glib::ustring &,
-		const Glib::ustring &,
-		const Glib::ustring &)> callback);
+	const GDBusConnection *connection,
+	const std::string &name,
+	Fn<void(Fn<Result<StartReply>()>)> callback);
 
 class ServiceWatcher {
 public:
 	ServiceWatcher(
-		const Glib::RefPtr<Gio::DBus::Connection> &connection,
-		const Glib::ustring &service,
+		const GDBusConnection *connection,
+		const std::string &service,
 		Fn<void(
-			const Glib::ustring &,
-			const Glib::ustring &,
-			const Glib::ustring &)> callback)
-	: _connection(connection)
-	, _signalId(RegisterServiceWatcher(connection, service, callback)) {
-	}
+			const std::string &,
+			const std::string &,
+			const std::string &)> callback);
 
-	~ServiceWatcher() {
-		if (!_connection || !_signalId) {
-			return;
-		}
-		_connection->signal_unsubscribe(_signalId);
-	}
+	~ServiceWatcher();
 
 private:
-	Glib::RefPtr<Gio::DBus::Connection> _connection;
-	uint _signalId = 0;
+	struct Private;
+	std::unique_ptr<Private> _private;
 };
 
 } // namespace base::Platform::DBus

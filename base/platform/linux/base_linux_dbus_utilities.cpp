@@ -6,108 +6,138 @@
 //
 #include "base/platform/linux/base_linux_dbus_utilities.h"
 
+#include <xdgdbus/xdgdbus.hpp>
+
 namespace base::Platform::DBus {
+namespace {
 
-bool NameHasOwner(
-		const Glib::RefPtr<Gio::DBus::Connection> &connection,
-		const Glib::ustring &name) {
-	return connection->call_sync(
+using namespace gi::repository;
+
+gi::result<XdgDBus::DBus> MakeInterface(const GDBusConnection *connection) {
+	return XdgDBus::DBusProxy::new_sync(
+		gi::wrap(connection, gi::transfer_none),
+		Gio::DBusProxyFlags::NONE_,
+		kService,
 		kObjectPath,
-		kInterface,
-		"NameHasOwner",
-		Glib::create_variant(std::tuple{name}),
-		kService
-	).get_child(0).get_dynamic<bool>();
+		nullptr);
 }
 
-std::vector<Glib::ustring> ListActivatableNames(
-		const Glib::RefPtr<Gio::DBus::Connection> &connection) {
-	return connection->call_sync(
-		kObjectPath,
-		kInterface,
-		"ListActivatableNames",
-		{},
-		kService
-	).get_child(0).get_dynamic<std::vector<Glib::ustring>>();
+auto MakeUnexpected(GLib::Error &&error) {
+	return make_unexpected(std::make_unique<GLib::Error>(std::move(error)));
 }
 
-StartReply StartServiceByName(
-		const Glib::RefPtr<Gio::DBus::Connection> &connection,
-		const Glib::ustring &name) {
-	return StartReply(
-		connection->call_sync(
-			kObjectPath,
-			kInterface,
-			"StartServiceByName",
-			Glib::create_variant(std::tuple{ name, uint(0) }),
-			kService
-		).get_child(0).get_dynamic<uint>()
-	);
+} // namespace
+
+Result<bool> NameHasOwner(
+		const GDBusConnection *connection,
+		const std::string &name) {
+	auto interface = MakeInterface(connection);
+	if (!interface) {
+		return MakeUnexpected(std::move(interface.error()));
+	}
+
+	auto result = interface->call_name_has_owner_sync(name);
+	if (!result) {
+		return MakeUnexpected(std::move(result.error()));
+	}
+
+	return std::get<1>(*result);
+}
+
+Result<std::vector<std::string>> ListActivatableNames(
+		const GDBusConnection *connection) {
+	auto interface = MakeInterface(connection);
+	if (!interface) {
+		return MakeUnexpected(std::move(interface.error()));
+	}
+
+	auto result = interface->call_list_activatable_names_sync();
+	if (!result) {
+		return MakeUnexpected(std::move(result.error()));
+	}
+
+	std::vector<std::string> value;
+	ranges::copy(std::get<1>(*result), ranges::back_inserter(value));
+	return value;
+}
+
+Result<StartReply> StartServiceByName(
+		const GDBusConnection *connection,
+		const std::string &name) {
+	auto interface = MakeInterface(connection);
+	if (!interface) {
+		return MakeUnexpected(std::move(interface.error()));
+	}
+
+	auto result = interface->call_start_service_by_name_sync(name, 0);
+	if (!result) {
+		return MakeUnexpected(std::move(result.error()));
+	}
+
+	return StartReply(std::get<1>(*result));
 }
 
 void StartServiceByNameAsync(
-		const Glib::RefPtr<Gio::DBus::Connection> &connection,
-		const Glib::ustring &name,
-		Fn<void(Fn<StartReply()>)> callback) {
-	connection->call(
-		kObjectPath,
-		kInterface,
-		"StartServiceByName",
-		Glib::create_variant(std::tuple{ name, uint(0) }),
-		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-			callback([=] {
-				return StartReply(
-					connection->call_finish(
-						result
-					).get_child(
-						0
-					).get_dynamic<uint>()
-				);
-			});
-		},
-		kService);
-}
+		const GDBusConnection *connection,
+		const std::string &name,
+		Fn<void(Fn<Result<StartReply>()>)> callback) {
+	auto interface = MakeInterface(connection);
+	if (!interface) {
+		const auto error = std::make_shared<GLib::Error>(
+			std::move(interface.error()));
 
-uint RegisterServiceWatcher(
-		const Glib::RefPtr<Gio::DBus::Connection> &connection,
-		const Glib::ustring &service,
-		Fn<void(
-			const Glib::ustring &,
-			const Glib::ustring &,
-			const Glib::ustring &)> callback) {
-	return connection->signal_subscribe(
-		[=](
-			const Glib::RefPtr<Gio::DBus::Connection> &connection,
-			const Glib::ustring &sender_name,
-			const Glib::ustring &object_path,
-			const Glib::ustring &interface_name,
-			const Glib::ustring &signal_name,
-			const Glib::VariantContainerBase &parameters) {
-			try {
-				const auto name = parameters.get_child(
-					0
-				).get_dynamic<Glib::ustring>();
+		callback([=]() -> Result<StartReply> {
+			return MakeUnexpected(std::move(*error));
+		});
 
-				const auto oldOwner =  parameters.get_child(
-					1
-				).get_dynamic<Glib::ustring>();
+		return;
+	}
 
-				const auto newOwner =  parameters.get_child(
-					2
-				).get_dynamic<Glib::ustring>();
-
-				if (name.raw() != service.raw()) {
-					return;
-				}
-
-				callback(name, oldOwner, newOwner);
-			} catch (...) {
+	interface->call_start_service_by_name(name, 0, [
+		=,
+		interface = *interface
+	](GObject::Object source_object, Gio::AsyncResult res) mutable {
+		callback([=]() mutable -> Result<StartReply> {
+			auto result = interface.call_start_service_by_name_finish(res);
+			if (!result) {
+				return MakeUnexpected(std::move(result.error()));
 			}
-		},
-		kService,
-		kInterface,
-		"NameOwnerChanged",
-		kObjectPath);
+
+			return StartReply(std::get<1>(*result));
+		});
+	});
 }
+
+struct ServiceWatcher::Private {
+	gi::result<XdgDBus::DBus> interface;
+};
+
+ServiceWatcher::ServiceWatcher(
+	const GDBusConnection *connection,
+	const std::string &service,
+	Fn<void(
+		const std::string &,
+		const std::string &,
+		const std::string &)> callback)
+: _private(std::make_unique<Private>()) {
+	_private->interface = MakeInterface(connection);
+	if (!_private->interface) {
+		return;
+	}
+
+	_private->interface->signal_name_owner_changed().connect([=](
+			XdgDBus::DBus,
+			gi::cstring_v name,
+			gi::cstring_v oldOwner,
+			gi::cstring_v newOwner) {
+		if (name != service) {
+			return;
+		}
+
+		callback(name, oldOwner, newOwner);
+	});
+}
+
+ServiceWatcher::~ServiceWatcher() = default;
 
 } // namespace base::Platform::DBus

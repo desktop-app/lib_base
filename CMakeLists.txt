@@ -271,6 +271,7 @@ elseif (LINUX)
     )
 
     include(${cmake_helpers_loc}/external/glib/generate_dbus.cmake)
+    generate_dbus(lib_base org.freedesktop. XdgDBus ${src_loc}/base/platform/linux/org.freedesktop.DBus.xml)
     generate_dbus(lib_base org.freedesktop.portal. XdpInhibit ${third_party_loc}/xdg-desktop-portal/data/org.freedesktop.portal.Inhibit.xml)
     generate_dbus(lib_base org.freedesktop.portal. XdpOpenURI ${third_party_loc}/xdg-desktop-portal/data/org.freedesktop.portal.OpenURI.xml)
     generate_dbus(lib_base org.freedesktop.portal. XdpRequest ${third_party_loc}/xdg-desktop-portal/data/org.freedesktop.portal.Request.xml)
