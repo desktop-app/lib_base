@@ -16,7 +16,8 @@
 #include <QtCore/QStandardPaths>
 #include <QtGui/QDesktopServices>
 
-#include <giomm.h>
+#include <xdpopenuri/xdpopenuri.hpp>
+#include <xdgfilemanager1/xdgfilemanager1.hpp>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,94 +29,101 @@
 namespace base::Platform {
 namespace {
 
+using namespace gi::repository;
+
 void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
-	const auto connection = [] {
-		try {
-			return Gio::DBus::Connection::get_sync(
-				Gio::DBus::BusType::SESSION);
-		} catch (...) {
-			return Glib::RefPtr<Gio::DBus::Connection>();
-		}
-	}();
+	XdpOpenURI::OpenURIProxy::new_for_bus(
+		Gio::BusType::SESSION_,
+		Gio::DBusProxyFlags::NONE_,
+		XDP::kService,
+		XDP::kObjectPath,
+		[=](GObject::Object, Gio::AsyncResult res) {
+			auto interface = XdpOpenURI::OpenURI(
+				XdpOpenURI::OpenURIProxy::new_for_bus_finish(res, nullptr));
 
-	if (!connection) {
-		fail();
-		return;
-	}
+			if (!interface) {
+				fail();
+				return;
+			}
 
-	const auto fd = open(
-		QFile::encodeName(filepath).constData(),
-		O_RDONLY);
+			const auto fd = open(
+				QFile::encodeName(filepath).constData(),
+				O_RDONLY);
 
-	if (fd == -1) {
-		fail();
-		return;
-	}
+			if (fd == -1) {
+				fail();
+				return;
+			}
 
-	RunWithXdgActivationToken([=](const QString &activationToken) {
-		connection->call(
-			XDP::kObjectPath,
-			"org.freedesktop.portal.OpenURI",
-			"OpenDirectory",
-			Glib::create_variant(std::tuple{
-				XDP::ParentWindowID(),
-				Glib::DBusHandle(),
-				std::map<Glib::ustring, Glib::VariantBase>{
-					{
-						"activation_token",
-						Glib::create_variant(
-							Glib::ustring(activationToken.toStdString()))
-					},
-				},
-			}),
-			[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-				try {
-					connection->call_finish(result);
-				} catch (...) {
-					fail();
-				}
-				close(fd);
-			},
-			Gio::UnixFDList::create(std::vector<int>{ fd }),
-			XDP::kService);
-	});
+			RunWithXdgActivationToken([=](
+					const QString &activationToken) mutable {
+				interface.call_open_directory(
+					std::string(XDP::ParentWindowID()),
+					GLib::Variant::new_handle(0),
+					GLib::Variant::new_array({
+						GLib::Variant::new_dict_entry(
+							GLib::Variant::new_string("activation_token"),
+							GLib::Variant::new_variant(
+								GLib::Variant::new_string(
+									activationToken.toStdString()))),
+					}),
+					Gio::UnixFDList::new_from_array((std::array{
+						fd,
+					}).data(), 1),
+					{},
+					[=](GObject::Object, Gio::AsyncResult res) mutable {
+						if (!interface.call_open_directory_finish(res)) {
+							fail();
+						}
+						close(fd);
+					});
+			});
+		});
 }
 
 void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
-	const auto connection = [] {
-		try {
-			return Gio::DBus::Connection::get_sync(
-				Gio::DBus::BusType::SESSION);
-		} catch (...) {
-			return Glib::RefPtr<Gio::DBus::Connection>();
-		}
-	}();
+	XdgFileManager1::FileManager1Proxy::new_for_bus(
+		Gio::BusType::SESSION_,
+		Gio::DBusProxyFlags::NONE_,
+		"org.freedesktop.FileManager1",
+		"/org/freedesktop/FileManager1",
+		[=](GObject::Object, Gio::AsyncResult res) {
+			auto interface = XdgFileManager1::FileManager1(
+				XdgFileManager1::FileManager1Proxy::new_for_bus_finish(
+					res,
+					nullptr));
 
-	if (!connection) {
-		fail();
-		return;
-	}
+			if (!interface) {
+				fail();
+				return;
+			}
 
-	RunWithXdgActivationToken([=](const QString &startupId) {
-		connection->call(
-			"/org/freedesktop/FileManager1",
-			"org.freedesktop.FileManager1",
-			"ShowItems",
-			Glib::create_variant(std::tuple{
-				std::vector<Glib::ustring>{
-					Glib::filename_to_uri(filepath.toStdString())
-				},
-				Glib::ustring(startupId.toStdString()),
-			}),
-			[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-				try {
-					connection->call_finish(result);
-				} catch (...) {
-					fail();
-				}
-			},
-			"org.freedesktop.FileManager1");
-	});
+			RunWithXdgActivationToken([=](const QString &startupId) mutable {
+				const auto callbackWrap = gi::unwrap(
+					Gio::AsyncReadyCallback(
+						[=](GObject::Object, Gio::AsyncResult res) mutable {
+							if (!interface.call_show_items_finish(res)) {
+								fail();
+							}
+						}
+					),
+					gi::scope_async);
+
+				xdg_file_manager1_file_manager1_call_show_items(
+					interface.gobj_(),
+					(std::array<const char*, 2>{
+						GLib::filename_to_uri(
+							filepath.toStdString(),
+							nullptr
+						).c_str(),
+						nullptr,
+					}).data(),
+					startupId.toStdString().c_str(),
+					nullptr,
+					&callbackWrap->wrapper,
+					callbackWrap);
+			});
+		});
 }
 
 } // namespace
