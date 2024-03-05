@@ -15,11 +15,13 @@
 #include <xcb/screensaver.h>
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#include <glibmm.h>
-#include <giomm.h>
+#include <xdgscreensaver/xdgscreensaver.hpp>
+#include <mutteridlemonitor/mutteridlemonitor.hpp>
 
 namespace base::Platform {
 namespace {
+
+using namespace gi::repository;
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 std::optional<crl::time> XCBLastUserInputTime() {
@@ -56,128 +58,45 @@ std::optional<crl::time> XCBLastUserInputTime() {
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
-	static auto NotSupported = false;
+	auto interface = XdgScreenSaver::ScreenSaver(
+		XdgScreenSaver::ScreenSaverProxy::new_for_bus_sync(
+			Gio::BusType::SESSION_,
+			Gio::DBusProxyFlags::NONE_,
+			"org.freedesktop.ScreenSaver",
+			"/org/freedesktop/ScreenSaver",
+			nullptr));
 
-	if (NotSupported) {
+	if (!interface) {
 		return std::nullopt;
 	}
 
-	try {
-		const auto connection = [] {
-			try {
-				return Gio::DBus::Connection::get_sync(
-					Gio::DBus::BusType::SESSION);
-			} catch (...) {
-				return Glib::RefPtr<Gio::DBus::Connection>();
-			}
-		}();
-
-		if (!connection) {
-			NotSupported = true;
-			return std::nullopt;
-		}
-
-		const auto value = connection->call_sync(
-			"/org/freedesktop/ScreenSaver",
-			"org.freedesktop.ScreenSaver",
-			"GetSessionIdleTime",
-			{},
-			"org.freedesktop.ScreenSaver"
-		).get_child(0).get_dynamic<uint>();
-
-		return (crl::now() - static_cast<crl::time>(value));
-	} catch (const Glib::Error &e) {
-		static const auto NotSupportedErrors = {
-			"org.freedesktop.DBus.Error.ServiceUnknown",
-			"org.freedesktop.DBus.Error.NotSupported",
-		};
-
-		static const auto NotSupportedErrorsToLog = {
-			"org.freedesktop.DBus.Error.AccessDenied",
-		};
-
-		const auto errorName = Gio::DBus::ErrorUtils::get_remote_error(
-			e).raw();
-
-		if (ranges::contains(NotSupportedErrors, errorName)) {
-			NotSupported = true;
-			return std::nullopt;
-		} else if (ranges::contains(NotSupportedErrorsToLog, errorName)) {
-			NotSupported = true;
-		}
-
-		LOG(("Unable to get last user input time "
-			"from org.freedesktop.ScreenSaver: %1")
-			.arg(e.what()));
-	} catch (const std::exception &e) {
-		LOG(("Unable to get last user input time "
-			"from org.freedesktop.ScreenSaver: %1")
-			.arg(e.what()));
+	const auto result = interface.call_get_session_idle_time_sync();
+	if (!result) {
+		return std::nullopt;
 	}
 
-	return std::nullopt;
+	return (crl::now() - static_cast<crl::time>(std::get<1>(*result)));
 }
 
 std::optional<crl::time> MutterDBusLastUserInputTime() {
-	static auto NotSupported = false;
+	auto interface = MutterIdleMonitor::IdleMonitor(
+		MutterIdleMonitor::IdleMonitorProxy::new_for_bus_sync(
+			Gio::BusType::SESSION_,
+			Gio::DBusProxyFlags::NONE_,
+			"org.gnome.Mutter.IdleMonitor",
+			"/org/gnome/Mutter/IdleMonitor/Core",
+			nullptr));
 
-	if (NotSupported) {
+	if (!interface) {
 		return std::nullopt;
 	}
 
-	try {
-		const auto connection = [] {
-			try {
-				return Gio::DBus::Connection::get_sync(
-					Gio::DBus::BusType::SESSION);
-			} catch (...) {
-				return Glib::RefPtr<Gio::DBus::Connection>();
-			}
-		}();
-
-		if (!connection) {
-			NotSupported = true;
-			return std::nullopt;
-		}
-
-		const auto value = connection->call_sync(
-			"/org/gnome/Mutter/IdleMonitor/Core",
-			"org.gnome.Mutter.IdleMonitor",
-			"GetIdletime",
-			{},
-			"org.gnome.Mutter.IdleMonitor"
-		).get_child(0).get_dynamic<uint64>();
-
-		return (crl::now() - static_cast<crl::time>(value));
-	} catch (const Glib::Error &e) {
-		static const auto NotSupportedErrors = {
-			"org.freedesktop.DBus.Error.ServiceUnknown",
-		};
-
-		static const auto NotSupportedErrorsToLog = {
-			"org.freedesktop.DBus.Error.AccessDenied",
-		};
-
-		const auto errorName = Gio::DBus::ErrorUtils::get_remote_error(
-			e).raw();
-
-		if (ranges::contains(NotSupportedErrors, errorName)) {
-			NotSupported = true;
-			return std::nullopt;
-		} else if (ranges::contains(NotSupportedErrorsToLog, errorName)) {
-			NotSupported = true;
-		}
-
-		LOG(("Unable to get last user input time "
-			"from org.gnome.Mutter.IdleMonitor: %1")
-			.arg(e.what()));
-	} catch (const std::exception &e) {
-		LOG(("Unable to get last user input time "
-			"from org.gnome.Mutter.IdleMonitor: %1")
-			.arg(e.what()));
+	const auto result = interface.call_get_idletime_sync();
+	if (!result) {
+		return std::nullopt;
 	}
 
-	return std::nullopt;
+	return (crl::now() - static_cast<crl::time>(std::get<1>(*result)));
 }
 
 } // namespace
