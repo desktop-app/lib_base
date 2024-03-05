@@ -15,179 +15,155 @@
 #include <kshell.h>
 #include <ksandbox.h>
 
-#include <glibmm.h>
-#include <giomm.h>
+#include <gio/gio.hpp>
+#include <snapcraft/snapcraft.hpp>
 
 namespace base::Platform {
 namespace {
 
-constexpr auto kSnapcraftSettingsService = "io.snapcraft.Settings";
-constexpr auto kSnapcraftSettingsObjectPath = "/io/snapcraft/Settings";
-constexpr auto kSnapcraftSettingsInterface = kSnapcraftSettingsService;
+using namespace gi::repository;
 
 void SnapDefaultHandler(const QString &protocol) {
-	const auto connection = [] {
-		try {
-			return Gio::DBus::Connection::get_sync(
-				Gio::DBus::BusType::SESSION);
-		} catch (const std::exception &e) {
-			LOG(("Snap Default Handler Error: %1").arg(e.what()));
-			return Glib::RefPtr<Gio::DBus::Connection>();
-		}
-	}();
+    Snapcraft::SettingsProxy::new_for_bus(
+        Gio::BusType::SESSION_,
+        Gio::DBusProxyFlags::NONE_,
+        "io.snapcraft.Settings",
+        "/io/snapcraft/Settings",
+        [=](GObject::Object, Gio::AsyncResult res) {
+            auto interface = Snapcraft::Settings(
+                Snapcraft::SettingsProxy::new_for_bus_finish(res, nullptr));
 
-	if (!connection) {
-		return;
-	}
+            if (!interface) {
+                return;
+            }
 
-	connection->call(
-		kSnapcraftSettingsObjectPath,
-		kSnapcraftSettingsInterface,
-		"GetSub",
-		Glib::create_variant(std::tuple{
-			Glib::ustring("default-url-scheme-handler"),
-			Glib::ustring(protocol.toStdString()),
-		}),
-		[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-			const auto currentHandler = [&]() -> std::optional<Glib::ustring> {
-				try {
-					return connection->call_finish(
-						result
-					).get_child(0).get_dynamic<Glib::ustring>();
-				} catch (const std::exception &e) {
-					LOG(("Snap Default Handler Error: %1").arg(e.what()));
-					return std::nullopt;
-				}
-			}();
+            interface.call_get_sub(
+                "default-url-scheme-handler",
+                protocol.toStdString(),
+                [=](GObject::Object, Gio::AsyncResult res) mutable {
+                    const auto currentHandler = [&]()
+                    -> std::optional<std::string> {
+                        if (auto result = interface.call_get_sub_finish(
+                                res)) {
+                            return std::get<1>(*result).opt_();
+                        }
+                        return std::nullopt;
+                    }();
 
-			if (!currentHandler) {
-				return;
-			}
+                    if (!currentHandler) {
+                        return;
+                    }
 
-			const auto &integration = Integration::Instance();
-			const auto expectedHandler = integration.executableName()
-				+ u".desktop"_q;
+                    const auto &integration = Integration::Instance();
+                    const auto expectedHandler = integration.executableName()
+                        + u".desktop"_q;
 
-			if (currentHandler->c_str() == expectedHandler) {
-				return;
-			}
+                    if (currentHandler->c_str() == expectedHandler) {
+                        return;
+                    }
 
-			const auto window = std::make_shared<QWidget>();
-			window->setAttribute(Qt::WA_DontShowOnScreen);
-			window->setWindowModality(Qt::ApplicationModal);
-			window->show();
+                    const auto window = std::make_shared<QWidget>();
+                    window->setAttribute(Qt::WA_DontShowOnScreen);
+                    window->setWindowModality(Qt::ApplicationModal);
+                    window->show();
 
-			connection->call(
-				kSnapcraftSettingsObjectPath,
-				kSnapcraftSettingsInterface,
-				"SetSub",
-				Glib::create_variant(std::tuple{
-					Glib::ustring("default-url-scheme-handler"),
-					Glib::ustring(protocol.toStdString()),
-					Glib::ustring(expectedHandler.toStdString()),
-				}),
-				[=](const Glib::RefPtr<Gio::AsyncResult> &result) {
-					(void)window; // don't destroy until finish
-					try {
-						connection->call_finish(result);
-					} catch (const std::exception &e) {
-						LOG(("Snap Default Handler Error: %1").arg(e.what()));
-					}
-				},
-				kSnapcraftSettingsService);
-		},
-		kSnapcraftSettingsService);
+                    interface.call_set_sub(
+                        "default-url-scheme-handler",
+                        protocol.toStdString(),
+                        expectedHandler.toStdString(),
+                        [=](GObject::Object, Gio::AsyncResult) {
+                            (void)window; // don't destroy until finish
+                        });
+                });
+        });
 }
 
 } // namespace
 
 bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
-	const auto handlerType = "x-scheme-handler/"
-		+ descriptor.protocol.toStdString();
+    const auto handlerType = "x-scheme-handler/"
+        + descriptor.protocol.toStdString();
 
-	const auto neededCommandline = KShell::joinArgs(QStringList{
-		descriptor.executable,
-	} + KShell::splitArgs(descriptor.arguments) + QStringList{
-		"--",
-		"%u",
-	}).toStdString();
+    const auto neededCommandline = KShell::joinArgs(QStringList{
+        descriptor.executable,
+    } + KShell::splitArgs(descriptor.arguments) + QStringList{
+        "--",
+        "%u",
+    }).toStdString();
 
-	const auto currentAppInfo = Gio::AppInfo::get_default_for_type(
-		handlerType,
-		true);
+    auto currentAppInfo = Gio::AppInfo::get_default_for_type(
+        handlerType,
+        true);
 
-	if (currentAppInfo) {
-		return currentAppInfo->get_commandline() == neededCommandline;
-	}
+    if (currentAppInfo) {
+        return currentAppInfo.get_commandline() == neededCommandline;
+    }
 
-	return false;
+    return false;
 }
 
 void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
-	if (KSandbox::isSnap()) {
-		SnapDefaultHandler(descriptor.protocol);
-		return;
-	}
+    if (KSandbox::isSnap()) {
+        SnapDefaultHandler(descriptor.protocol);
+        return;
+    }
 
-	if (CheckUrlScheme(descriptor)) {
-		return;
-	}
-	UnregisterUrlScheme(descriptor);
+    if (CheckUrlScheme(descriptor)) {
+        return;
+    }
+    UnregisterUrlScheme(descriptor);
 
-	const auto handlerType = "x-scheme-handler/"
-		+ descriptor.protocol.toStdString();
+    const auto handlerType = "x-scheme-handler/"
+        + descriptor.protocol.toStdString();
 
-	const auto commandlineForCreator = KShell::joinArgs(QStringList{
-		descriptor.executable,
-	} + KShell::splitArgs(descriptor.arguments) + QStringList{
-		"--",
-	}).toStdString();
+    const auto commandlineForCreator = KShell::joinArgs(QStringList{
+        descriptor.executable,
+    } + KShell::splitArgs(descriptor.arguments) + QStringList{
+        "--",
+    }).toStdString();
 
-	const auto appId = QGuiApplication::desktopFileName().toStdString();
-	if (!appId.empty()) {
-		if (const auto appInfo = Gio::DesktopAppInfo::create(
-			appId + ".desktop")) {
-			if (appInfo->get_commandline() == commandlineForCreator + " %u") {
-				appInfo->set_as_default_for_type(handlerType);
-				return;
-			}
-		}
-	}
+    const auto appId = QGuiApplication::desktopFileName().toStdString();
+    if (!appId.empty()) {
+        Gio::AppInfo appInfo = Gio::DesktopAppInfo::new_(appId + ".desktop");
+        if (appInfo) {
+            if (appInfo.get_commandline() == commandlineForCreator + " %u") {
+                appInfo.set_as_default_for_type(handlerType);
+                return;
+            }
+        }
+    }
 
-	try {
-		const auto newAppInfo = Gio::AppInfo::create_from_commandline(
-			commandlineForCreator,
-			descriptor.displayAppName.toStdString(),
-			Gio::AppInfo::CreateFlags::SUPPORTS_URIS);
+    auto newAppInfo = Gio::AppInfo::create_from_commandline(
+        commandlineForCreator,
+        descriptor.displayAppName.toStdString(),
+        Gio::AppInfoCreateFlags::SUPPORTS_URIS_,
+        nullptr);
 
-		if (newAppInfo) {
-			newAppInfo->set_as_default_for_type(handlerType);
-		}
-	} catch (const std::exception &e) {
-		LOG(("Register Url Scheme Error: %1").arg(e.what()));
-	}
+    if (newAppInfo) {
+        newAppInfo.set_as_default_for_type(handlerType);
+    }
 }
 
 void UnregisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
-	const auto handlerType = "x-scheme-handler/"
-		+ descriptor.protocol.toStdString();
+    const auto handlerType = "x-scheme-handler/"
+        + descriptor.protocol.toStdString();
 
-	const auto neededCommandline = KShell::joinArgs(QStringList{
-		descriptor.executable,
-	} + KShell::splitArgs(descriptor.arguments) + QStringList{
-		"--",
-		"%u",
-	}).toStdString();
+    const auto neededCommandline = KShell::joinArgs(QStringList{
+        descriptor.executable,
+    } + KShell::splitArgs(descriptor.arguments) + QStringList{
+        "--",
+        "%u",
+    }).toStdString();
 
-	const auto registeredAppInfos = Gio::AppInfo::get_recommended_for_type(
-		handlerType);
+    auto registeredAppInfos = Gio::AppInfo::get_recommended_for_type(
+        handlerType);
 
-	for (const auto &appInfo : registeredAppInfos) {
-		if (appInfo->get_commandline() == neededCommandline
-			&& !appInfo->get_id().compare(0, 8, "userapp-")) {
-			appInfo->do_delete();
-		}
-	}
+    for (auto &appInfo : registeredAppInfos) {
+        if (appInfo.get_commandline() == neededCommandline
+            && !std::string(appInfo.get_id()).compare(0, 8, "userapp-")) {
+            appInfo.delete_();
+        }
+    }
 }
 
 } // namespace base::Platform
