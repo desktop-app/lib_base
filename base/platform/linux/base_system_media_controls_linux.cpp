@@ -132,6 +132,11 @@ private:
 				Gio::impl::internal::DBusInterfaceSkeletonClassDef,
 				get_info,
 				true)
+
+			GI_DEFINES_MEMBER(
+				Gio::impl::internal::DBusInterfaceIfaceDef,
+				get_info,
+				false)
 		};
 
 		Player(not_null<Private*> parent)
