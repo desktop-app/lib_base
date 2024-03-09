@@ -56,9 +56,7 @@ Result<std::vector<std::string>> ListActivatableNames(
 		return MakeUnexpected(std::move(result.error()));
 	}
 
-	std::vector<std::string> value;
-	ranges::copy(std::get<1>(*result), ranges::back_inserter(value));
-	return value;
+	return std::get<1>(*result) | ranges::to<std::vector<std::string>>;
 }
 
 Result<StartReply> StartServiceByName(
