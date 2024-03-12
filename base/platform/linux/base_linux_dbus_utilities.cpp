@@ -107,7 +107,7 @@ void StartServiceByNameAsync(
 }
 
 struct ServiceWatcher::Private {
-	gi::result<XdgDBus::DBus> interface;
+	XdgDBus::DBus interface;
 };
 
 ServiceWatcher::ServiceWatcher(
@@ -118,22 +118,32 @@ ServiceWatcher::ServiceWatcher(
 		const std::string &,
 		const std::string &)> callback)
 : _private(std::make_unique<Private>()) {
-	_private->interface = MakeInterface(connection);
-	if (!_private->interface) {
-		return;
-	}
+	XdgDBus::DBusProxy::new_(
+		gi::wrap(connection, gi::transfer_none),
+		Gio::DBusProxyFlags::NONE_,
+		kService,
+		kObjectPath,
+		nullptr,
+		crl::guard(this, [=](GObject::Object, Gio::AsyncResult res) {
+			_private->interface = XdgDBus::DBus(
+				XdgDBus::DBusProxy::new_finish(res, nullptr));
 
-	_private->interface->signal_name_owner_changed().connect([=](
-			XdgDBus::DBus,
-			gi::cstring_v name,
-			gi::cstring_v oldOwner,
-			gi::cstring_v newOwner) {
-		if (name != service) {
-			return;
-		}
+			if (!_private->interface) {
+				return;
+			}
 
-		callback(name, oldOwner, newOwner);
-	});
+			_private->interface.signal_name_owner_changed().connect([=](
+					XdgDBus::DBus,
+					std::string name,
+					std::string oldOwner,
+					std::string newOwner) {
+				if (name != service) {
+					return;
+				}
+
+				callback(name, oldOwner, newOwner);
+			});
+		}));
 }
 
 ServiceWatcher::~ServiceWatcher() = default;
