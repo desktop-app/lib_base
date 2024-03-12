@@ -115,7 +115,7 @@ public:
 						});
 
 						XdpInhibit::Inhibit(proxy).call_inhibit(
-							std::string(XDP::ParentWindowID()),
+							XDP::ParentWindowID(),
 							flags,
 							GLib::Variant::new_array({
 								GLib::Variant::new_dict_entry(

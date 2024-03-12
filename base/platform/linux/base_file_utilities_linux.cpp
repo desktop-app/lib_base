@@ -58,7 +58,7 @@ void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 			RunWithXdgActivationToken([=](
 					const QString &activationToken) mutable {
 				interface.call_open_directory(
-					std::string(XDP::ParentWindowID()),
+					XDP::ParentWindowID(),
 					GLib::Variant::new_handle(0),
 					GLib::Variant::new_array({
 						GLib::Variant::new_dict_entry(
