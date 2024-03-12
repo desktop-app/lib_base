@@ -7,6 +7,7 @@
 #pragma once
 
 #include "base/expected.h"
+#include "base/weak_ptr.h"
 
 typedef struct _GDBusConnection GDBusConnection;
 
@@ -40,7 +41,7 @@ void StartServiceByNameAsync(
 	const std::string &name,
 	Fn<void(Fn<Result<StartReply>()>)> callback);
 
-class ServiceWatcher {
+class ServiceWatcher : public has_weak_ptr {
 public:
 	ServiceWatcher(
 		const GDBusConnection *connection,
