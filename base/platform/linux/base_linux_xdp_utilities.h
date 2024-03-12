@@ -6,6 +6,9 @@
 //
 #pragma once
 
+#include "base/expected.h"
+#include "base/weak_ptr.h"
+
 #include <glibmm.h>
 
 class QWindow;
@@ -17,43 +20,53 @@ inline constexpr auto kObjectPath = "/org/freedesktop/portal/desktop";
 inline constexpr auto kRequestInterface = "org.freedesktop.portal.Request";
 inline constexpr auto kSettingsInterface = "org.freedesktop.portal.Settings";
 
-Glib::ustring ParentWindowID();
-Glib::ustring ParentWindowID(QWindow *window);
+template <typename T>
+using Result = expected<T, std::unique_ptr<std::exception>>;
 
-std::optional<Glib::VariantBase> ReadSetting(
-	const Glib::ustring &group,
-	const Glib::ustring &key);
+std::string ParentWindowID();
+std::string ParentWindowID(QWindow *window);
+
+Result<Glib::VariantBase> ReadSetting(
+	const std::string &group,
+	const std::string &key);
 
 template <typename T>
-std::optional<T> ReadSetting(
-		const Glib::ustring &group,
-		const Glib::ustring &key) {
+Result<T> ReadSetting(
+		const std::string &group,
+		const std::string &key) {
 	try {
-		if (const auto value = ReadSetting(group, key)) {
+		auto value = ReadSetting(group, key);
+		if (value) {
 			return value->get_dynamic<T>();
 		}
+		return make_unexpected(std::move(value.error()));
+	} catch (std::invalid_argument &e) {
+		return make_unexpected(
+			std::make_unique<std::invalid_argument>(std::move(e)));
+	} catch (std::bad_cast &e) {
+		return make_unexpected(std::make_unique<std::bad_cast>(std::move(e)));
 	} catch (...) {
+		return make_unexpected(std::make_unique<std::exception>());
 	}
-	return std::nullopt;
 }
 
-class SettingWatcher {
+class SettingWatcher : public has_weak_ptr {
 public:
 	SettingWatcher(
 		Fn<void(
-			const Glib::ustring &,
-			const Glib::ustring &,
+			const std::string &,
+			const std::string &,
 			const Glib::VariantBase &)> callback);
 
 	template <typename ...Args>
 	SettingWatcher(
 		Fn<void(
-			const Glib::ustring &,
-			const Glib::ustring &,
+			const std::string &,
+			const std::string &,
 			Args...)> callback)
 	: SettingWatcher([=](
-			const Glib::ustring &group,
-			const Glib::ustring &key,
+			const std::string &group,
+			const std::string &key,
 			const Glib::VariantBase &value) {
 		if constexpr (sizeof...(Args) == 0) {
 			callback(group, key);
@@ -83,14 +96,14 @@ public:
 
 	template <typename ...Args>
 	SettingWatcher(
-		const Glib::ustring &group,
-		const Glib::ustring &key,
+		const std::string &group,
+		const std::string &key,
 		Fn<void(Args...)> callback)
 	: SettingWatcher([=](
-			const Glib::ustring &group2,
-			const Glib::ustring &key2,
+			const std::string &group2,
+			const std::string &key2,
 			Args &&...value) {
-		if (group.raw() == group2.raw() && key.raw() == key2.raw()) {
+		if (group == group2 && key == key2) {
 			callback(std::forward<decltype(value)>(value)...);
 		}
 	}) {
@@ -98,8 +111,8 @@ public:
 
 	template <typename Callback>
 	SettingWatcher(
-		const Glib::ustring &group,
-		const Glib::ustring &key,
+		const std::string &group,
+		const std::string &key,
 		Callback callback)
 	: SettingWatcher(group, key, std::function(callback)) {
 	}

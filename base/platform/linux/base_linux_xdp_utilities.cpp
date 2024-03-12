@@ -8,7 +8,7 @@
 
 #include "base/platform/base_platform_info.h"
 
-#include <giomm.h>
+#include <xdpsettings/xdpsettings.hpp>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
@@ -19,13 +19,15 @@
 #include <private/qgenericunixservices_p.h>
 #endif // Qt >= 6.5.0
 
+using namespace gi::repository;
+
 namespace base::Platform::XDP {
 
-Glib::ustring ParentWindowID() {
+std::string ParentWindowID() {
 	return ParentWindowID(QGuiApplication::focusWindow());
 }
 
-Glib::ustring ParentWindowID(QWindow *window) {
+std::string ParentWindowID(QWindow *window) {
 	if (!window) {
 		return {};
 	}
@@ -46,84 +48,64 @@ Glib::ustring ParentWindowID(QWindow *window) {
 	return {};
 }
 
-std::optional<Glib::VariantBase> ReadSetting(
-		const Glib::ustring &group,
-		const Glib::ustring &key) {
-	try {
-		return Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::SESSION
-		)->call_sync(
-			std::string(kObjectPath),
-			std::string(kSettingsInterface),
-			"Read",
-			Glib::create_variant(std::tuple{
-				group,
-				key,
-			}),
-			std::string(kService)
-		).get_child(
-			0
-		).get_dynamic<Glib::Variant<Glib::VariantBase>>(
-		).get();
-	} catch (...) {
+Result<Glib::VariantBase> ReadSetting(
+		const std::string &group,
+		const std::string &key) {
+	auto interface = gi::result<XdpSettings::Settings>(
+		XdpSettings::SettingsProxy::new_for_bus_sync(
+			Gio::BusType::SESSION_,
+			Gio::DBusProxyFlags::NONE_,
+			kService,
+			kObjectPath));
+	
+	if (!interface) {
+		return make_unexpected(
+			std::make_unique<GLib::Error>(std::move(interface.error())));
 	}
 
-	return std::nullopt;
+	auto result = interface->call_read_one_sync(group, key);
+	if (!result) {
+		return make_unexpected(
+			std::make_unique<GLib::Error>(std::move(result.error())));
+	}
+
+	return Glib::wrap(std::get<1>(*result).get_variant().gobj_copy_());
 }
 
 class SettingWatcher::Private {
 public:
-	Glib::RefPtr<Gio::DBus::Connection> dbusConnection;
-	uint signalId = 0;
+	XdpSettings::Settings interface;
 };
 
 SettingWatcher::SettingWatcher(
 		Fn<void(
-			const Glib::ustring &,
-			const Glib::ustring &,
+			const std::string &,
+			const std::string &,
 			const Glib::VariantBase &)> callback)
 : _private(std::make_unique<Private>()) {
-	try {
-		_private->dbusConnection = Gio::DBus::Connection::get_sync(
-			Gio::DBus::BusType::SESSION);
+	XdpSettings::SettingsProxy::new_for_bus(
+		Gio::BusType::SESSION_,
+		Gio::DBusProxyFlags::NONE_,
+		kService,
+		kObjectPath,
+		crl::guard(this, [=](GObject::Object, Gio::AsyncResult res) {
+			_private->interface = XdpSettings::Settings(
+				XdpSettings::SettingsProxy::new_for_bus_finish(res, nullptr));
 
-		_private->signalId = _private->dbusConnection->signal_subscribe(
-			[=](
-				const Glib::RefPtr<Gio::DBus::Connection> &connection,
-				const Glib::ustring &sender_name,
-				const Glib::ustring &object_path,
-				const Glib::ustring &interface_name,
-				const Glib::ustring &signal_name,
-				const Glib::VariantContainerBase &parameters) {
-				try {
-					const auto group = parameters.get_child(
-						0
-					).get_dynamic<Glib::ustring>();
+			if (!_private->interface) {
+				return;
+			}
 
-					const auto key = parameters.get_child(
-						1
-					).get_dynamic<Glib::ustring>();
-
-					const auto value = parameters.get_child(
-						2
-					).get_dynamic<Glib::VariantBase>();
-
-					callback(group, key, value);
-				} catch (...) {
-				}
-			},
-			std::string(kService),
-			std::string(kSettingsInterface),
-			"SettingChanged",
-			std::string(kObjectPath));
-	} catch (...) {
-	}
+			_private->interface.signal_setting_changed().connect([=](
+					XdpSettings::Settings,
+					std::string group,
+					std::string key,
+					GLib::Variant value) {
+				callback(group, key, Glib::wrap(value.get_variant().gobj_copy_()));
+			});
+		}));
 }
 
-SettingWatcher::~SettingWatcher() {
-	if (_private->dbusConnection && _private->signalId != 0) {
-		_private->dbusConnection->signal_unsubscribe(_private->signalId);
-	}
-}
+SettingWatcher::~SettingWatcher() = default;
 
 } // namespace base::Platform::XDP
