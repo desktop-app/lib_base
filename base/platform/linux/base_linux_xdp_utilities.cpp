@@ -48,7 +48,7 @@ std::string ParentWindowID(QWindow *window) {
 	return {};
 }
 
-Result<Glib::VariantBase> ReadSetting(
+gi::result<GLib::Variant> ReadSetting(
 		const std::string &group,
 		const std::string &key) {
 	auto interface = gi::result<XdpSettings::Settings>(
@@ -59,17 +59,15 @@ Result<Glib::VariantBase> ReadSetting(
 			kObjectPath));
 	
 	if (!interface) {
-		return make_unexpected(
-			std::make_unique<GLib::Error>(std::move(interface.error())));
+		return make_unexpected(std::move(interface.error()));
 	}
 
 	auto result = interface->call_read_one_sync(group, key);
 	if (!result) {
-		return make_unexpected(
-			std::make_unique<GLib::Error>(std::move(result.error())));
+		return make_unexpected(std::move(result.error()));
 	}
 
-	return Glib::wrap(std::get<1>(*result).get_variant().gobj_copy_());
+	return std::get<1>(*result).get_variant();
 }
 
 class SettingWatcher::Private {
@@ -81,7 +79,7 @@ SettingWatcher::SettingWatcher(
 		Fn<void(
 			const std::string &,
 			const std::string &,
-			const Glib::VariantBase &)> callback)
+			GLib::Variant)> callback)
 : _private(std::make_unique<Private>()) {
 	XdpSettings::SettingsProxy::new_for_bus(
 		Gio::BusType::SESSION_,
@@ -101,7 +99,7 @@ SettingWatcher::SettingWatcher(
 					std::string group,
 					std::string key,
 					GLib::Variant value) {
-				callback(group, key, Glib::wrap(value.get_variant().gobj_copy_()));
+				callback(group, key, value.get_variant());
 			});
 		}));
 }

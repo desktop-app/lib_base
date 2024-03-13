@@ -266,7 +266,6 @@ if (WIN32)
 elseif (LINUX)
     target_link_libraries(lib_base
     PUBLIC
-        desktop-app::external_glibmm
         desktop-app::external_kcoreaddons
     )
 
