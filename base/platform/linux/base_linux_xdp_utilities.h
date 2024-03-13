@@ -9,7 +9,11 @@
 #include "base/expected.h"
 #include "base/weak_ptr.h"
 
+#include <glib/glib.hpp>
+
+#if __has_include(<glibmm.h>)
 #include <glibmm.h>
+#endif // __has_include(<glibmm.h>)
 
 class QWindow;
 
@@ -20,24 +24,22 @@ inline constexpr auto kObjectPath = "/org/freedesktop/portal/desktop";
 inline constexpr auto kRequestInterface = "org.freedesktop.portal.Request";
 inline constexpr auto kSettingsInterface = "org.freedesktop.portal.Settings";
 
-template <typename T>
-using Result = expected<T, std::unique_ptr<std::exception>>;
-
 std::string ParentWindowID();
 std::string ParentWindowID(QWindow *window);
 
-Result<Glib::VariantBase> ReadSetting(
+gi::result<gi::repository::GLib::Variant> ReadSetting(
 	const std::string &group,
 	const std::string &key);
 
+#if __has_include(<glibmm.h>)
 template <typename T>
-Result<T> ReadSetting(
+gi::result<T> ReadSetting(
 		const std::string &group,
 		const std::string &key) {
 	try {
 		auto value = ReadSetting(group, key);
 		if (value) {
-			return value->get_dynamic<T>();
+			return Glib::wrap(value->gobj_copy_()).get_dynamic<T>();
 		}
 		return make_unexpected(std::move(value.error()));
 	} catch (std::invalid_argument &e) {
@@ -49,6 +51,7 @@ Result<T> ReadSetting(
 		return make_unexpected(std::make_unique<std::exception>());
 	}
 }
+#endif
 
 class SettingWatcher : public has_weak_ptr {
 public:
@@ -56,8 +59,32 @@ public:
 		Fn<void(
 			const std::string &,
 			const std::string &,
-			const Glib::VariantBase &)> callback);
+			gi::repository::GLib::Variant)> callback);
 
+	SettingWatcher(
+		const std::string &group,
+		const std::string &key,
+		Fn<void(gi::repository::GLib::Variant)> callback)
+	: SettingWatcher([=](
+			const std::string &group2,
+			const std::string &key2,
+			gi::repository::GLib::Variant value) {
+		if (group == group2 && key == key2) {
+			callback(value);
+		}
+	}) {
+	}
+
+	SettingWatcher(
+		const std::string &group,
+		const std::string &key,
+		Fn<void()> callback)
+	: SettingWatcher(group, key, [=](gi::repository::GLib::Variant) {
+		callback();
+	}) {
+	}
+
+#if __has_include(<glibmm.h>)
 	template <typename ...Args>
 	SettingWatcher(
 		Fn<void(
@@ -67,7 +94,7 @@ public:
 	: SettingWatcher([=](
 			const std::string &group,
 			const std::string &key,
-			const Glib::VariantBase &value) {
+			gi::repository::GLib::Variant value) {
 		if constexpr (sizeof...(Args) == 0) {
 			callback(group, key);
 			return;
@@ -76,13 +103,16 @@ public:
 			using Tuple = std::tuple<std::decay_t<Args>...>;
 			if constexpr (sizeof...(Args) == 1) {
 				using Arg0 = std::tuple_element_t<0, Tuple>;
-				callback(group, key, value.get_dynamic<Arg0>());
+				callback(
+					group,
+					key,
+					Glib::wrap(value.gobj_copy_()).get_dynamic<Arg0>());
 			} else {
 				std::apply(
 					callback,
 					std::tuple_cat(
 						std::forward_as_tuple(group, key),
-						value.get_dynamic<Tuple>()));
+						Glib::wrap(value.gobj_copy_()).get_dynamic<Tuple>()));
 			}
 		} catch (...) {
 		}
@@ -116,6 +146,7 @@ public:
 		Callback callback)
 	: SettingWatcher(group, key, std::function(callback)) {
 	}
+#endif // __has_include(<glibmm.h>)
 
 	~SettingWatcher();
 
