@@ -26,6 +26,7 @@ namespace base::Platform {
 namespace {
 
 using namespace gi::repository;
+namespace GObject = gi::repository::GObject;
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 constexpr auto kResetScreenSaverTimeout = 10 * crl::time(1000);

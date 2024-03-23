@@ -30,6 +30,7 @@ namespace base::Platform {
 namespace {
 
 using namespace gi::repository;
+namespace GObject = gi::repository::GObject;
 
 void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 	XdpOpenURI::OpenURIProxy::new_for_bus(

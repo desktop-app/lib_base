@@ -12,6 +12,7 @@ namespace base::Platform::DBus {
 namespace {
 
 using namespace gi::repository;
+namespace GObject = gi::repository::GObject;
 
 gi::result<XdgDBus::DBus> MakeInterface(const GDBusConnection *connection) {
 	return XdgDBus::DBusProxy::new_sync(

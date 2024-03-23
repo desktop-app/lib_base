@@ -22,6 +22,7 @@ namespace base::Platform {
 namespace {
 
 using namespace gi::repository;
+namespace GObject = gi::repository::GObject;
 
 void SnapDefaultHandler(const QString &protocol) {
     Snapcraft::SettingsProxy::new_for_bus(
