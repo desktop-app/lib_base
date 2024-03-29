@@ -56,14 +56,14 @@ NetworkReachability::NetworkReachability()
 	} else if (QNetworkInformation::load(
 		QNetworkInformation::Feature::Reachability)) {
 		_private->available = QNetworkInformation::instance()->reachability()
-			!= QNetworkInformation::Reachability::Disconnected;
+			== QNetworkInformation::Reachability::Online;
 		base::qt_signal_producer(
 			QNetworkInformation::instance(),
 			&QNetworkInformation::reachabilityChanged
 		) | rpl::start_with_next([=](
 				QNetworkInformation::Reachability newReachability) {
 			_private->available = newReachability
-				!= QNetworkInformation::Reachability::Disconnected;
+				== QNetworkInformation::Reachability::Online;
 		}, _private->lifetime);
 #elif QT_VERSION < QT_VERSION_CHECK(6, 0, 0) // Qt >= 6.2.0
 	} else {
