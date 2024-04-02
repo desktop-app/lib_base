@@ -19,9 +19,15 @@
 #include <private/qgenericunixservices_p.h>
 #endif // Qt >= 6.5.0
 
-using namespace gi::repository;
+#include <sstream>
 
 namespace base::Platform::XDP {
+namespace {
+
+using namespace gi::repository;
+namespace GObject = gi::repository::GObject;
+
+} // namespace
 
 std::string ParentWindowID() {
 	return ParentWindowID(QGuiApplication::focusWindow());
