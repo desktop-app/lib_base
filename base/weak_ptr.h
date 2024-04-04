@@ -18,7 +18,8 @@ class has_weak_ptr;
 namespace details {
 
 struct alive_tracker {
-	explicit alive_tracker(const has_weak_ptr *value) : value(value) {
+	explicit alive_tracker(const has_weak_ptr *value) noexcept
+	: value(value) {
 	}
 
 	std::atomic<int> counter = 1;
@@ -64,7 +65,7 @@ public:
 		}
 	}
 
-	friend inline void invalidate_weak_ptrs(has_weak_ptr *object) {
+	friend inline void invalidate_weak_ptrs(has_weak_ptr *object) noexcept {
 		if (auto alive = object ? object->_alive.load() : nullptr) {
 			if (object->_alive.compare_exchange_strong(alive, nullptr)) {
 				alive->value.store(nullptr);
@@ -72,7 +73,7 @@ public:
 			}
 		}
 	}
-	friend inline int weak_ptrs_count(has_weak_ptr *object) {
+	friend inline int weak_ptrs_count(has_weak_ptr *object) noexcept {
 		if (const auto alive = object ? object->_alive.load() : nullptr) {
 			return alive->counter.load();
 		}
@@ -83,7 +84,7 @@ private:
 	template <typename Child>
 	friend class weak_ptr;
 
-	details::alive_tracker *incrementAliveTracker() const {
+	details::alive_tracker *incrementAliveTracker() const noexcept {
 		auto current = _alive.load();
 		if (!current) {
 			auto alive = std::make_unique<details::alive_tracker>(this);
@@ -103,19 +104,21 @@ template <typename T>
 class weak_ptr {
 public:
 	weak_ptr() = default;
-	weak_ptr(T *value)
+	weak_ptr(std::nullptr_t) noexcept {
+	}
+	weak_ptr(T *value) noexcept
 	: _alive(value ? value->incrementAliveTracker() : nullptr) {
 	}
-	weak_ptr(gsl::not_null<T*> value)
+	weak_ptr(gsl::not_null<T*> value) noexcept
 	: _alive(value->incrementAliveTracker()) {
 	}
-	weak_ptr(const std::unique_ptr<T> &value)
+	weak_ptr(const std::unique_ptr<T> &value) noexcept
 	: weak_ptr(value.get()) {
 	}
-	weak_ptr(const std::shared_ptr<T> &value)
+	weak_ptr(const std::shared_ptr<T> &value) noexcept
 	: weak_ptr(value.get()) {
 	}
-	weak_ptr(const std::weak_ptr<T> &value)
+	weak_ptr(const std::weak_ptr<T> &value) noexcept
 	: weak_ptr(value.lock().get()) {
 	}
 	weak_ptr(const weak_ptr &other) noexcept
@@ -139,23 +142,23 @@ public:
 	: _alive(std::exchange(other._alive, nullptr)) {
 	}
 
-	weak_ptr &operator=(T *value) {
+	weak_ptr &operator=(T *value) noexcept {
 		reset(value);
 		return *this;
 	}
-	weak_ptr &operator=(gsl::not_null<T*> value) {
+	weak_ptr &operator=(gsl::not_null<T*> value) noexcept {
 		reset(value.get());
 		return *this;
 	}
-	weak_ptr &operator=(const std::unique_ptr<T> &value) {
+	weak_ptr &operator=(const std::unique_ptr<T> &value) noexcept {
 		reset(value.get());
 		return *this;
 	}
-	weak_ptr &operator=(const std::shared_ptr<T> &value) {
+	weak_ptr &operator=(const std::shared_ptr<T> &value) noexcept {
 		reset(value.get());
 		return *this;
 	}
-	weak_ptr &operator=(const std::weak_ptr<T> &value) {
+	weak_ptr &operator=(const std::weak_ptr<T> &value) noexcept {
 		reset(value.lock().get());
 		return *this;
 	}
@@ -200,10 +203,10 @@ public:
 		destroy();
 	}
 
-	[[nodiscard]] bool null() const {
+	[[nodiscard]] bool null() const noexcept {
 		return !_alive;
 	}
-	[[nodiscard]] bool empty() const {
+	[[nodiscard]] bool empty() const noexcept {
 		return !_alive || !_alive->value;
 	}
 	[[nodiscard]] T *get() const noexcept {
@@ -228,7 +231,7 @@ public:
 		weak_ptr,
 		weak_ptr) noexcept = default;
 
-	void reset(T *value = nullptr) {
+	void reset(T *value = nullptr) noexcept {
 		if ((!value && _alive) || (get() != value)) {
 			destroy();
 			_alive = value ? value->incrementAliveTracker() : nullptr;
