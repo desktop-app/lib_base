@@ -21,6 +21,8 @@ namespace base {
 namespace unixtime {
 namespace {
 
+constexpr auto kIgnoreTimeDifference = TimeId(3);
+
 std::atomic<bool> ValueUpdated/* = false*/;
 std::atomic<TimeId> ValueShift/* = 0*/;
 std::atomic<bool> HttpValueValid/* = false*/;
@@ -40,8 +42,8 @@ private:
 	uint64 _startId = 0;
 	std::atomic<uint32> _incrementedPart = 0;
 	uint64 _startCounter = 0;
-	uint64 _randomPart = 0;
-	float64 _multiplier = 0.;
+	const uint64 _randomPart = 0;
+	const float64 _multiplier = 0.;
 
 };
 
@@ -79,11 +81,15 @@ MsgIdManager GlobalMsgIdManager;
 #endif // Q_OS_MAC || Q_OS_WIN
 }
 
-MsgIdManager::MsgIdManager() {
+[[nodiscard]] uint32 PrepareRandomPart() {
 	auto generator = std::mt19937(std::random_device()());
 	auto distribution = std::uniform_int_distribution<uint32>();
-	_randomPart = distribution(generator);
-	_multiplier = GetMultiplier();
+	return distribution(generator);
+}
+
+MsgIdManager::MsgIdManager()
+: _randomPart(PrepareRandomPart())
+, _multiplier(GetMultiplier()) {
 	initialize();
 
 	srand(uint32(_startCounter & 0xFFFFFFFFUL));
@@ -103,11 +109,16 @@ uint64 MsgIdManager::next() {
 	const auto counter = GetCounter();
 
 	QReadLocker lock(&_lock);
-	const auto delta = (counter - _startCounter);
-	const auto result = _startId + (uint64)floor(delta * _multiplier);
+	const auto startCounter = _startCounter;
+	const auto startId = _startId;
 	lock.unlock();
 
-	return (result & ~0x03L) + (_incrementedPart += 4);
+	const auto incrementedPart = (_incrementedPart += 4);
+
+	const auto delta = (counter - startCounter);
+	const auto result = startId + (uint64)floor(delta * _multiplier);
+
+	return (result & ~0x03L) + incrementedPart;
 }
 
 TimeId local() {
@@ -128,13 +139,21 @@ TimeId now() {
 void update(TimeId now, bool force) {
 	if (force) {
 		ValueUpdated = true;
-	} else {
+	} else if (ValueUpdated) {
+		return;
+	}
+
+	const auto shift = now - local();
+	const auto ignore = !force
+		&& (std::abs(shift - ValueShift) < kIgnoreTimeDifference);
+	if (ignore) {
+		return;
+	} else if (!force) {
 		auto expected = false;
 		if (!ValueUpdated.compare_exchange_strong(expected, true)) {
 			return;
 		}
 	}
-	const auto shift = now - local();
 	const auto old = ValueShift.exchange(shift);
 
 	HttpValueShift = 0;
