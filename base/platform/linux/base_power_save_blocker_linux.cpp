@@ -8,7 +8,6 @@
 
 #include "base/platform/base_platform_info.h"
 #include "base/platform/linux/base_linux_xdp_utilities.h"
-#include "base/platform/linux/base_linux_wayland_integration.h"
 #include "base/timer_rpl.h"
 #include "base/weak_ptr.h"
 #include "base/random.h"
@@ -181,11 +180,6 @@ void BlockPowerSave(
 			PortalPreventAppSuspension(true, description);
 			break;
 		case PowerSaveBlockType::PreventDisplaySleep:
-			if (window) {
-				if (const auto integration = WaylandIntegration::Instance()) {
-					integration->preventDisplaySleep(window, true);
-				}
-			}
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 			XCBPreventDisplaySleep(true);
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
