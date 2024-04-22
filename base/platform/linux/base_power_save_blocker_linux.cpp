@@ -196,11 +196,6 @@ void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 			PortalPreventAppSuspension(false);
 			break;
 		case PowerSaveBlockType::PreventDisplaySleep:
-			if (window) {
-				if (const auto integration = WaylandIntegration::Instance()) {
-					integration->preventDisplaySleep(window, false);
-				}
-			}
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 			XCBPreventDisplaySleep(false);
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
