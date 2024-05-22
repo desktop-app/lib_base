@@ -272,7 +272,7 @@ public:
 		if (failed() || !_data) {
 			return false;
 		}
-		constexpr auto kMillerRabinIterationCount = 30;
+		constexpr auto kMillerRabinIterationCount = 64;
 		const auto result = BN_is_prime_ex(
 			raw(),
 			kMillerRabinIterationCount,
