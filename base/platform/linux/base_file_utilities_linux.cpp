@@ -49,7 +49,7 @@ void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 
 			const auto fd = open(
 				QFile::encodeName(filepath).constData(),
-				O_RDONLY);
+				O_RDONLY | O_CLOEXEC);
 
 			if (fd == -1) {
 				fail();
@@ -68,15 +68,12 @@ void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 								GLib::Variant::new_string(
 									activationToken.toStdString()))),
 					}),
-					Gio::UnixFDList::new_from_array((std::array{
-						fd,
-					}).data(), 1),
+					Gio::UnixFDList::new_from_array(&fd, 1),
 					{},
 					[=](GObject::Object, Gio::AsyncResult res) mutable {
 						if (!interface.call_open_directory_finish(res)) {
 							fail();
 						}
-						close(fd);
 					});
 			});
 		});
