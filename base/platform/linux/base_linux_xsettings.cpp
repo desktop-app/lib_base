@@ -218,7 +218,7 @@ public:
 	}
 
 	const not_null<xcb_connection_t*> connection;
-	xcb_window_t x_settings_window = XCB_WINDOW_NONE;
+	xcb_window_t x_settings_window = XCB_NONE;
 	QMap<QByteArray, PropertyValue> settings;
 	bool initialized = false;
 };
