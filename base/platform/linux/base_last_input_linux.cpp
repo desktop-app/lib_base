@@ -35,13 +35,13 @@ std::optional<crl::time> XCBLastUserInputTime() {
 	}
 
 	const auto root = XCB::GetRootWindow(connection);
-	if (!root.has_value()) {
+	if (!root) {
 		return std::nullopt;
 	}
 
 	const auto cookie = xcb_screensaver_query_info(
 		connection,
-		*root);
+		root);
 
 	const auto reply = XCB::MakeReplyPointer(
 		xcb_screensaver_query_info_reply(

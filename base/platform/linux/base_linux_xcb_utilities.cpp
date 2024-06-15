@@ -22,30 +22,14 @@ std::weak_ptr<CustomConnection> GlobalCustomConnection;
 
 class TimestampGetter : public QAbstractNativeEventFilter {
 public:
-	TimestampGetter() {
+	TimestampGetter()
+	: _connection(GetConnectionFromQt())
+	, _window(GetRootWindow(_connection))
+	, _atom(GetAtom(_connection, "_DESKTOP_APP_GET_TIMESTAMP")) {
+		QCoreApplication::instance()->installNativeEventFilter(this);
 	}
 
-	std::optional<xcb_timestamp_t> get() {
-		_connection = GetConnectionFromQt();
-		if (!_connection) {
-			return std::nullopt;
-		}
-
-		const auto window = GetRootWindow(_connection);
-		if (!window.has_value()) {
-			return std::nullopt;
-		}
-
-		const auto atom = GetAtom(_connection, "_DESKTOP_APP_GET_TIMESTAMP");
-		if (!atom.has_value()) {
-			return std::nullopt;
-		}
-
-		_window = *window;
-		_atom = *atom;
-
-		QCoreApplication::instance()->installNativeEventFilter(this);
-
+	xcb_timestamp_t get() {
 		xcb_change_property(
 			_connection,
 			XCB_PROP_MODE_REPLACE,
@@ -103,7 +87,7 @@ private:
 	xcb_connection_t *_connection = nullptr;
 	xcb_window_t _window = XCB_WINDOW_NONE;
 	xcb_atom_t _atom = XCB_ATOM_NONE;
-	std::optional<xcb_timestamp_t> _timestamp;
+	xcb_timestamp_t _timestamp = XCB_CURRENT_TIME;
 };
 
 } // namespace
@@ -139,24 +123,22 @@ xcb_connection_t *GetConnectionFromQt() {
 #endif // !xcb
 }
 
-std::optional<xcb_timestamp_t> GetTimestamp() {
+xcb_timestamp_t GetTimestamp() {
 	return TimestampGetter().get();
 }
 
-std::optional<xcb_window_t> GetRootWindow(xcb_connection_t *connection) {
+xcb_window_t GetRootWindow(xcb_connection_t *connection) {
 	const auto screen = xcb_setup_roots_iterator(
 		xcb_get_setup(connection)).data;
 
 	if (!screen) {
-		return std::nullopt;
+		return XCB_NONE;
 	}
 
 	return screen->root;
 }
 
-std::optional<xcb_atom_t> GetAtom(
-		xcb_connection_t *connection,
-		const QString &name) {
+xcb_atom_t GetAtom(xcb_connection_t *connection, const QString &name) {
 	const auto cookie = xcb_intern_atom(
 		connection,
 		0,
@@ -169,7 +151,7 @@ std::optional<xcb_atom_t> GetAtom(
 		nullptr));
 
 	if (!reply) {
-		return std::nullopt;
+		return XCB_NONE;
 	}
 
 	return reply->atom;
@@ -195,7 +177,7 @@ std::vector<xcb_atom_t> GetWMSupported(
 	auto netWmAtoms = std::vector<xcb_atom_t>{};
 
 	const auto supportedAtom = GetAtom(connection, "_NET_SUPPORTED");
-	if (!supportedAtom.has_value()) {
+	if (!supportedAtom) {
 		return netWmAtoms;
 	}
 
@@ -207,7 +189,7 @@ std::vector<xcb_atom_t> GetWMSupported(
 			connection,
 			false,
 			root,
-			*supportedAtom,
+			supportedAtom,
 			XCB_ATOM_ATOM,
 			offset,
 			1024);
@@ -242,22 +224,22 @@ std::vector<xcb_atom_t> GetWMSupported(
 	return netWmAtoms;
 }
 
-std::optional<xcb_window_t> GetSupportingWMCheck(
+xcb_window_t GetSupportingWMCheck(
 		xcb_connection_t *connection,
 		xcb_window_t root) {
 	const auto supportingAtom = base::Platform::XCB::GetAtom(
 		connection,
 		"_NET_SUPPORTING_WM_CHECK");
 
-	if (!supportingAtom.has_value()) {
-		return std::nullopt;
+	if (!supportingAtom) {
+		return XCB_NONE;
 	}
 
 	const auto cookie = xcb_get_property(
 		connection,
 		false,
 		root,
-		*supportingAtom,
+		supportingAtom,
 		XCB_ATOM_WINDOW,
 		0,
 		1024);
@@ -268,14 +250,13 @@ std::optional<xcb_window_t> GetSupportingWMCheck(
 		nullptr));
 
 	if (!reply) {
-		return std::nullopt;
+		return XCB_NONE;
 	}
 
 	return (reply->format == 32 && reply->type == XCB_ATOM_WINDOW)
-		? std::optional<xcb_window_t>{
-			*reinterpret_cast<xcb_window_t*>(
-				xcb_get_property_value(reply.get()))
-		} : std::nullopt;
+		? *reinterpret_cast<xcb_window_t*>(
+			xcb_get_property_value(reply.get()))
+		: XCB_NONE;
 }
 
 bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName) {
@@ -285,16 +266,16 @@ bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName) {
 	}
 
 	const auto root = GetRootWindow(connection);
-	if (!root.has_value()) {
+	if (!root) {
 		return false;
 	}
 
 	const auto atom = GetAtom(connection, atomName);
-	if (!atom.has_value()) {
+	if (!atom) {
 		return false;
 	}
 
-	return ranges::contains(GetWMSupported(connection, *root), *atom);
+	return ranges::contains(GetWMSupported(connection, root), atom);
 }
 
 } // namespace base::Platform::XCB
