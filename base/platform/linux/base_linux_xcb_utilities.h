@@ -40,13 +40,11 @@ std::shared_ptr<CustomConnection> SharedConnection();
 
 xcb_connection_t *GetConnectionFromQt();
 
-std::optional<xcb_timestamp_t> GetTimestamp();
+xcb_timestamp_t GetTimestamp();
 
-std::optional<xcb_window_t> GetRootWindow(xcb_connection_t *connection);
+xcb_window_t GetRootWindow(xcb_connection_t *connection);
 
-std::optional<xcb_atom_t> GetAtom(
-		xcb_connection_t *connection,
-		const QString &name);
+xcb_atom_t GetAtom(xcb_connection_t *connection, const QString &name);
 
 bool IsExtensionPresent(
 		xcb_connection_t *connection,
@@ -56,7 +54,7 @@ std::vector<xcb_atom_t> GetWMSupported(
 		xcb_connection_t *connection,
 		xcb_window_t root);
 
-std::optional<xcb_window_t> GetSupportingWMCheck(
+xcb_window_t GetSupportingWMCheck(
 		xcb_connection_t *connection,
 		xcb_window_t root);
 

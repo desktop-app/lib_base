@@ -25,12 +25,12 @@ void XCBActivateWindow(WId window) {
 	}
 
 	const auto root = XCB::GetRootWindow(connection);
-	if (!root.has_value()) {
+	if (!root) {
 		return;
 	}
 
 	const auto timestamp = XCB::GetTimestamp();
-	if (!timestamp.has_value()) {
+	if (!timestamp) {
 		return;
 	}
 
@@ -38,7 +38,7 @@ void XCBActivateWindow(WId window) {
 		connection,
 		"_NET_ACTIVE_WINDOW");
 
-	if (!activeWindowAtom.has_value()) {
+	if (!activeWindowAtom) {
 		return;
 	}
 
@@ -61,9 +61,9 @@ void XCBActivateWindow(WId window) {
 	xev.format = 32;
 	xev.sequence = 0;
 	xev.window = window;
-	xev.type = *activeWindowAtom;
+	xev.type = activeWindowAtom;
 	xev.data.data32[0] = 1; // source: 1=application 2=pager
-	xev.data.data32[1] = *timestamp; // timestamp
+	xev.data.data32[1] = timestamp; // timestamp
 	xev.data.data32[2] = focusWindow // currently active window
 		? focusWindow->winId()
 		: XCB_NONE;
@@ -73,7 +73,7 @@ void XCBActivateWindow(WId window) {
 	xcb_send_event(
 		connection,
 		false,
-		*root,
+		root,
 		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
 			| XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY,
 		reinterpret_cast<const char *>(&xev));

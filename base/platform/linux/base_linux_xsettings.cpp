@@ -69,8 +69,8 @@ public:
 				connection,
 				false,
 				x_settings_window,
-				*_xsettings_atom,
-				*_xsettings_atom,
+				_xsettings_atom,
+				_xsettings_atom,
 				offset/4,
 				8192);
 
@@ -235,7 +235,7 @@ XSettings::XSettings()
 
 	const auto selection_cookie = xcb_get_selection_owner(
 		_private->connection,
-		*selection_owner_atom);
+		selection_owner_atom);
 
 	const auto selection_result = MakeReplyPointer(
 		xcb_get_selection_owner_reply(

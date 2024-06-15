@@ -237,7 +237,7 @@ QString GetWindowManager() {
 	}
 
 	const auto root = base::Platform::XCB::GetRootWindow(connection);
-	if (!root.has_value()) {
+	if (!root) {
 		return {};
 	}
 
@@ -251,21 +251,18 @@ QString GetWindowManager() {
 
 	const auto supportingWindow = base::Platform::XCB::GetSupportingWMCheck(
 		connection,
-		*root);
+		root);
 
-	if (!nameAtom.has_value()
-		|| !utf8Atom.has_value()
-		|| !supportingWindow.has_value()
-		|| *supportingWindow == XCB_WINDOW_NONE) {
+	if (!nameAtom || !utf8Atom || !supportingWindow) {
 		return {};
 	}
 
 	const auto cookie = xcb_get_property(
 		connection,
 		false,
-		*supportingWindow,
-		*nameAtom,
-		*utf8Atom,
+		supportingWindow,
+		nameAtom,
+		utf8Atom,
 		0,
 		1024);
 
@@ -279,7 +276,7 @@ QString GetWindowManager() {
 		return {};
 	}
 
-	return (reply->format == 8 && reply->type == *utf8Atom)
+	return (reply->format == 8 && reply->type == utf8Atom)
 		? QString::fromUtf8(
 			reinterpret_cast<const char*>(
 				xcb_get_property_value(reply.get())),
