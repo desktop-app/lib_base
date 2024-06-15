@@ -85,8 +85,8 @@ private:
 
 	QEventLoop _loop;
 	xcb_connection_t *_connection = nullptr;
-	xcb_window_t _window = XCB_WINDOW_NONE;
-	xcb_atom_t _atom = XCB_ATOM_NONE;
+	xcb_window_t _window = XCB_NONE;
+	xcb_atom_t _atom = XCB_NONE;
 	xcb_timestamp_t _timestamp = XCB_CURRENT_TIME;
 };
 
