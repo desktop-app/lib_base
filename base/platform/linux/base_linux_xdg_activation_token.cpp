@@ -15,7 +15,7 @@
 namespace base::Platform {
 
 void RunWithXdgActivationToken(Fn<void(QString)> callback) {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#if defined QT_FEATURE_wayland && QT_CONFIG(wayland)
 	const auto window = QGuiApplication::focusWindow();
 	if (!window) {
 		callback({});
@@ -39,9 +39,9 @@ void RunWithXdgActivationToken(Fn<void(QString)> callback) {
 		Qt::SingleShotConnection);
 
 	nativeWindow->requestXdgActivationToken(native->lastInputSerial());
-#else // Qt >= 6.5.0
+#else // wayland
 	callback({});
-#endif // Qt < 6.5.0
+#endif // !wayland
 }
 
 QString XdgActivationToken() {

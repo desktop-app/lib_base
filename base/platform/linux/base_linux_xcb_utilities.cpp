@@ -117,6 +117,7 @@ std::shared_ptr<CustomConnection> SharedConnection() {
 }
 
 xcb_connection_t *GetConnectionFromQt() {
+#if defined QT_FEATURE_xcb && QT_CONFIG(xcb)
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
 	using namespace QNativeInterface;
 	const auto native = qApp->nativeInterface<QX11Application>();
@@ -133,6 +134,9 @@ xcb_connection_t *GetConnectionFromQt() {
 	return reinterpret_cast<xcb_connection_t*>(
 		native->nativeResourceForIntegration(QByteArray("connection")));
 #endif // Qt < 6.2.0
+#else // xcb
+	return nullptr;
+#endif // !xcb
 }
 
 std::optional<xcb_timestamp_t> GetTimestamp() {
