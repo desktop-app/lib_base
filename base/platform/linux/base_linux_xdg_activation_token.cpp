@@ -20,6 +20,11 @@ void RunWithXdgActivationToken(Fn<void(QString)> callback) {
 	if (!window) {
 		callback({});
 		return;
+	} else if (!window->isVisible()) {
+		InvokeQueued(qApp, [=] {
+			RunWithXdgActivationToken(callback);
+		});
+		return;
 	}
 
 	using namespace QNativeInterface;
