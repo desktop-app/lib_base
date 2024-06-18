@@ -15,7 +15,6 @@
 #include <xcb/screensaver.h>
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-#include <xdgscreensaver/xdgscreensaver.hpp>
 #include <mutteridlemonitor/mutteridlemonitor.hpp>
 
 namespace base::Platform {
@@ -57,27 +56,6 @@ std::optional<crl::time> XCBLastUserInputTime() {
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
-std::optional<crl::time> FreedesktopDBusLastUserInputTime() {
-	auto interface = XdgScreenSaver::ScreenSaver(
-		XdgScreenSaver::ScreenSaverProxy::new_for_bus_sync(
-			Gio::BusType::SESSION_,
-			Gio::DBusProxyFlags::NONE_,
-			"org.freedesktop.ScreenSaver",
-			"/org/freedesktop/ScreenSaver",
-			nullptr));
-
-	if (!interface) {
-		return std::nullopt;
-	}
-
-	const auto result = interface.call_get_session_idle_time_sync();
-	if (!result) {
-		return std::nullopt;
-	}
-
-	return (crl::now() - static_cast<crl::time>(std::get<1>(*result)));
-}
-
 std::optional<crl::time> MutterDBusLastUserInputTime() {
 	auto interface = MutterIdleMonitor::IdleMonitor(
 		MutterIdleMonitor::IdleMonitorProxy::new_for_bus_sync(
@@ -110,11 +88,6 @@ std::optional<crl::time> LastUserInputTime() {
 		}
 	}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-
-	const auto freedesktopResult = FreedesktopDBusLastUserInputTime();
-	if (freedesktopResult.has_value()) {
-		return freedesktopResult;
-	}
 
 	const auto mutterResult = MutterDBusLastUserInputTime();
 	if (mutterResult.has_value()) {
