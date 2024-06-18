@@ -57,6 +57,11 @@ std::optional<crl::time> XCBLastUserInputTime() {
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 std::optional<crl::time> MutterDBusLastUserInputTime() {
+	static auto NotSupported = false;
+	if (NotSupported) {
+		return std::nullopt;
+	}
+
 	auto interface = MutterIdleMonitor::IdleMonitor(
 		MutterIdleMonitor::IdleMonitorProxy::new_for_bus_sync(
 			Gio::BusType::SESSION_,
@@ -66,11 +71,13 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 			nullptr));
 
 	if (!interface) {
+		NotSupported = true;
 		return std::nullopt;
 	}
 
 	const auto result = interface.call_get_idletime_sync();
 	if (!result) {
+		NotSupported = true;
 		return std::nullopt;
 	}
 
