@@ -60,7 +60,7 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 	auto interface = MutterIdleMonitor::IdleMonitor(
 		MutterIdleMonitor::IdleMonitorProxy::new_for_bus_sync(
 			Gio::BusType::SESSION_,
-			Gio::DBusProxyFlags::NONE_,
+			Gio::DBusProxyFlags::DO_NOT_AUTO_START_AT_CONSTRUCTION_,
 			"org.gnome.Mutter.IdleMonitor",
 			"/org/gnome/Mutter/IdleMonitor/Core",
 			nullptr));
