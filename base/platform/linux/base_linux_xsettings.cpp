@@ -280,7 +280,7 @@ bool XSettings::initialized() const {
 bool XSettings::nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
-		NativeEventResult *result) {
+		native_event_filter_result *result) {
 	const auto event = static_cast<xcb_generic_event_t*>(message);
 	const auto response_type = event->response_type & ~0x80;
 	if (response_type != XCB_PROPERTY_NOTIFY)

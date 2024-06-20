@@ -51,7 +51,7 @@ private:
 	bool nativeEventFilter(
 			const QByteArray &eventType,
 			void *message,
-			NativeEventResult *result) override {
+			native_event_filter_result *result) override {
 		const auto guard = gsl::finally([&] {
 			_connection = GetConnectionFromQt();
 			if (!_connection || xcb_connection_has_error(_connection)) {

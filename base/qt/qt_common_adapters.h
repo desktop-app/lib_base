@@ -15,10 +15,8 @@
 namespace base {
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-using NativeEventResult = qintptr;
 using TouchDevice = QInputDevice::DeviceType;
 #else // Qt >= 6.0.0
-using NativeEventResult = long;
 using TouchDevice = QTouchDevice;
 #endif // Qt < 6.0.0
 

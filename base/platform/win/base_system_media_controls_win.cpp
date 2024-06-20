@@ -48,7 +48,7 @@ struct SystemMediaControls::Private : QAbstractNativeEventFilter {
 	bool nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
-		long *result) override;
+		native_event_filter_result *result) override;
 
 	QWidget parent;
 	HWND hwnd = nullptr;
@@ -66,7 +66,7 @@ struct SystemMediaControls::Private : QAbstractNativeEventFilter {
 bool SystemMediaControls::Private::nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
-		long *result) {
+		native_event_filter_result *result) {
 	Expects(hwnd != nullptr);
 
 	const auto msg = static_cast<MSG*>(message);

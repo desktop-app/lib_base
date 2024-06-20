@@ -7,7 +7,6 @@
 #pragma once
 
 #include "base/platform/linux/base_linux_xcb_utilities.h"
-#include "base/qt/qt_common_adapters.h"
 
 #include <QtCore/QAbstractNativeEventFilter>
 
@@ -41,7 +40,7 @@ private:
 	bool nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
-		NativeEventResult *result) override;
+		native_event_filter_result *result) override;
 
 	enum class Type {
 		Integer,

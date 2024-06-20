@@ -32,7 +32,7 @@ private:
 	bool nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
-		long *result) override;
+		native_event_filter_result *result) override;
 
 	QWidget _fake;
 	HWND _hwnd = nullptr;
@@ -87,7 +87,7 @@ std::optional<bool> BatterySaving::enabled() const {
 bool BatterySaving::nativeEventFilter(
 		const QByteArray &eventType,
 		void *message,
-		long *result) {
+		native_event_filter_result *result) {
 	Expects(_hwnd != nullptr);
 
 	const auto msg = static_cast<MSG*>(message);

@@ -25,6 +25,12 @@
 
 namespace func = base::functors;
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+using native_event_filter_result = qintptr;
+#else // Qt >= 6.0.0
+using native_event_filter_result = long;
+#endif // Qt >= 6.0.0
+
 using gsl::not_null;
 using index_type = gsl::index;
 using size_type = gsl::index;
