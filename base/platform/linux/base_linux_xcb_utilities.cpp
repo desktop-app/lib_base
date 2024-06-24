@@ -38,20 +38,20 @@ public:
 			return _timestamp;
 		}
 
-		xcb_change_property(
-			_connection,
-			XCB_PROP_MODE_REPLACE,
-			_window,
-			_atom,
-			XCB_ATOM_INTEGER,
-			32,
-			0,
-			nullptr);
+		free(
+			xcb_request_check(
+				_connection,
+				xcb_change_property_checked(
+					_connection,
+					XCB_PROP_MODE_REPLACE,
+					_window,
+					_atom,
+					XCB_ATOM_INTEGER,
+					32,
+					0,
+					nullptr)));
 
-		xcb_flush(_connection);
-		sync();
 		_loop.exec();
-
 		return _timestamp;
 	}
 
@@ -66,7 +66,11 @@ private:
 			}
 
 			if (_loop.isRunning()) {
-				sync();
+				free(
+					xcb_get_input_focus_reply(
+						_connection,
+						xcb_get_input_focus(_connection),
+						nullptr));
 			}
 		});
 
@@ -83,11 +87,6 @@ private:
 		_timestamp = pn->time;
 		_loop.quit();
 		return false;
-	}
-
-	void sync() {
-		const auto cookie = xcb_get_input_focus(_connection);
-		free(xcb_get_input_focus_reply(_connection, cookie, nullptr));
 	}
 
 	QEventLoop _loop;

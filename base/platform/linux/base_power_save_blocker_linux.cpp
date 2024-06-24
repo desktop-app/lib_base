@@ -47,7 +47,12 @@ void XCBPreventDisplaySleep(bool prevent) {
 		if (!connection || xcb_connection_has_error(connection)) {
 			return;
 		}
-		xcb_force_screen_saver(connection, XCB_SCREEN_SAVER_RESET);
+		free(
+			xcb_request_check(
+				connection,
+				xcb_force_screen_saver_checked(
+					connection,
+					XCB_SCREEN_SAVER_RESET)));
 	}, lifetime);
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
