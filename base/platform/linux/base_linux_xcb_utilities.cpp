@@ -26,10 +26,18 @@ public:
 	: _connection(GetConnectionFromQt())
 	, _window(GetRootWindow(_connection))
 	, _atom(GetAtom(_connection, "_DESKTOP_APP_GET_TIMESTAMP")) {
+		if (!_connection) {
+			return;
+		}
+
 		QCoreApplication::instance()->installNativeEventFilter(this);
 	}
 
 	xcb_timestamp_t get() {
+		if (!_connection) {
+			return _timestamp;
+		}
+
 		xcb_change_property(
 			_connection,
 			XCB_PROP_MODE_REPLACE,
@@ -53,8 +61,7 @@ private:
 			void *message,
 			native_event_filter_result *result) override {
 		const auto guard = gsl::finally([&] {
-			_connection = GetConnectionFromQt();
-			if (!_connection || xcb_connection_has_error(_connection)) {
+			if (xcb_connection_has_error(_connection)) {
 				_loop.quit();
 			}
 
@@ -128,6 +135,10 @@ xcb_timestamp_t GetTimestamp() {
 }
 
 xcb_window_t GetRootWindow(xcb_connection_t *connection) {
+	if (!connection || xcb_connection_has_error(connection)) {
+		return XCB_NONE;
+	}
+
 	const auto screen = xcb_setup_roots_iterator(
 		xcb_get_setup(connection)).data;
 
@@ -139,6 +150,10 @@ xcb_window_t GetRootWindow(xcb_connection_t *connection) {
 }
 
 xcb_atom_t GetAtom(xcb_connection_t *connection, const QString &name) {
+	if (!connection || xcb_connection_has_error(connection)) {
+		return XCB_NONE;
+	}
+
 	const auto cookie = xcb_intern_atom(
 		connection,
 		0,
@@ -160,6 +175,10 @@ xcb_atom_t GetAtom(xcb_connection_t *connection, const QString &name) {
 bool IsExtensionPresent(
 		xcb_connection_t *connection,
 		xcb_extension_t *ext) {
+	if (!connection || xcb_connection_has_error(connection)) {
+		return false;
+	}
+
 	const auto reply = xcb_get_extension_data(
 		connection,
 		ext);
@@ -175,6 +194,10 @@ std::vector<xcb_atom_t> GetWMSupported(
 		xcb_connection_t *connection,
 		xcb_window_t root) {
 	auto netWmAtoms = std::vector<xcb_atom_t>{};
+
+	if (!connection || xcb_connection_has_error(connection)) {
+		return netWmAtoms;
+	}
 
 	const auto supportedAtom = GetAtom(connection, "_NET_SUPPORTED");
 	if (!supportedAtom) {
@@ -227,6 +250,10 @@ std::vector<xcb_atom_t> GetWMSupported(
 xcb_window_t GetSupportingWMCheck(
 		xcb_connection_t *connection,
 		xcb_window_t root) {
+	if (!connection || xcb_connection_has_error(connection)) {
+		return XCB_NONE;
+	}
+
 	const auto supportingAtom = base::Platform::XCB::GetAtom(
 		connection,
 		"_NET_SUPPORTING_WM_CHECK");
@@ -260,7 +287,6 @@ xcb_window_t GetSupportingWMCheck(
 }
 
 bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName) {
-	// for inline GetConnectionFromQt or CustomConnection use
 	if (!connection || xcb_connection_has_error(connection)) {
 		return false;
 	}

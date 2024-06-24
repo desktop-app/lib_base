@@ -217,7 +217,7 @@ public:
 
 	}
 
-	const not_null<xcb_connection_t*> connection;
+	xcb_connection_t * const connection = nullptr;
 	xcb_window_t x_settings_window = XCB_NONE;
 	QMap<QByteArray, PropertyValue> settings;
 	bool initialized = false;
@@ -226,6 +226,9 @@ public:
 
 XSettings::XSettings()
 : _private(std::make_unique<Private>()) {
+	if (!_private->connection)
+		return;
+
 	const auto selection_owner_atom = GetAtom(
 		_private->connection,
 		"_XSETTINGS_S0");
