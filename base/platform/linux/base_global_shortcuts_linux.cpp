@@ -112,10 +112,11 @@ X11Manager::X11Manager()
 		sizeof(recordRange) / sizeof(recordRange[0]),
 		clientSpec,
 		recordRange);
-	if (xcb_request_check(_connection, createCookie)) {
+	if (const auto error = xcb_request_check(_connection, createCookie)) {
 		LOG((
 			"Global Shortcuts Manager: Could not create a record context!"));
 		_context = std::nullopt;
+		free(error);
 		return;
 	}
 
