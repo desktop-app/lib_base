@@ -49,6 +49,8 @@ PRIVATE
     base/platform/linux/base_process_linux.cpp
     base/platform/linux/base_process_linux.h
     base/platform/linux/base_system_media_controls_linux.cpp
+    base/platform/linux/base_system_unlock_linux.cpp
+    base/platform/linux/base_system_unlock_linux.h
     base/platform/linux/base_url_scheme_linux.cpp
     base/platform/linux/base_url_scheme_linux.h
     base/platform/mac/base_battery_saving_mac.mm
@@ -73,6 +75,8 @@ PRIVATE
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
     base/platform/mac/base_system_media_controls_mac.mm
+    base/platform/mac/base_system_unlock_mac.h
+    base/platform/mac/base_system_unlock_mac.mm
     base/platform/mac/base_url_scheme_mac.h
     base/platform/mac/base_url_scheme_mac.mm
     base/platform/mac/base_utilities_mac.h
@@ -95,6 +99,8 @@ PRIVATE
     base/platform/win/base_process_win.cpp
     base/platform/win/base_process_win.h
     base/platform/win/base_system_media_controls_win.cpp
+    base/platform/win/base_system_unlock_win.cpp
+    base/platform/win/base_system_unlock_win.h
     base/platform/win/base_url_scheme_win.cpp
     base/platform/win/base_url_scheme_win.h
     base/platform/win/base_windows_co_task_mem.h
@@ -194,6 +200,7 @@ PRIVATE
     base/runtime_composer.h
     base/single_instance.cpp
     base/single_instance.h
+    base/system_unlock.h
     base/thread_safe_wrap.h
     base/timer.cpp
     base/timer.h
