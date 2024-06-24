@@ -258,11 +258,15 @@ XSettings::XSettings()
 	const uint32_t event_mask[] = {
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE
 	};
-	xcb_change_window_attributes(
-		_private->connection,
-		_private->x_settings_window,
-		event,
-		event_mask);
+
+	free(
+		xcb_request_check(
+			_private->connection,
+			xcb_change_window_attributes_checked(
+				_private->connection,
+				_private->x_settings_window,
+				event,
+				event_mask)));
 
 	_private->populateSettings(_private->getSettings());
 	_private->initialized = true;

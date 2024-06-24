@@ -45,15 +45,21 @@ void XCBActivateWindow(WId window) {
 	const auto focusWindow = QGuiApplication::focusWindow();
 
 	// map the window first
-	xcb_map_window(connection, window);
+	free(
+		xcb_request_check(
+			connection,
+			xcb_map_window_checked(connection, window)));
 
 	// now raise (restack) the window
 	uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-	xcb_configure_window(
-		connection,
-		window,
-		XCB_CONFIG_WINDOW_STACK_MODE,
-		values);
+	free(
+		xcb_request_check(
+			connection,
+			xcb_configure_window_checked(
+				connection,
+				window,
+				XCB_CONFIG_WINDOW_STACK_MODE,
+				values)));
 
 	// and, finally, make it the active window
 	xcb_client_message_event_t xev;
@@ -70,13 +76,16 @@ void XCBActivateWindow(WId window) {
 	xev.data.data32[3] = 0;
 	xev.data.data32[4] = 0;
 
-	xcb_send_event(
-		connection,
-		false,
-		root,
-		XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
-			| XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY,
-		reinterpret_cast<const char *>(&xev));
+	free(
+		xcb_request_check(
+			connection,
+			xcb_send_event_checked(
+				connection,
+				false,
+				root,
+				XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT
+					| XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY,
+				reinterpret_cast<const char *>(&xev))));
 }
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
