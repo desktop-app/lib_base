@@ -24,9 +24,9 @@ using winrt::Windows::Foundation::IAsyncOperation;
 
 } // namespace
 
-rpl::producer<SystemUnlockAvailability> SystemUnlockStatus() {
-	static auto result = rpl::variable<SystemUnlockAvailability>(
-		SystemUnlockAvailability::Unknown);
+rpl::producer<SystemUnlockAvailability> SystemUnlockStatus(
+		bool lookupDetails) {
+	static auto result = rpl::variable<SystemUnlockAvailability>();
 	WinRT::Try([&] {
 		UserConsentVerifier::CheckAvailabilityAsync().Completed([](
 				IAsyncOperation<UserConsentVerifierAvailability> that,
@@ -37,9 +37,10 @@ rpl::producer<SystemUnlockAvailability> SystemUnlockStatus() {
 			const auto available = (status == AsyncStatus::Completed)
 				&& (results == UserConsentVerifierAvailability::Available);
 			crl::on_main([=] {
-				result = available
-					? SystemUnlockAvailability::Available
-					: SystemUnlockAvailability::Unavailable;
+				result = SystemUnlockAvailability{
+					.known = true,
+					.available = available,
+				};
 			});
 		});
 	});

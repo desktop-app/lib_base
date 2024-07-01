@@ -11,13 +11,19 @@ class QString;
 
 namespace base {
 
-enum class SystemUnlockAvailability {
-	Unknown,
-	Available,
-	Unavailable,
+struct SystemUnlockAvailability {
+	bool known : 1 = false;
+	bool available : 1 = false;
+	bool withBiometrics : 1 = false;
+	bool withCompanion : 1 = false;
+
+	friend inline bool operator==(
+		SystemUnlockAvailability,
+		SystemUnlockAvailability) = default;
 };
 
-[[nodiscard]] rpl::producer<SystemUnlockAvailability> SystemUnlockStatus();
+[[nodiscard]] rpl::producer<SystemUnlockAvailability> SystemUnlockStatus(
+	bool lookupDetails = false);
 
 enum class SystemUnlockResult {
 	Success,

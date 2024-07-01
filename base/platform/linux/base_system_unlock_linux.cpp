@@ -8,8 +8,9 @@
 
 namespace base {
 
-rpl::producer<SystemUnlockAvailability> SystemUnlockStatus() {
-	return rpl::single(SystemUnlockAvailability::Unavailable);
+rpl::producer<SystemUnlockAvailability> SystemUnlockStatus(
+		bool lookupDetails) {
+	return rpl::single(SystemUnlockAvailability{ .known = true });
 }
 
 void SuggestSystemUnlock(
