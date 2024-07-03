@@ -182,7 +182,6 @@ bool CloseProcesses(const QString &filename) {
 		return false;
 	}
 
-	auto result = BOOL(FALSE);
 	auto session = DWORD();
 	auto sessionKey = std::wstring(CCH_RM_SESSION_KEY + 1, wchar_t(0));
 	auto error = RmStartSession(&session, 0, sessionKey.data());

@@ -23,8 +23,6 @@ bool SwitchKeyboardLayoutToEnglish() {
 	if (!listSize || listSize > kMaxLayoutsCount) {
 		return false;
 	}
-	const auto current = GetKeyboardLayout(0);
-	const auto value = quintptr(current) & 0xFF;
 	auto list = std::vector<HKL>(listSize, nullptr);
 	GetKeyboardLayoutList(list.size(), list.data());
 	auto selectedLayout = HKL();
@@ -36,7 +34,6 @@ bool SwitchKeyboardLayoutToEnglish() {
 		}
 	};
 	for (const auto layout : list) {
-		const auto value = quintptr(layout);
 		const auto languageId = reinterpret_cast<quintptr>(layout) & 0xFFFF;
 		const auto primaryId = languageId & 0x03FF;
 		const auto sublanguageId = (languageId >> 10);
