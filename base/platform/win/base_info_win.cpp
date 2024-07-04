@@ -20,123 +20,119 @@
 namespace Platform {
 namespace {
 
-#define qsl(S) QStringLiteral(S)
-
 QString GetLangCodeById(unsigned int lngId) {
 	const auto primary = (lngId & 0xFFU);
 	switch (primary) {
-	case 0x36: return qsl("af");
-	case 0x1C: return qsl("sq");
-	case 0x5E: return qsl("am");
-	case 0x01: return qsl("ar");
-	case 0x2B: return qsl("hy");
-	case 0x4D: return qsl("as");
-	case 0x2C: return qsl("az");
-	case 0x45: return qsl("bn");
-	case 0x6D: return qsl("ba");
-	case 0x2D: return qsl("eu");
-	case 0x23: return qsl("be");
+	case 0x36: return u"af"_q;
+	case 0x1C: return u"sq"_q;
+	case 0x5E: return u"am"_q;
+	case 0x01: return u"ar"_q;
+	case 0x2B: return u"hy"_q;
+	case 0x4D: return u"as"_q;
+	case 0x2C: return u"az"_q;
+	case 0x45: return u"bn"_q;
+	case 0x6D: return u"ba"_q;
+	case 0x2D: return u"eu"_q;
+	case 0x23: return u"be"_q;
 	case 0x1A:
-	if (lngId == LANG_CROATIAN) {
-		return qsl("hr");
-	} else if (lngId == LANG_BOSNIAN_NEUTRAL || lngId == LANG_BOSNIAN) {
-		return qsl("bs");
-	}
-	return qsl("sr");
-	break;
-	case 0x7E: return qsl("br");
-	case 0x02: return qsl("bg");
-	case 0x92: return qsl("ku");
-	case 0x03: return qsl("ca");
-	case 0x04: return qsl("zh");
-	case 0x83: return qsl("co");
-	case 0x05: return qsl("cs");
-	case 0x06: return qsl("da");
-	case 0x65: return qsl("dv");
-	case 0x13: return qsl("nl");
-	case 0x09: return qsl("en");
-	case 0x25: return qsl("et");
-	case 0x38: return qsl("fo");
-	case 0x0B: return qsl("fi");
-	case 0x0c: return qsl("fr");
-	case 0x62: return qsl("fy");
-	case 0x56: return qsl("gl");
-	case 0x37: return qsl("ka");
-	case 0x07: return qsl("de");
-	case 0x08: return qsl("el");
-	case 0x6F: return qsl("kl");
-	case 0x47: return qsl("gu");
-	case 0x68: return qsl("ha");
-	case 0x0D: return qsl("he");
-	case 0x39: return qsl("hi");
-	case 0x0E: return qsl("hu");
-	case 0x0F: return qsl("is");
-	case 0x70: return qsl("ig");
-	case 0x21: return qsl("id");
-	case 0x5D: return qsl("iu");
-	case 0x3C: return qsl("ga");
-	case 0x34: return qsl("xh");
-	case 0x35: return qsl("zu");
-	case 0x10: return qsl("it");
-	case 0x11: return qsl("ja");
-	case 0x4B: return qsl("kn");
-	case 0x3F: return qsl("kk");
-	case 0x53: return qsl("kh");
-	case 0x87: return qsl("rw");
-	case 0x12: return qsl("ko");
-	case 0x40: return qsl("ky");
-	case 0x54: return qsl("lo");
-	case 0x26: return qsl("lv");
-	case 0x27: return qsl("lt");
-	case 0x6E: return qsl("lb");
-	case 0x2F: return qsl("mk");
-	case 0x3E: return qsl("ms");
-	case 0x4C: return qsl("ml");
-	case 0x3A: return qsl("mt");
-	case 0x81: return qsl("mi");
-	case 0x4E: return qsl("mr");
-	case 0x50: return qsl("mn");
-	case 0x61: return qsl("ne");
-	case 0x14: return qsl("no");
-	case 0x82: return qsl("oc");
-	case 0x48: return qsl("or");
-	case 0x63: return qsl("ps");
-	case 0x29: return qsl("fa");
-	case 0x15: return qsl("pl");
-	case 0x16: return qsl("pt");
-	case 0x67: return qsl("ff");
-	case 0x46: return qsl("pa");
-	case 0x18: return qsl("ro");
-	case 0x17: return qsl("rm");
-	case 0x19: return qsl("ru");
-	case 0x3B: return qsl("se");
-	case 0x4F: return qsl("sa");
-	case 0x32: return qsl("tn");
-	case 0x59: return qsl("sd");
-	case 0x5B: return qsl("si");
-	case 0x1B: return qsl("sk");
-	case 0x24: return qsl("sl");
-	case 0x0A: return qsl("es");
-	case 0x41: return qsl("sw");
-	case 0x1D: return qsl("sv");
-	case 0x28: return qsl("tg");
-	case 0x49: return qsl("ta");
-	case 0x44: return qsl("tt");
-	case 0x4A: return qsl("te");
-	case 0x1E: return qsl("th");
-	case 0x51: return qsl("bo");
-	case 0x73: return qsl("ti");
-	case 0x1F: return qsl("tr");
-	case 0x42: return qsl("tk");
-	case 0x22: return qsl("uk");
-	case 0x20: return qsl("ur");
-	case 0x80: return qsl("ug");
-	case 0x43: return qsl("uz");
-	case 0x2A: return qsl("vi");
-	case 0x52: return qsl("cy");
-	case 0x88: return qsl("wo");
-	case 0x78: return qsl("ii");
-	case 0x6A: return qsl("yo");
+		return (lngId == LANG_CROATIAN)
+			? u"hr"_q
+			: (lngId == LANG_BOSNIAN_NEUTRAL || lngId == LANG_BOSNIAN)
+			? u"bs"_q
+			: u"sr"_q;
+	case 0x7E: return u"br"_q;
+	case 0x02: return u"bg"_q;
+	case 0x92: return u"ku"_q;
+	case 0x03: return u"ca"_q;
+	case 0x04: return u"zh"_q;
+	case 0x83: return u"co"_q;
+	case 0x05: return u"cs"_q;
+	case 0x06: return u"da"_q;
+	case 0x65: return u"dv"_q;
+	case 0x13: return u"nl"_q;
+	case 0x09: return u"en"_q;
+	case 0x25: return u"et"_q;
+	case 0x38: return u"fo"_q;
+	case 0x0B: return u"fi"_q;
+	case 0x0c: return u"fr"_q;
+	case 0x62: return u"fy"_q;
+	case 0x56: return u"gl"_q;
+	case 0x37: return u"ka"_q;
+	case 0x07: return u"de"_q;
+	case 0x08: return u"el"_q;
+	case 0x6F: return u"kl"_q;
+	case 0x47: return u"gu"_q;
+	case 0x68: return u"ha"_q;
+	case 0x0D: return u"he"_q;
+	case 0x39: return u"hi"_q;
+	case 0x0E: return u"hu"_q;
+	case 0x0F: return u"is"_q;
+	case 0x70: return u"ig"_q;
+	case 0x21: return u"id"_q;
+	case 0x5D: return u"iu"_q;
+	case 0x3C: return u"ga"_q;
+	case 0x34: return u"xh"_q;
+	case 0x35: return u"zu"_q;
+	case 0x10: return u"it"_q;
+	case 0x11: return u"ja"_q;
+	case 0x4B: return u"kn"_q;
+	case 0x3F: return u"kk"_q;
+	case 0x53: return u"kh"_q;
+	case 0x87: return u"rw"_q;
+	case 0x12: return u"ko"_q;
+	case 0x40: return u"ky"_q;
+	case 0x54: return u"lo"_q;
+	case 0x26: return u"lv"_q;
+	case 0x27: return u"lt"_q;
+	case 0x6E: return u"lb"_q;
+	case 0x2F: return u"mk"_q;
+	case 0x3E: return u"ms"_q;
+	case 0x4C: return u"ml"_q;
+	case 0x3A: return u"mt"_q;
+	case 0x81: return u"mi"_q;
+	case 0x4E: return u"mr"_q;
+	case 0x50: return u"mn"_q;
+	case 0x61: return u"ne"_q;
+	case 0x14: return u"no"_q;
+	case 0x82: return u"oc"_q;
+	case 0x48: return u"or"_q;
+	case 0x63: return u"ps"_q;
+	case 0x29: return u"fa"_q;
+	case 0x15: return u"pl"_q;
+	case 0x16: return u"pt"_q;
+	case 0x67: return u"ff"_q;
+	case 0x46: return u"pa"_q;
+	case 0x18: return u"ro"_q;
+	case 0x17: return u"rm"_q;
+	case 0x19: return u"ru"_q;
+	case 0x3B: return u"se"_q;
+	case 0x4F: return u"sa"_q;
+	case 0x32: return u"tn"_q;
+	case 0x59: return u"sd"_q;
+	case 0x5B: return u"si"_q;
+	case 0x1B: return u"sk"_q;
+	case 0x24: return u"sl"_q;
+	case 0x0A: return u"es"_q;
+	case 0x41: return u"sw"_q;
+	case 0x1D: return u"sv"_q;
+	case 0x28: return u"tg"_q;
+	case 0x49: return u"ta"_q;
+	case 0x44: return u"tt"_q;
+	case 0x4A: return u"te"_q;
+	case 0x1E: return u"th"_q;
+	case 0x51: return u"bo"_q;
+	case 0x73: return u"ti"_q;
+	case 0x1F: return u"tr"_q;
+	case 0x42: return u"tk"_q;
+	case 0x22: return u"uk"_q;
+	case 0x20: return u"ur"_q;
+	case 0x80: return u"ug"_q;
+	case 0x43: return u"uz"_q;
+	case 0x2A: return u"vi"_q;
+	case 0x52: return u"cy"_q;
+	case 0x88: return u"wo"_q;
+	case 0x78: return u"ii"_q;
+	case 0x6A: return u"yo"_q;
 	}
 	return QString();
 }
@@ -194,6 +190,30 @@ QString SystemVersionPretty() {
 }
 
 QString SystemCountry() {
+	auto key = HKEY();
+	const auto result = RegOpenKeyEx(
+		HKEY_CURRENT_USER,
+		L"Control Panel\\International\\Geo",
+		0,
+		KEY_READ,
+		&key);
+	if (result == ERROR_SUCCESS) {
+		constexpr auto kBufSize = 4;
+		auto checkType = DWORD();
+		auto checkSize = DWORD(kBufSize * 2);
+		auto checkStr = std::array<WCHAR, kBufSize>{ 0 };
+		const auto result = RegQueryValueEx(
+			key,
+			L"Name",
+			0,
+			&checkType,
+			reinterpret_cast<BYTE*>(checkStr.data()),
+			&checkSize);
+		if (result == ERROR_SUCCESS && checkSize == 6) { // 2 wchars + null
+			return QString::fromWCharArray(checkStr.data());
+		}
+	}
+
 	int chCount = GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, 0, 0);
 	if (chCount && chCount < 128) {
 		WCHAR wstrCountry[128];
