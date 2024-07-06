@@ -45,8 +45,8 @@ void ProcessHookedKeyboardEvent(WPARAM wParam, LPARAM lParam) {
 	const auto press = (PKBDLLHOOKSTRUCT)lParam;
 	const auto repeatCount = uint32(0);
 	const auto extendedBit = ((press->flags & LLKHF_EXTENDED) != 0);
-	const auto contextBit = ((press->flags & LLKHF_ALTDOWN) != 0);
-	const auto transitionState = ((press->flags & LLKHF_UP) != 0);
+	//const auto contextBit = ((press->flags & LLKHF_ALTDOWN) != 0);
+	//const auto transitionState = ((press->flags & LLKHF_UP) != 0);
 	const auto lParamForEvent = (repeatCount & 0x0000FFFFU)
 		| ((uint32(press->scanCode) & 0xFFU) << 16)
 		| (extendedBit ? (uint32(KF_EXTENDED) << 16) : 0);
