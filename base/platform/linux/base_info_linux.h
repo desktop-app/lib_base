@@ -21,6 +21,7 @@ inline constexpr bool IsLinux() {
 inline constexpr bool IsWindows() { return false; }
 inline constexpr bool IsWindows32Bit() { return false; }
 inline constexpr bool IsWindows64Bit() { return false; }
+inline constexpr bool IsWindowsARM64() { return false; }
 inline constexpr bool IsWindowsStoreBuild() { return false; }
 inline bool IsWindows7OrGreater() { return false; }
 inline bool IsWindows8OrGreater() { return false; }

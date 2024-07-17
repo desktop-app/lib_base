@@ -44,6 +44,7 @@ enum class OutdateReason {
 [[nodiscard]] constexpr bool IsWindows();
 [[nodiscard]] constexpr bool IsWindows32Bit();
 [[nodiscard]] constexpr bool IsWindows64Bit();
+[[nodiscard]] constexpr bool IsWindowsARM64();
 [[nodiscard]] constexpr bool IsWindowsStoreBuild();
 [[nodiscard]] bool IsWindows7OrGreater();
 [[nodiscard]] bool IsWindows8OrGreater();
