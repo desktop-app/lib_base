@@ -58,7 +58,7 @@ using TimeId = int32;
 
 #ifndef _DEBUG
 
-#ifdef _MSC_VER
+#if defined _MSC_VER && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #define DESKTOP_APP_USE_NO_ALLOCATION_LITERAL
 #endif // _MSC_VER
 
