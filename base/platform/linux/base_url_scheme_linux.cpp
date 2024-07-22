@@ -10,7 +10,6 @@
 #include "base/debug_log.h"
 
 #include <QtGui/QGuiApplication>
-#include <QtWidgets/QWidget>
 
 #include <kshell.h>
 #include <ksandbox.h>
@@ -63,18 +62,11 @@ void SnapDefaultHandler(const QString &protocol) {
                         return;
                     }
 
-                    const auto window = std::make_shared<QWidget>();
-                    window->setAttribute(Qt::WA_DontShowOnScreen);
-                    window->setWindowModality(Qt::ApplicationModal);
-                    window->show();
-
                     interface.call_set_sub(
                         "default-url-scheme-handler",
                         protocol.toStdString(),
                         expectedHandler.toStdString(),
-                        [=](GObject::Object, Gio::AsyncResult) {
-                            (void)window; // don't destroy until finish
-                        });
+                        nullptr);
                 });
         });
 }
