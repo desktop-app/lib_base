@@ -314,7 +314,9 @@ bool IsWayland() {
 					&& LOAD_LIBRARY_SYMBOL(lib, wl_display_connect)
 					&& LOAD_LIBRARY_SYMBOL(lib, wl_display_disconnect)) {
 				const auto display = wl_display_connect(nullptr);
-				wl_display_disconnect(display);
+				if (display) {
+					wl_display_disconnect(display);
+				}
 				return display;
 			}
 			return qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
