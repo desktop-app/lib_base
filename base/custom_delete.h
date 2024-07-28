@@ -12,7 +12,9 @@ template <auto fn>
 struct custom_delete {
     template <typename T>
     constexpr void operator()(T* value) const {
-        fn(value);
+        if (value) {
+            fn(value);
+        }
     }
 };
 
