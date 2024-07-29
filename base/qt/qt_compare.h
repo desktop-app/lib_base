@@ -49,7 +49,7 @@ namespace base::details {
 
 template <typename T>
 using compare_three_way_result_t = decltype(
-    (std::declval<const std::remove_reference_t<T>&>()
+	(std::declval<const std::remove_reference_t<T>&>()
 		<=> std::declval<const std::remove_reference_t<T>&>()));
 
 template <typename ...Types>

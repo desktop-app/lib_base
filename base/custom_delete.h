@@ -10,12 +10,12 @@ namespace base {
 
 template <auto fn>
 struct custom_delete {
-    template <typename T>
-    constexpr void operator()(T* value) const {
-        if (value) {
-            fn(value);
-        }
-    }
+	template <typename T>
+	constexpr void operator()(T* value) const {
+		if (value) {
+			fn(value);
+		}
+	}
 };
 
 } // namespace base
