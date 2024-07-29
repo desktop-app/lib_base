@@ -35,7 +35,7 @@ inline bool contains(const Container &container, const T &value) {
 
 template <typename Container>
 inline void reorder(Container &container, int oldPosition, int newPosition) {
-	const auto b = begin(container);
+	const auto b = container.begin();
 	if (oldPosition < newPosition) {
 		std::rotate(
 			b + oldPosition,
