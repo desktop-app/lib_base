@@ -7,7 +7,7 @@
 #include "base/platform/win/base_info_win.h"
 
 #include "base/algorithm.h"
-#include "base/platform/base_platform_info.h"
+#include "base/platform/win/base_windows_safe_library.h"
 
 #include <QtCore/QOperatingSystemVersion>
 #include <QtCore/QJsonObject>
@@ -19,6 +19,18 @@
 
 namespace Platform {
 namespace {
+
+decltype(&::IsWow64Process2) IsWow64Process2;
+
+bool IsWow64Process2Supported() {
+	static const auto Result = [&] {
+#define LOAD_SYMBOL(lib, name) base::Platform::LoadMethod(lib, #name, name)
+		const auto lib = base::Platform::SafeLoadLibrary(L"Kernel32.dll");
+		return LOAD_SYMBOL(lib, IsWow64Process2);
+#undef LOAD_SYMBOL
+	}();
+	return Result;
+}
 
 QString GetLangCodeById(unsigned int lngId) {
 	const auto primary = (lngId & 0xFFU);
@@ -174,19 +186,52 @@ QString DeviceModelPretty() {
 }
 
 QString SystemVersionPretty() {
-	if (IsWindows11OrGreater()) {
-		return "Windows 11";
-	} else if (IsWindows10OrGreater()) {
-		return "Windows 10";
-	} else if (IsWindows8Point1OrGreater()) {
-		return "Windows 8.1";
-	} else if (IsWindows8OrGreater()) {
-		return "Windows 8";
-	} else if (IsWindows7OrGreater()) {
-		return "Windows 7";
-	} else {
-		return QSysInfo::prettyProductName();
-	}
+	static const auto result = [&] {
+		QStringList resultList;
+
+		if (IsWindows11OrGreater()) {
+			resultList << "Windows 11";
+		} else if (IsWindows10OrGreater()) {
+			resultList << "Windows 10";
+		} else if (IsWindows8Point1OrGreater()) {
+			resultList << "Windows 8.1";
+		} else if (IsWindows8OrGreater()) {
+			resultList << "Windows 8";
+		} else if (IsWindows7OrGreater()) {
+			resultList << "Windows 7";
+		} else {
+			resultList << QSysInfo::prettyProductName();
+		}
+
+		USHORT processMachine, nativeMachine{};
+		if (IsWow64Process2Supported()) {
+			IsWow64Process2(
+				GetCurrentProcess(),
+				&processMachine,
+				&nativeMachine);
+		} else {
+			BOOL isWow64{};
+			IsWow64Process(GetCurrentProcess(), &isWow64);
+			if (isWow64) {
+				nativeMachine = IMAGE_FILE_MACHINE_AMD64;
+			}
+		}
+
+		switch (nativeMachine) {
+		case IMAGE_FILE_MACHINE_AMD64: {
+			resultList << "x64";
+			break;
+		}
+		case IMAGE_FILE_MACHINE_ARM64: {
+			resultList << "arm64";
+			break;
+		}
+		}
+
+		return resultList.join(' ');
+	}();
+
+	return result;
 }
 
 QString SystemCountry() {
