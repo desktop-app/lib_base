@@ -39,7 +39,8 @@ bool IsGoodProtocol(const QString &protocol) {
 	return equals(qstr("http"))
 		|| equals(qstr("https"))
 		|| equals(qstr("tg"))
-		|| equals(qstr("ton"));
+		|| equals(qstr("ton"))
+		|| equals(qstr("tonsite"));
 }
 
 } // namespace
