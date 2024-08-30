@@ -150,6 +150,7 @@ PRIVATE
     base/const_string.h
     base/custom_app_icon.h
     base/custom_delete.h
+    base/debug_destroy_informer.h
     base/debug_log.cpp
     base/debug_log.h
     base/enum_mask.h
