@@ -12,15 +12,15 @@
 #include <iostream>
 
 template <typename T>
-class Debug : public T {
+class PrintDead : public T {
 public:
 	template <typename... Args>
-	Debug(Args&&... args) : T(std::forward<Args>(args)...) {}
+	PrintDead(Args&&... args) : T(std::forward<Args>(args)...) {}
 
-	~Debug() {
+	~PrintDead() {
 		std::cout
-			<< "Instance of class "
 			<< "\033[32m" // Green.
+			<< "Instance of class "
 			<< typeid(T).name()
 			<< " is dead!"
 			<< "\033[0m"
@@ -29,8 +29,7 @@ public:
 };
 
 // #include "base/debug_destroy_informer.h"
-// Usage: std::make_shared<PrintDead(QSvgRenderer)>(...);
-// Usage: PrintDead(QSvgRenderer)(...);
-#define PrintDead(ClassName) Debug<ClassName>
+// Usage: std::make_shared<PrintDead<QSvgRenderer>>(...);
+// Usage: PrintDead<QSvgRenderer>(...);
 
 #endif // _DEBUG
