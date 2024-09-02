@@ -23,6 +23,8 @@ PRIVATE
     base/platform/linux/base_file_utilities_linux.h
     base/platform/linux/base_global_shortcuts_linux.cpp
     base/platform/linux/base_global_shortcuts_linux.h
+    base/platform/linux/base_haptic_linux.cpp
+    base/platform/linux/base_haptic_linux.h
     base/platform/linux/base_info_linux.cpp
     base/platform/linux/base_info_linux.h
     base/platform/linux/base_last_input_linux.cpp
@@ -63,6 +65,8 @@ PRIVATE
     base/platform/mac/base_file_utilities_mac.mm
     base/platform/mac/base_global_shortcuts_mac.mm
     base/platform/mac/base_global_shortcuts_mac.h
+    base/platform/mac/base_haptic_mac.h
+    base/platform/mac/base_haptic_mac.mm
     base/platform/mac/base_info_mac.h
     base/platform/mac/base_info_mac.mm
     base/platform/mac/base_last_input_mac.h
@@ -87,6 +91,8 @@ PRIVATE
     base/platform/win/base_file_utilities_win.h
     base/platform/win/base_global_shortcuts_win.cpp
     base/platform/win/base_global_shortcuts_win.h
+    base/platform/win/base_haptic_win.cpp
+    base/platform/win/base_haptic_win.h
     base/platform/win/base_info_win.cpp
     base/platform/win/base_info_win.h
     base/platform/win/base_last_input_win.cpp
@@ -117,6 +123,7 @@ PRIVATE
     base/platform/win/wrl/wrl_module_h.h
     base/platform/base_platform_custom_app_icon.h
     base/platform/base_platform_global_shortcuts.h
+    base/platform/base_platform_haptic.h
     base/platform/base_platform_info.cpp
     base/platform/base_platform_info.h
     base/platform/base_platform_last_input.h
