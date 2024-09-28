@@ -6,6 +6,15 @@
 //
 #include "base/platform/base_platform_network_reachability.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
+namespace base::Platform {
+
+std::unique_ptr<NetworkReachability> NetworkReachability::Create() {
+	return nullptr;
+}
+
+} // namespace base::Platform
+#else // Qt >= 6.2.0
 #include "base/debug_log.h"
 
 #include <windows.h>
@@ -205,3 +214,4 @@ std::unique_ptr<NetworkReachability> NetworkReachability::Create() {
 }
 
 } // namespace base::Platform
+#endif // Qt < 6.2.0
