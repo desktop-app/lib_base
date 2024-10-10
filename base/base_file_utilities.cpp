@@ -27,7 +27,7 @@ QString FileNameFromUserString(QString name) {
 		0x2067, // RTL Isolate
 		'/', '\\', '<', '>', ':', '"', '|', '?', '*' };
 	for (auto &ch : name) {
-		if (ch < 32 || ranges::find(kBad, ch.unicode()) != end(kBad)) {
+		if (ch.unicode() < 32 || ranges::find(kBad, ch.unicode()) != end(kBad)) {
 			ch = '_';
 		}
 	}
