@@ -50,6 +50,19 @@ inline void reorder(Container &container, int oldPosition, int newPosition) {
 
 }
 
+[[nodiscard]] inline int reorder_index(
+		int index,
+		int oldPosition,
+		int newPosition) {
+	return (index == oldPosition)
+		? newPosition
+		: (oldPosition < index && index <= newPosition)
+		? (index - 1)
+		: (oldPosition > index && index >= newPosition)
+		? (index + 1)
+		: index;
+}
+
 template <typename D, typename T>
 inline constexpr D up_cast(T object) {
 	using DV = std::decay_t<decltype(*D())>;
