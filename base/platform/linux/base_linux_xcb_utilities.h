@@ -56,6 +56,10 @@ template <typename T>
 
 [[nodiscard]] xcb_connection_t *GetConnectionFromQt();
 
+[[nodiscard]] rpl::lifetime InstallEventHandler(
+	xcb_connection_t *connection,
+	Fn<void(xcb_generic_event_t*)> handler);
+
 [[nodiscard]] xcb_timestamp_t GetTimestamp();
 
 [[nodiscard]] xcb_window_t GetRootWindow(xcb_connection_t *connection);
