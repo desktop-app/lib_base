@@ -288,7 +288,7 @@ QString GetWindowManager() {
 }
 
 bool IsX11() {
-	if (!QGuiApplication::instance()) {
+	if (!qApp) {
 		static const auto result = []() -> bool {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 			const base::Platform::XCB::Connection connection;
@@ -299,12 +299,22 @@ bool IsX11() {
 		}();
 		return result;
 	}
-	static const auto result = (QGuiApplication::platformName() == "xcb");
+	static const bool result =
+#if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
+#if defined QT_FEATURE_xcb && QT_CONFIG(xcb)
+		qApp->nativeInterface<QNativeInterface::QX11Application>()
+#else // xcb
+		false
+#endif // !xcb
+#else // Qt >= 6.2.0
+		QGuiApplication::platformName() == "xcb"
+#endif // Qt < 6.2.0
+		;
 	return result;
 }
 
 bool IsWayland() {
-	if (!QGuiApplication::instance()) {
+	if (!qApp) {
 		static const auto result = []() -> bool {
 			struct wl_display *(*wl_display_connect)(const char *name);
 			void (*wl_display_disconnect)(struct wl_display *display);
@@ -323,8 +333,17 @@ bool IsWayland() {
 		}();
 		return result;
 	}
-	static const auto result
-		= QGuiApplication::platformName().startsWith("wayland");
+	static const bool result =
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+#if defined QT_FEATURE_wayland && QT_CONFIG(wayland)
+		qApp->nativeInterface<QNativeInterface::QWaylandApplication>()
+#else // wayland
+		false
+#endif // !wayland
+#else // Qt >= 6.7.0
+		QGuiApplication::platformName().startsWith("wayland")
+#endif // Qt < 6.7.0
+		;
 	return result;
 }
 
