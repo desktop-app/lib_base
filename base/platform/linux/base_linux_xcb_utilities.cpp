@@ -8,7 +8,9 @@
 
 #include "base/qt/qt_common_adapters.h"
 
+#include <QtCore/QAbstractEventDispatcher>
 #include <QtCore/QAbstractNativeEventFilter>
+#include <QtCore/QSocketNotifier>
 #include <QtGui/QGuiApplication>
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 2, 0)
@@ -19,6 +21,37 @@ namespace base::Platform::XCB {
 namespace {
 
 std::weak_ptr<CustomConnection> GlobalCustomConnection;
+
+class QtEventFilter : public QAbstractNativeEventFilter {
+public:
+	QtEventFilter(Fn<void(xcb_generic_event_t*)> handler)
+	: _handler(handler) {
+		QCoreApplication::instance()->installNativeEventFilter(this);
+	}
+
+private:
+	bool nativeEventFilter(
+			const QByteArray &eventType,
+			void *message,
+			native_event_filter_result *result) override {
+		_handler(reinterpret_cast<xcb_generic_event_t*>(message));
+		return false;
+	}
+
+	Fn<void(xcb_generic_event_t*)> _handler;
+};
+
+base::flat_map<
+	xcb_connection_t*,
+	std::pair<
+		std::variant<
+			v::null_t,
+			std::unique_ptr<QSocketNotifier>,
+			std::unique_ptr<QtEventFilter>
+		>,
+		std::vector<std::unique_ptr<Fn<void(xcb_generic_event_t*)>>>
+	>
+> EventHandlers;
 
 class TimestampGetter : public QAbstractNativeEventFilter {
 public:
@@ -127,6 +160,90 @@ xcb_connection_t *GetConnectionFromQt() {
 #else // xcb
 	return nullptr;
 #endif // !xcb
+}
+
+rpl::lifetime InstallEventHandler(
+		xcb_connection_t *connection,
+		Fn<void(xcb_generic_event_t*)> handler) {
+	if (!connection || xcb_connection_has_error(connection)) {
+		return rpl::lifetime();
+	}
+
+	auto it = EventHandlers.find(connection);
+	if (it == EventHandlers.cend()) {
+		using EventHandlerVector = decltype(
+			EventHandlers
+		)::value_type::second_type::second_type;
+
+		if (connection == GetConnectionFromQt()) {
+			it = EventHandlers.emplace(
+				connection,
+				std::make_pair(
+					std::make_unique<QtEventFilter>([=](
+							xcb_generic_event_t *event) {
+						const auto it = EventHandlers.find(connection);
+						for (const auto &handler : it->second.second) {
+							(*handler)(event);
+						}
+					}),
+					EventHandlerVector()
+				)
+			).first;
+		} else {
+			it = EventHandlers.emplace(
+				connection,
+				std::make_pair(
+					std::make_unique<QSocketNotifier>(
+						xcb_get_file_descriptor(connection),
+						QSocketNotifier::Read
+					),
+					EventHandlerVector()
+				)
+			).first;
+
+			auto &notifier = *v::get<std::unique_ptr<QSocketNotifier>>(
+				it->second.first);
+
+			QObject::connect(
+				QCoreApplication::eventDispatcher(),
+				&QAbstractEventDispatcher::aboutToBlock,
+				&notifier,
+				[=] {
+					const auto it = EventHandlers.find(connection);
+					EventPointer<xcb_generic_event_t> event;
+					while (!xcb_connection_has_error(connection)
+							&& (event = MakeEventPointer(
+								xcb_poll_for_event(connection)))) {
+						for (const auto &handler : it->second.second) {
+							(*handler)(event.get());
+						}
+					}
+					// Let handlers handle the error
+					if (xcb_connection_has_error(connection)) {
+						for (const auto &handler : it->second.second) {
+							(*handler)(nullptr);
+						}
+						it->second.first = v::null;
+					}
+				});
+
+			notifier.setEnabled(true);
+		}
+	}
+
+	const auto ptr = it->second.second.emplace_back(new Fn(handler)).get();
+	return rpl::lifetime([=] {
+		const auto it = EventHandlers.find(connection);
+		it->second.second.erase(
+			ranges::remove(
+				it->second.second,
+				ptr,
+				&decltype(it->second.second)::value_type::get),
+			it->second.second.end());
+		if (it->second.second.empty()) {
+			EventHandlers.remove(connection);
+		}
+	});
 }
 
 xcb_timestamp_t GetTimestamp() {
