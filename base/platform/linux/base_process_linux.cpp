@@ -29,7 +29,7 @@ void XCBActivateWindow(WId window) {
 		return;
 	}
 
-	const auto timestamp = XCB::GetTimestamp();
+	const auto timestamp = XCB::GetTimestamp(connection);
 	if (!timestamp) {
 		return;
 	}

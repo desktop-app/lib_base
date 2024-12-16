@@ -53,82 +53,6 @@ base::flat_map<
 	>
 > EventHandlers;
 
-class TimestampGetter : public QAbstractNativeEventFilter {
-public:
-	TimestampGetter()
-	: _connection(GetConnectionFromQt())
-	, _window(GetRootWindow(_connection))
-	, _atom(GetAtom(_connection, "_DESKTOP_APP_GET_TIMESTAMP")) {
-		if (!_connection) {
-			return;
-		}
-
-		QCoreApplication::instance()->installNativeEventFilter(this);
-	}
-
-	xcb_timestamp_t get() {
-		if (!_connection) {
-			return _timestamp;
-		}
-
-		free(
-			xcb_request_check(
-				_connection,
-				xcb_change_property_checked(
-					_connection,
-					XCB_PROP_MODE_REPLACE,
-					_window,
-					_atom,
-					XCB_ATOM_INTEGER,
-					32,
-					0,
-					nullptr)));
-
-		_loop.exec();
-		return _timestamp;
-	}
-
-private:
-	bool nativeEventFilter(
-			const QByteArray &eventType,
-			void *message,
-			native_event_filter_result *result) override {
-		const auto guard = gsl::finally([&] {
-			if (xcb_connection_has_error(_connection)) {
-				_loop.quit();
-			}
-
-			if (_loop.isRunning()) {
-				free(
-					xcb_get_input_focus_reply(
-						_connection,
-						xcb_get_input_focus(_connection),
-						nullptr));
-			}
-		});
-
-		const auto event = reinterpret_cast<xcb_generic_event_t*>(message);
-		if ((event->response_type & ~0x80) != XCB_PROPERTY_NOTIFY) {
-			return false;
-		}
-
-		const auto pn = reinterpret_cast<xcb_property_notify_event_t*>(event);
-		if (pn->window != _window || pn->atom != _atom) {
-			return false;
-		}
-
-		_timestamp = pn->time;
-		_loop.quit();
-		return false;
-	}
-
-	QEventLoop _loop;
-	xcb_connection_t *_connection = nullptr;
-	xcb_window_t _window = XCB_NONE;
-	xcb_atom_t _atom = XCB_NONE;
-	xcb_timestamp_t _timestamp = XCB_CURRENT_TIME;
-};
-
 } // namespace
 
 std::shared_ptr<CustomConnection> SharedConnection() {
@@ -246,8 +170,86 @@ rpl::lifetime InstallEventHandler(
 	});
 }
 
-xcb_timestamp_t GetTimestamp() {
-	return TimestampGetter().get();
+xcb_timestamp_t GetTimestamp(xcb_connection_t *connection) {
+	if (!connection || xcb_connection_has_error(connection)) {
+		return XCB_CURRENT_TIME;
+	}
+
+	const auto window = GetRootWindow(connection);
+	if (!window) {
+		return XCB_CURRENT_TIME;
+	}
+
+	const auto atom = GetAtom(connection, "_DESKTOP_APP_GET_TIMESTAMP");
+	if (!atom) {
+		return XCB_CURRENT_TIME;
+	}
+
+	const auto eventMask = ChangeWindowEventMask(
+		connection,
+		window,
+		XCB_EVENT_MASK_PROPERTY_CHANGE);
+
+	if (!eventMask) {
+		return XCB_CURRENT_TIME;
+	}
+
+	QEventLoop loop;
+	xcb_timestamp_t timestamp = XCB_CURRENT_TIME;
+	const auto lifetime = InstallEventHandler(
+		connection,
+		[&](xcb_generic_event_t *event) {
+			if (!event) {
+				loop.quit();
+				return;
+			}
+
+			const auto guard = gsl::finally([&] {
+				free(
+					xcb_get_input_focus_reply(
+						connection,
+						xcb_get_input_focus(connection),
+						nullptr));
+			});
+
+			if ((event->response_type & ~0x80) != XCB_PROPERTY_NOTIFY) {
+				return;
+			}
+
+			const auto pn = reinterpret_cast<xcb_property_notify_event_t*>(
+				event);
+
+			if (pn->window != window || pn->atom != atom) {
+				return;
+			}
+
+			timestamp = pn->time;
+			loop.quit();
+		});
+
+	if (!lifetime) {
+		return XCB_CURRENT_TIME;
+	}
+
+	const auto error = MakeErrorPointer(
+		xcb_request_check(
+			connection,
+			xcb_change_property_checked(
+				connection,
+				XCB_PROP_MODE_REPLACE,
+				window,
+				atom,
+				XCB_ATOM_INTEGER,
+				32,
+				0,
+				nullptr)));
+
+	if (error) {
+		return XCB_CURRENT_TIME;
+	}
+
+	loop.exec();
+	return timestamp;
 }
 
 xcb_window_t GetRootWindow(xcb_connection_t *connection) {
