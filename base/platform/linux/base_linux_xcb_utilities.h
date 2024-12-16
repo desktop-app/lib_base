@@ -60,7 +60,7 @@ template <typename T>
 	xcb_connection_t *connection,
 	Fn<void(xcb_generic_event_t*)> handler);
 
-[[nodiscard]] xcb_timestamp_t GetTimestamp();
+[[nodiscard]] xcb_timestamp_t GetTimestamp(xcb_connection_t *connection);
 
 [[nodiscard]] xcb_window_t GetRootWindow(xcb_connection_t *connection);
 
