@@ -6,7 +6,6 @@
 //
 #include "base/platform/linux/base_last_input_linux.h"
 
-#include "base/platform/base_platform_info.h"
 #include "base/debug_log.h"
 
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
@@ -88,11 +87,9 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 
 std::optional<crl::time> LastUserInputTime() {
 #ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-	if (::Platform::IsX11()) {
-		const auto xcbResult = XCBLastUserInputTime();
-		if (xcbResult.has_value()) {
-			return xcbResult;
-		}
+	const auto xcbResult = XCBLastUserInputTime();
+	if (xcbResult.has_value()) {
+		return xcbResult;
 	}
 #endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
