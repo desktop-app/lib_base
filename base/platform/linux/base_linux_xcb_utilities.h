@@ -58,7 +58,6 @@ xcb_window_t GetSupportingWMCheck(
 		xcb_connection_t *connection,
 		xcb_window_t root);
 
-// convenient API, checks connection for nullptr
 bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName);
 
 class Connection {
