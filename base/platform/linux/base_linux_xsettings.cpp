@@ -6,8 +6,6 @@
 //
 #include "base/platform/linux/base_linux_xsettings.h"
 
-#include "base/platform/base_platform_info.h"
-
 #include <QtCore/QByteArray>
 #include <QtCore/QtEndian>
 #include <QtGui/QColor>
@@ -274,10 +272,9 @@ XSettings::XSettings()
 
 XSettings::~XSettings() = default;
 
-XSettings *XSettings::Instance() {
-	if (!::Platform::IsX11()) return nullptr;
+XSettings &XSettings::Instance() {
 	static XSettings instance;
-	return &instance;
+	return instance;
 }
 
 bool XSettings::initialized() const {

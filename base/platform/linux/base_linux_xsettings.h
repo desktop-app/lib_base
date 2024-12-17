@@ -14,7 +14,7 @@ namespace base::Platform::XCB {
 
 class XSettings : public QAbstractNativeEventFilter {
 public:
-	static XSettings *Instance();
+	static XSettings &Instance();
 	bool initialized() const;
 
 	QVariant setting(const QByteArray &property) const;
