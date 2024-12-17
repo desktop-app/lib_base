@@ -47,8 +47,7 @@ public:
 
 class XSettings::Private {
 public:
-	Private()
-	: connection(GetConnectionFromQt()) {
+	Private() {
 	}
 
 	QByteArray getSettings() {
@@ -215,16 +214,20 @@ public:
 
 	}
 
-	xcb_connection_t * const connection = nullptr;
+	const Connection connection;
 	xcb_window_t x_settings_window = XCB_NONE;
 	QMap<QByteArray, PropertyValue> settings;
 	bool initialized = false;
+	rpl::lifetime lifetime;
 };
 
 
 XSettings::XSettings()
 : _private(std::make_unique<Private>()) {
 	if (!_private->connection)
+		return;
+
+	if (xcb_connection_has_error(_private->connection))
 		return;
 
 	const auto selection_owner_atom = GetAtom(
@@ -251,20 +254,39 @@ XSettings::XSettings()
 	if (!_private->x_settings_window)
 		return;
 
-	QCoreApplication::instance()->installNativeEventFilter(this);
-	const uint32_t event = XCB_CW_EVENT_MASK;
-	const uint32_t event_mask[] = {
-		XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE
-	};
+	auto event_handler = InstallEventHandler(
+		_private->connection,
+		[=](xcb_generic_event_t *event) {
+			if (!event)
+				return;
 
-	free(
-		xcb_request_check(
-			_private->connection,
-			xcb_change_window_attributes_checked(
-				_private->connection,
-				_private->x_settings_window,
-				event,
-				event_mask)));
+			const auto response_type = event->response_type & ~0x80;
+			if (response_type != XCB_PROPERTY_NOTIFY)
+				return;
+
+			const auto pn = reinterpret_cast<xcb_property_notify_event_t*>(
+				event);
+
+			if (pn->window != _private->x_settings_window)
+				return;
+
+			_private->populateSettings(_private->getSettings());
+	});
+
+	if (!event_handler)
+		return;
+
+	_private->lifetime.add(std::move(event_handler));
+
+	auto event_mask = ChangeWindowEventMask(
+		_private->connection,
+		_private->x_settings_window,
+		XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE);
+	
+	if (!event_mask)
+		return;
+
+	_private->lifetime.add(std::move(event_mask));
 
 	_private->populateSettings(_private->getSettings());
 	_private->initialized = true;
@@ -279,23 +301,6 @@ XSettings &XSettings::Instance() {
 
 bool XSettings::initialized() const {
 	return _private->initialized;
-}
-
-bool XSettings::nativeEventFilter(
-		const QByteArray &eventType,
-		void *message,
-		native_event_filter_result *result) {
-	const auto event = static_cast<xcb_generic_event_t*>(message);
-	const auto response_type = event->response_type & ~0x80;
-	if (response_type != XCB_PROPERTY_NOTIFY)
-		return false;
-
-	const auto pn = reinterpret_cast<xcb_property_notify_event_t*>(event);
-	if (pn->window != _private->x_settings_window)
-		return false;
-
-	_private->populateSettings(_private->getSettings());
-	return false;
 }
 
 void XSettings::registerCallbackForProperty(

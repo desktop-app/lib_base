@@ -8,11 +8,9 @@
 
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 
-#include <QtCore/QAbstractNativeEventFilter>
-
 namespace base::Platform::XCB {
 
-class XSettings : public QAbstractNativeEventFilter {
+class XSettings {
 public:
 	static XSettings &Instance();
 	bool initialized() const;
@@ -36,11 +34,6 @@ public:
 private:
 	XSettings();
 	~XSettings();
-
-	bool nativeEventFilter(
-		const QByteArray &eventType,
-		void *message,
-		native_event_filter_result *result) override;
 
 	enum class Type {
 		Integer,
