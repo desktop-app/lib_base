@@ -65,8 +65,8 @@ private:
 		custom_delete<xcb_key_symbols_free>
 	> _keySymbols;
 	std::unique_ptr<QSocketNotifier> _notifier;
-	std::optional<xcb_record_context_t> _context;
-	std::optional<xcb_record_enable_context_cookie_t> _cookie;
+	xcb_record_context_t _context = XCB_NONE;
+	xcb_record_enable_context_cookie_t _cookie = { XCB_NONE };
 
 };
 
@@ -106,7 +106,7 @@ X11Manager::X11Manager()
 
 	const auto createCookie = xcb_record_create_context_checked(
 		_connection,
-		*_context,
+		_context,
 		0,
 		sizeof(clientSpec) / sizeof(clientSpec[0]),
 		sizeof(recordRange) / sizeof(recordRange[0]),
@@ -115,12 +115,12 @@ X11Manager::X11Manager()
 	if (const auto error = xcb_request_check(_connection, createCookie)) {
 		LOG((
 			"Global Shortcuts Manager: Could not create a record context!"));
-		_context = std::nullopt;
+		_context = XCB_NONE;
 		free(error);
 		return;
 	}
 
-	_cookie = xcb_record_enable_context(_connection, *_context);
+	_cookie = xcb_record_enable_context(_connection, _context);
 	xcb_flush(_connection);
 
 	_notifier = std::make_unique<QSocketNotifier>(
@@ -134,11 +134,10 @@ X11Manager::X11Manager()
 
 		void *reply = nullptr;
 		xcb_generic_error_t *error = nullptr;
-		while (_cookie
-			&& _cookie->sequence
+		while (_cookie.sequence
 			&& xcb_poll_for_reply(
 				_connection,
-				_cookie->sequence,
+				_cookie.sequence,
 				&reply,
 				&error)) {
 			// The xcb_poll_for_reply method may set both reply and error
@@ -165,14 +164,14 @@ X11Manager::X11Manager()
 
 
 X11Manager::~X11Manager() {
-	if (_cookie) {
-		xcb_record_disable_context(_connection, *_context);
-		_cookie = std::nullopt;
+	if (_cookie.sequence) {
+		xcb_record_disable_context(_connection, _context);
+		_cookie = { XCB_NONE };
 	}
 
 	if (_context) {
-		xcb_record_free_context(_connection, *_context);
-		_context = std::nullopt;
+		xcb_record_free_context(_connection, _context);
+		_context = XCB_NONE;
 	}
 }
 
@@ -227,7 +226,7 @@ xcb_keysym_t X11Manager::computeKeysym(xcb_keycode_t detail, uint16_t state) {
 }
 
 bool X11Manager::available() const {
-	return _cookie.has_value();
+	return _cookie.sequence;
 }
 
 std::unique_ptr<X11Manager> _x11Manager = nullptr;
