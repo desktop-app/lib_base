@@ -32,33 +32,37 @@ template <typename T>
 using ReplyPointer = std::unique_ptr<T, custom_delete<free>>;
 
 template <typename T>
-ReplyPointer<T> MakeReplyPointer(T *reply) {
+[[nodiscard]] ReplyPointer<T> MakeReplyPointer(T *reply) {
 	return ReplyPointer<T>(reply);
 }
 
-std::shared_ptr<CustomConnection> SharedConnection();
+[[nodiscard]] std::shared_ptr<CustomConnection> SharedConnection();
 
-xcb_connection_t *GetConnectionFromQt();
+[[nodiscard]] xcb_connection_t *GetConnectionFromQt();
 
-xcb_timestamp_t GetTimestamp();
+[[nodiscard]] xcb_timestamp_t GetTimestamp();
 
-xcb_window_t GetRootWindow(xcb_connection_t *connection);
+[[nodiscard]] xcb_window_t GetRootWindow(xcb_connection_t *connection);
 
-xcb_atom_t GetAtom(xcb_connection_t *connection, const QString &name);
+[[nodiscard]] xcb_atom_t GetAtom(
+	xcb_connection_t *connection,
+	const QString &name);
 
-bool IsExtensionPresent(
+[[nodiscard]] bool IsExtensionPresent(
 		xcb_connection_t *connection,
 		xcb_extension_t *ext);
 
-std::vector<xcb_atom_t> GetWMSupported(
+[[nodiscard]] std::vector<xcb_atom_t> GetWMSupported(
 		xcb_connection_t *connection,
 		xcb_window_t root);
 
-xcb_window_t GetSupportingWMCheck(
+[[nodiscard]] xcb_window_t GetSupportingWMCheck(
 		xcb_connection_t *connection,
 		xcb_window_t root);
 
-bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName);
+[[nodiscard]] bool IsSupportedByWM(
+	xcb_connection_t *connection,
+	const QString &atomName);
 
 class Connection {
 public:
