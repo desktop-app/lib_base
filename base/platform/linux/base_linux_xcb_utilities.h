@@ -84,6 +84,19 @@ template <typename T>
 	xcb_connection_t *connection,
 	const QString &atomName);
 
+enum class ChangeWindowEventMaskMode {
+	Add,
+	Remove,
+	Replace,
+};
+
+[[nodiscard]] rpl::lifetime ChangeWindowEventMask(
+	xcb_connection_t *connection,
+	xcb_window_t window,
+	uint mask,
+	ChangeWindowEventMaskMode mode = ChangeWindowEventMaskMode::Add,
+	bool revert = true);
+
 class Connection {
 public:
 	Connection()

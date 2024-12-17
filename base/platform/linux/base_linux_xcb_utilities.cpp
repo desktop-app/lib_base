@@ -420,4 +420,79 @@ bool IsSupportedByWM(xcb_connection_t *connection, const QString &atomName) {
 	return ranges::contains(GetWMSupported(connection, root), atom);
 }
 
+rpl::lifetime ChangeWindowEventMask(
+		xcb_connection_t *connection,
+		xcb_window_t window,
+		uint mask,
+		ChangeWindowEventMaskMode mode,
+		bool revert) {
+	using Mode = ChangeWindowEventMaskMode;
+	if (!connection || xcb_connection_has_error(connection)) {
+		return rpl::lifetime();
+	}
+
+	const auto windowAttribsCookie = xcb_get_window_attributes(
+		connection,
+		window);
+
+	const auto windowAttribs = MakeReplyPointer(xcb_get_window_attributes_reply(
+		connection,
+		windowAttribsCookie,
+		nullptr));
+	
+	const uint oldMask = windowAttribs ? windowAttribs->your_event_mask : 0;
+
+	if ((mode == Mode::Add) && (oldMask & mask)) {
+		return rpl::lifetime([] {});
+	} else if ((mode == Mode::Remove) && !(oldMask & mask)) {
+		return rpl::lifetime([] {});
+	} else if (oldMask == mask) {
+		return rpl::lifetime([] {});
+	}
+
+	const uint value[] = {
+		mode == Mode::Add
+			? oldMask | mask
+			: mode == Mode::Remove
+			? oldMask & ~mask
+			: mask
+	};
+
+	const auto error = MakeErrorPointer(
+		xcb_request_check(
+			connection,
+			xcb_change_window_attributes_checked(
+				connection,
+				window,
+				XCB_CW_EVENT_MASK,
+				value)));
+
+	if (error) {
+		return rpl::lifetime();
+	}
+
+	if (!revert) {
+		return rpl::lifetime([] {});
+	}
+
+	return rpl::lifetime([=] {
+		if (xcb_connection_has_error(connection)) {
+			return;
+		}
+
+		const uint value[] = {
+			oldMask
+		};
+
+		free(
+			xcb_request_check(
+				connection,
+				xcb_change_window_attributes_checked(
+					connection,
+					window,
+					XCB_CW_EVENT_MASK,
+					value)));
+	});
+}
+
 } // namespace base::Platform::XCB
