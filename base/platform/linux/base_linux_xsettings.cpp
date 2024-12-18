@@ -271,7 +271,7 @@ XSettings::XSettings()
 				return;
 
 			_private->populateSettings(_private->getSettings());
-	});
+		});
 
 	if (!event_handler)
 		return;
