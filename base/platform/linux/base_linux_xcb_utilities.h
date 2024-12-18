@@ -44,6 +44,14 @@ template <typename T>
 	return ReplyPointer<T>(reply);
 }
 
+template <typename T>
+using ErrorPointer = std::unique_ptr<T, custom_delete<free>>;
+
+template <typename T>
+[[nodiscard]] ErrorPointer<T> MakeErrorPointer(T *error) {
+	return ErrorPointer<T>(error);
+}
+
 [[nodiscard]] std::shared_ptr<CustomConnection> SharedConnection();
 
 [[nodiscard]] xcb_connection_t *GetConnectionFromQt();
