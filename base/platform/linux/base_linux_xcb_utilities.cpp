@@ -437,10 +437,11 @@ rpl::lifetime ChangeWindowEventMask(
 		connection,
 		window);
 
-	const auto windowAttribs = MakeReplyPointer(xcb_get_window_attributes_reply(
-		connection,
-		windowAttribsCookie,
-		nullptr));
+	const auto windowAttribs = MakeReplyPointer(
+		xcb_get_window_attributes_reply(
+			connection,
+			windowAttribsCookie,
+			nullptr));
 	
 	const uint oldMask = windowAttribs ? windowAttribs->your_event_mask : 0;
 
