@@ -95,35 +95,19 @@ rpl::lifetime InstallEventHandler(
 
 	auto it = EventHandlers.find(connection);
 	if (it == EventHandlers.cend()) {
-		using EventHandlerVector = decltype(
-			EventHandlers
-		)::value_type::second_type::second_type;
-
+		it = EventHandlers.emplace(connection).first;
 		if (connection == GetConnectionFromQt()) {
-			it = EventHandlers.emplace(
-				connection,
-				std::make_pair(
-					std::make_unique<QtEventFilter>([=](
-							xcb_generic_event_t *event) {
-						const auto it = EventHandlers.find(connection);
-						for (const auto &handler : it->second.second) {
-							(*handler)(event);
-						}
-					}),
-					EventHandlerVector()
-				)
-			).first;
+			it->second.first = std::make_unique<QtEventFilter>([=](
+					xcb_generic_event_t *event) {
+				const auto it = EventHandlers.find(connection);
+				for (const auto &handler : it->second.second) {
+					(*handler)(event);
+				}
+			});
 		} else {
-			it = EventHandlers.emplace(
-				connection,
-				std::make_pair(
-					std::make_unique<QSocketNotifier>(
-						xcb_get_file_descriptor(connection),
-						QSocketNotifier::Read
-					),
-					EventHandlerVector()
-				)
-			).first;
+			it->second.first = std::make_unique<QSocketNotifier>(
+				xcb_get_file_descriptor(connection),
+				QSocketNotifier::Read);
 
 			auto &notifier = *v::get<std::unique_ptr<QSocketNotifier>>(
 				it->second.first);
