@@ -12,7 +12,7 @@ namespace base::Platform::XCB {
 
 class XSettings {
 public:
-	[[nodiscard]] static XSettings &Instance();
+	[[nodiscard]] static std::shared_ptr<XSettings> Instance();
 	[[nodiscard]] bool initialized() const;
 
 	[[nodiscard]] QVariant setting(const QByteArray &property) const;
