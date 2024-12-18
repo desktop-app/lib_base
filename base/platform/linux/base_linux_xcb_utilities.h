@@ -28,6 +28,15 @@ public:
 	}
 };
 
+class SharedConnection : public std::shared_ptr<CustomConnection> {
+public:
+	SharedConnection();
+
+	[[nodiscard]] operator xcb_connection_t*() const {
+		return get() ? get()->get() : nullptr;
+	}
+};
+
 template <typename T>
 using EventPointer = std::unique_ptr<T, custom_delete<free>>;
 
@@ -51,8 +60,6 @@ template <typename T>
 [[nodiscard]] ErrorPointer<T> MakeErrorPointer(T *error) {
 	return ErrorPointer<T>(error);
 }
-
-[[nodiscard]] std::shared_ptr<CustomConnection> SharedConnection();
 
 [[nodiscard]] xcb_connection_t *GetConnectionFromQt();
 
@@ -101,16 +108,20 @@ class Connection {
 public:
 	Connection()
 	: _qtConnection(GetConnectionFromQt())
-	, _customConnection(_qtConnection ? nullptr : SharedConnection()) {
+	, _sharedConnection(_qtConnection
+			? std::optional<SharedConnection>()
+			: std::optional<SharedConnection>(std::in_place)) {
 	}
 
 	[[nodiscard]] operator xcb_connection_t*() const {
-		return _customConnection ? _customConnection->get() : _qtConnection;
+		return _sharedConnection
+			? static_cast<xcb_connection_t*>(*_sharedConnection)
+			: _qtConnection;
 	}
 
 private:
 	xcb_connection_t * const _qtConnection = nullptr;
-	const std::shared_ptr<CustomConnection> _customConnection;
+	const std::optional<SharedConnection> _sharedConnection;
 };
 
 template <typename Object, auto constructor, auto destructor>

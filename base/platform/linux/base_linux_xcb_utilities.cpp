@@ -41,14 +41,15 @@ private:
 
 } // namespace
 
-std::shared_ptr<CustomConnection> SharedConnection() {
+SharedConnection::SharedConnection()
+: std::shared_ptr<CustomConnection>([] {
 	static std::weak_ptr<CustomConnection> Weak;
 	auto result = Weak.lock();
 	if (!result) {
 		Weak = result = std::make_shared<CustomConnection>();
 	}
 	return result;
-}
+}()) {}
 
 xcb_connection_t *GetConnectionFromQt() {
 #if defined QT_FEATURE_xcb && QT_CONFIG(xcb)
