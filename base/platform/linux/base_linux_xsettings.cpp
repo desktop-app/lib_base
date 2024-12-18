@@ -35,9 +35,11 @@ public:
 	}
 
 	rpl::lifetime addCallback(PropertyChangeFunc func) {
+		const auto handle = Instance();
 		callback_links.push_back(std::make_unique<PropertyChangeFunc>(func));
 		const auto ptr = callback_links.back().get();
 		return rpl::lifetime([=] {
+			(void)handle;
 			callback_links.erase(
 				ranges::remove(
 					callback_links,
@@ -302,9 +304,15 @@ XSettings::XSettings()
 
 XSettings::~XSettings() = default;
 
-XSettings &XSettings::Instance() {
-	static XSettings instance;
-	return instance;
+std::shared_ptr<XSettings> XSettings::Instance() {
+	static std::weak_ptr<XSettings> Weak;
+	auto result = Weak.lock();
+	if (!result) {
+		Weak = result = std::shared_ptr<XSettings>(
+			new XSettings,
+			[](XSettings *ptr) { delete ptr; });
+	}
+	return result;
 }
 
 bool XSettings::initialized() const {
