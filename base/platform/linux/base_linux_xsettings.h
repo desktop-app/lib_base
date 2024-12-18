@@ -12,10 +12,10 @@ namespace base::Platform::XCB {
 
 class XSettings {
 public:
-	static XSettings &Instance();
-	bool initialized() const;
+	[[nodiscard]] static XSettings &Instance();
+	[[nodiscard]] bool initialized() const;
 
-	QVariant setting(const QByteArray &property) const;
+	[[nodiscard]] QVariant setting(const QByteArray &property) const;
 
 	typedef void (*PropertyChangeFunc)(
 		xcb_connection_t *connection,
