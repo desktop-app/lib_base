@@ -29,6 +29,14 @@ public:
 };
 
 template <typename T>
+using EventPointer = std::unique_ptr<T, custom_delete<free>>;
+
+template <typename T>
+[[nodiscard]] EventPointer<T> MakeEventPointer(T *event) {
+	return EventPointer<T>(event);
+}
+
+template <typename T>
 using ReplyPointer = std::unique_ptr<T, custom_delete<free>>;
 
 template <typename T>
