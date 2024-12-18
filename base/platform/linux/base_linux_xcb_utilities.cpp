@@ -20,8 +20,6 @@
 namespace base::Platform::XCB {
 namespace {
 
-std::weak_ptr<CustomConnection> GlobalCustomConnection;
-
 class QtEventFilter : public QAbstractNativeEventFilter {
 public:
 	QtEventFilter(Fn<void(xcb_generic_event_t*)> handler)
@@ -41,24 +39,13 @@ private:
 	Fn<void(xcb_generic_event_t*)> _handler;
 };
 
-base::flat_map<
-	xcb_connection_t*,
-	std::pair<
-		std::variant<
-			v::null_t,
-			std::unique_ptr<QSocketNotifier>,
-			std::unique_ptr<QtEventFilter>
-		>,
-		std::vector<std::unique_ptr<Fn<void(xcb_generic_event_t*)>>>
-	>
-> EventHandlers;
-
 } // namespace
 
 std::shared_ptr<CustomConnection> SharedConnection() {
-	auto result = GlobalCustomConnection.lock();
+	static std::weak_ptr<CustomConnection> Weak;
+	auto result = Weak.lock();
 	if (!result) {
-		GlobalCustomConnection = result = std::make_shared<CustomConnection>();
+		Weak = result = std::make_shared<CustomConnection>();
 	}
 	return result;
 }
@@ -92,6 +79,18 @@ rpl::lifetime InstallEventHandler(
 	if (!connection || xcb_connection_has_error(connection)) {
 		return rpl::lifetime();
 	}
+
+	static base::flat_map<
+		xcb_connection_t*,
+		std::pair<
+			std::variant<
+				v::null_t,
+				std::unique_ptr<QSocketNotifier>,
+				std::unique_ptr<QtEventFilter>
+			>,
+			std::vector<std::unique_ptr<Fn<void(xcb_generic_event_t*)>>>
+		>
+	> EventHandlers;
 
 	auto it = EventHandlers.find(connection);
 	if (it == EventHandlers.cend()) {
