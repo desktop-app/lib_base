@@ -447,62 +447,40 @@ private:
 
 namespace details {
 
-template <typename Context, typename Method, typename Arg>
-inline void ShaUpdate(Context context, Method method, Arg &&arg) {
-	const auto span = bytes::make_span(arg);
-	method(context, span.data(), span.size());
+void ShaImpl(bytes::span dst, auto md, auto &&...args) {
+	Expects(dst.size() >= EVP_MD_size(md));
+
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_create();
+	if constexpr (sizeof...(args) == 1) {
+		EVP_MD_CTX_set_flags(mdctx, EVP_MD_CTX_FLAG_ONESHOT);
+	}
+
+	EVP_DigestInit_ex(mdctx, md, nullptr);
+
+	const auto update = [&mdctx](auto &&arg) {
+		const auto span = bytes::const_span(arg);
+		EVP_DigestUpdate(mdctx, arg.data(), arg.size());
+	};
+	(update(args), ...);
+
+	EVP_DigestFinal(mdctx, reinterpret_cast<unsigned char*>(dst.data()), nullptr);
+	EVP_MD_CTX_free(mdctx);
 }
 
-template <typename Context, typename Method, typename Arg, typename ...Args>
-inline void ShaUpdate(Context context, Method method, Arg &&arg, Args &&...args) {
-	const auto span = bytes::make_span(arg);
-	method(context, span.data(), span.size());
-	ShaUpdate(context, method, args...);
+inline void ShaTo(bytes::span dst, auto mdname, bytes::const_span data) {
+	auto md = EVP_MD_fetch(nullptr, mdname, nullptr);
+	Expects(dst.size() >= EVP_MD_size(md));
+	details::ShaImpl(dst, md, data);
+	EVP_MD_free(md);
 }
 
-template <size_type Size, typename Method>
-inline void Sha(
-		bytes::span dst,
-		Method method,
-		bytes::const_span data) {
-	Expects(dst.size() >= Size);
-
-	method(
-		reinterpret_cast<const unsigned char*>(data.data()),
-		data.size(),
-		reinterpret_cast<unsigned char*>(dst.data()));
-}
-
-template <size_type Size, typename Method>
-[[nodiscard]] inline bytes::vector Sha(
-		Method method,
-		bytes::const_span data) {
-	auto bytes = bytes::vector(Size);
-	Sha<Size>(bytes, method, data);
-	return bytes;
-}
-
-template <
-	size_type Size,
-	typename Context,
-	typename Init,
-	typename Update,
-	typename Finalize,
-	typename ...Args,
-	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
-[[nodiscard]] bytes::vector Sha(
-		Context context,
-		Init init,
-		Update update,
-		Finalize finalize,
-		Args &&...args) {
-	auto bytes = bytes::vector(Size);
-
-	init(&context);
-	ShaUpdate(&context, update, args...);
-	finalize(reinterpret_cast<unsigned char*>(bytes.data()), &context);
-
-	return bytes;
+template <typename ...Args>
+[[nodiscard]] inline bytes::vector Sha(auto mdname, Args &&...args) {
+	auto md = EVP_MD_fetch(nullptr, mdname, nullptr);
+	bytes::vector dst(EVP_MD_size(md));
+	details::ShaImpl(dst, md, args...);
+	EVP_MD_free(md);
+	return dst;
 }
 
 template <
@@ -532,64 +510,31 @@ constexpr auto kSha1Size = size_type(SHA_DIGEST_LENGTH);
 constexpr auto kSha256Size = size_type(SHA256_DIGEST_LENGTH);
 constexpr auto kSha512Size = size_type(SHA512_DIGEST_LENGTH);
 
-[[nodiscard]] inline bytes::vector Sha1(bytes::const_span data) {
-	return details::Sha<kSha1Size>(SHA1, data);
-}
-
 inline void Sha1To(bytes::span dst, bytes::const_span data) {
-	details::Sha<kSha1Size>(dst, SHA1, data);
+	details::ShaTo(dst, "SHA1", data);
 }
 
-template <
-	typename ...Args,
-	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+template <typename ...Args>
 [[nodiscard]] inline bytes::vector Sha1(Args &&...args) {
-	return details::Sha<kSha1Size>(
-		SHA_CTX(),
-		SHA1_Init,
-		SHA1_Update,
-		SHA1_Final,
-		args...);
-}
-
-[[nodiscard]] inline bytes::vector Sha256(bytes::const_span data) {
-	return details::Sha<kSha256Size>(SHA256, data);
+	return details::Sha("SHA1", args...);
 }
 
 inline void Sha256To(bytes::span dst, bytes::const_span data) {
-	details::Sha<kSha256Size>(dst, SHA256, data);
+	details::ShaTo(dst, "SHA256", data);
 }
 
-template <
-	typename ...Args,
-	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+template <typename ...Args>
 [[nodiscard]] inline bytes::vector Sha256(Args &&...args) {
-	return details::Sha<kSha256Size>(
-		SHA256_CTX(),
-		SHA256_Init,
-		SHA256_Update,
-		SHA256_Final,
-		args...);
-}
-
-[[nodiscard]] inline bytes::vector Sha512(bytes::const_span data) {
-	return details::Sha<kSha512Size>(SHA512, data);
+	return details::Sha("SHA256", args...);
 }
 
 inline void Sha512To(bytes::span dst, bytes::const_span data) {
-	details::Sha<kSha512Size>(dst, SHA512, data);
+	details::ShaTo(dst, "SHA512", data);
 }
 
-template <
-	typename ...Args,
-	typename = std::enable_if_t<(sizeof...(Args) > 1)>>
+template <typename ...Args>
 [[nodiscard]] inline bytes::vector Sha512(Args &&...args) {
-	return details::Sha<kSha512Size>(
-		SHA512_CTX(),
-		SHA512_Init,
-		SHA512_Update,
-		SHA512_Final,
-		args...);
+	return details::Sha("SHA512", args...);
 }
 
 inline bytes::vector Pbkdf2Sha512(
