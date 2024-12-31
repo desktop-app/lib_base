@@ -272,12 +272,7 @@ public:
 		if (failed() || !_data) {
 			return false;
 		}
-		constexpr auto kMillerRabinIterationCount = 64;
-		const auto result = BN_is_prime_ex(
-			raw(),
-			kMillerRabinIterationCount,
-			context.raw(),
-			nullptr);
+		const auto result = BN_check_prime(raw(), context.raw(), nullptr);
 		if (result == 1) {
 			return true;
 		} else if (result != 0) {
