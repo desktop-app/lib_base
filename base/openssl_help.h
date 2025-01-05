@@ -447,7 +447,10 @@ private:
 
 namespace details {
 
-void ShaImpl(bytes::span dst, auto md, auto &&...args) {
+template <
+	typename ...Args,
+	typename = std::enable_if_t<(sizeof...(Args) >= 1)>>
+void ShaImpl(bytes::span dst, auto md, Args &&...args) {
 	Expects(dst.size() >= EVP_MD_size(md));
 
 	EVP_MD_CTX *mdctx = EVP_MD_CTX_create();
