@@ -463,7 +463,7 @@ void ShaImpl(bytes::span dst, auto md, auto &&...args) {
 	};
 	(update(args), ...);
 
-	EVP_DigestFinal(mdctx, reinterpret_cast<unsigned char*>(dst.data()), nullptr);
+	EVP_DigestFinal_ex(mdctx, reinterpret_cast<unsigned char*>(dst.data()), nullptr);
 	EVP_MD_CTX_free(mdctx);
 }
 
