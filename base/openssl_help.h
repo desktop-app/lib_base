@@ -470,19 +470,15 @@ void ShaImpl(bytes::span dst, auto md, Args &&...args) {
 	EVP_MD_CTX_free(mdctx);
 }
 
-inline void ShaTo(bytes::span dst, auto mdname, bytes::const_span data) {
-	auto md = EVP_MD_fetch(nullptr, mdname, nullptr);
+inline void ShaTo(bytes::span dst, auto md, bytes::const_span data) {
 	Expects(dst.size() >= EVP_MD_size(md));
 	details::ShaImpl(dst, md, data);
-	EVP_MD_free(md);
 }
 
 template <typename ...Args>
-[[nodiscard]] inline bytes::vector Sha(auto mdname, Args &&...args) {
-	auto md = EVP_MD_fetch(nullptr, mdname, nullptr);
+[[nodiscard]] inline bytes::vector Sha(auto md, Args &&...args) {
 	bytes::vector dst(EVP_MD_size(md));
 	details::ShaImpl(dst, md, args...);
-	EVP_MD_free(md);
 	return dst;
 }
 
@@ -514,30 +510,30 @@ constexpr auto kSha256Size = size_type(SHA256_DIGEST_LENGTH);
 constexpr auto kSha512Size = size_type(SHA512_DIGEST_LENGTH);
 
 inline void Sha1To(bytes::span dst, bytes::const_span data) {
-	details::ShaTo(dst, "SHA1", data);
+	details::ShaTo(dst, EVP_sha1(), data);
 }
 
 template <typename ...Args>
 [[nodiscard]] inline bytes::vector Sha1(Args &&...args) {
-	return details::Sha("SHA1", args...);
+	return details::Sha(EVP_sha1(), args...);
 }
 
 inline void Sha256To(bytes::span dst, bytes::const_span data) {
-	details::ShaTo(dst, "SHA256", data);
+	details::ShaTo(dst, EVP_sha256(), data);
 }
 
 template <typename ...Args>
 [[nodiscard]] inline bytes::vector Sha256(Args &&...args) {
-	return details::Sha("SHA256", args...);
+	return details::Sha(EVP_sha256(), args...);
 }
 
 inline void Sha512To(bytes::span dst, bytes::const_span data) {
-	details::ShaTo(dst, "SHA512", data);
+	details::ShaTo(dst, EVP_sha512(), data);
 }
 
 template <typename ...Args>
 [[nodiscard]] inline bytes::vector Sha512(Args &&...args) {
-	return details::Sha("SHA512", args...);
+	return details::Sha(EVP_sha512(), args...);
 }
 
 inline bytes::vector Pbkdf2Sha512(
