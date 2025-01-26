@@ -277,6 +277,7 @@ elseif (LINUX)
     generate_dbus(lib_base org.freedesktop.portal. XdpSettings ${third_party_loc}/xdg-desktop-portal/data/org.freedesktop.portal.Settings.xml)
     generate_dbus(lib_base org.freedesktop. XdgFileManager1 ${src_loc}/base/platform/linux/org.freedesktop.FileManager1.xml)
     generate_dbus(lib_base org.gnome.Mutter. MutterIdleMonitor ${src_loc}/base/platform/linux/org.gnome.Mutter.IdleMonitor.xml)
+    generate_dbus(lib_base org.sigxcpu.Feedback. SigxcpuFeedback ${src_loc}/base/platform/linux/org.sigxcpu.Feedback.Haptic.xml)
     generate_dbus(lib_base org.mpris. Mpris ${src_loc}/base/platform/linux/mpris.xml)
     generate_dbus(lib_base io.snapcraft. Snapcraft ${src_loc}/base/platform/linux/io.snapcraft.Settings.xml)
 
