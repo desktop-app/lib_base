@@ -292,7 +292,7 @@ XSettings::XSettings()
 		_private->connection,
 		_private->x_settings_window,
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE);
-	
+
 	if (!event_mask)
 		return;
 
