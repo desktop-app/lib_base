@@ -426,7 +426,7 @@ rpl::lifetime ChangeWindowEventMask(
 			connection,
 			windowAttribsCookie,
 			nullptr));
-	
+
 	const uint oldMask = windowAttribs ? windowAttribs->your_event_mask : 0;
 
 	if ((mode == Mode::Add) && (oldMask & mask)) {

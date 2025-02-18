@@ -63,7 +63,7 @@ gi::result<GLib::Variant> ReadSetting(
 			Gio::DBusProxyFlags::NONE_,
 			kService,
 			kObjectPath));
-	
+
 	if (!interface) {
 		return make_unexpected(std::move(interface.error()));
 	}
