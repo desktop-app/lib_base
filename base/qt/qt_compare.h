@@ -21,13 +21,13 @@ template <typename P>
 	return a.get() <=> b.get();
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0) || !defined __cpp_lib_three_way_comparison
 [[nodiscard]] inline std::strong_ordering operator<=>(
 		const QString &a,
 		const QString &b) noexcept {
 	return a.compare(b) <=> 0;
 }
-#endif // Qt < 6.8.0
+#endif // Qt < 6.8.0 || !__cpp_lib_three_way_comparison
 
 template <typename T>
 [[nodiscard]] inline std::strong_ordering operator<=>(
