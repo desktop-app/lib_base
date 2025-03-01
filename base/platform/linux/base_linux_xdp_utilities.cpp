@@ -16,7 +16,11 @@
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+#include <private/qdesktopunixservices_p.h>
+#else
 #include <private/qgenericunixservices_p.h>
+#endif // Qt >= 6.9.0
 #endif // Qt >= 6.5.0
 
 #include <sstream>
@@ -39,7 +43,11 @@ std::string ParentWindowID(QWindow *window) {
 	}
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+	if (const auto services = dynamic_cast<QDesktopUnixServices*>(
+#else
 	if (const auto services = dynamic_cast<QGenericUnixServices*>(
+#endif // Qt >= 6.9.0
 			QGuiApplicationPrivate::platformIntegration()->services())) {
 		return services->portalWindowIdentifier(window).toStdString();
 	}
