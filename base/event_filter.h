@@ -26,6 +26,11 @@ not_null<QObject*> install_event_filter(
 	not_null<QObject*> object,
 	Fn<EventFilterResult(not_null<QEvent*>)> filter);
 
+void install_event_filter(
+	not_null<QObject*> object,
+	Fn<EventFilterResult(not_null<QEvent*>)> filter,
+	rpl::lifetime &lifetime);
+
 namespace details {
 
 class EventFilter : public QObject {

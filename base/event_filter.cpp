@@ -6,6 +6,8 @@
 //
 #include "base/event_filter.h"
 
+#include <QtCore/QPointer>
+
 namespace base {
 namespace details {
 
@@ -35,6 +37,25 @@ not_null<QObject*> install_event_filter(
 		not_null<QObject*> object,
 		Fn<EventFilterResult(not_null<QEvent*>)> filter) {
 	return new details::EventFilter(context, object, std::move(filter));
+}
+
+void install_event_filter(
+		not_null<QObject*> object,
+		Fn<EventFilterResult(not_null<QEvent*>)> filter,
+		rpl::lifetime &lifetime) {
+	// Not safe in case object is deleted before lifetime.
+	//
+	//lifetime.make_state<details::EventFilter>(
+	//	object,
+	//	object,
+	//	std::move(filter));
+
+	const auto raw = install_event_filter(object, std::move(filter));
+	lifetime.add([weak = QPointer<QObject>(raw.get())] {
+		if (const auto strong = weak.data()) {
+			delete strong;
+		}
+	});
 }
 
 } // namespace Core
