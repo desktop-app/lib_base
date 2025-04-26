@@ -261,9 +261,7 @@ PRIVATE
     desktop-app::external_xxhash
 )
 
-if (WIN32)
-    nuget_add_winrt(lib_base)
-elseif (LINUX)
+if (LINUX)
     target_link_libraries(lib_base
     PUBLIC
         desktop-app::external_kcoreaddons
