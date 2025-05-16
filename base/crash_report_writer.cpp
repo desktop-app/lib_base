@@ -414,13 +414,15 @@ void CrashReportWriter::startCatching() {
 	crashpad::CrashpadClient crashpad_client;
 	const auto handler = (Integration::Instance().executablePath() + "/Contents/Helpers/crashpad_handler").toStdString();
 	const auto database = QFile::encodeName(_path).constData();
-	if (crashpad_client.StartHandler(base::FilePath(handler),
-										base::FilePath(database),
-										std::string(),
-										Annotations,
-										std::vector<std::string>(),
-										false)) {
-		crashpad_client.UseHandler();
+	if (crashpad_client.StartHandler(
+			base::FilePath(handler),
+			base::FilePath(database),
+			{}, // metrics_dir
+			std::string(), // url
+			Annotations,
+			std::vector<std::string>(), // arguments
+			false, // restartable
+			false)) { // asynchronous_start
 	}
 #endif // USE_BREAKPAD
 #else
