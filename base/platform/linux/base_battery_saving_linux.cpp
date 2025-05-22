@@ -13,6 +13,10 @@
 #include <gio/gio.h>
 #include <dlfcn.h>
 
+extern "C" {
+typedef struct _GPowerProfileMonitor GPowerProfileMonitor;
+} // extern "C"
+
 namespace base::Platform {
 namespace {
 
