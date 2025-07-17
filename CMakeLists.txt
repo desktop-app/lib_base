@@ -222,6 +222,7 @@ PRIVATE
     base/variant.h
     base/virtual_method.h
     base/weak_ptr.h
+    base/weak_qptr.h
     base/zlib_help.h
     base/qt/qt_common_adapters.h
     base/qt/qt_compare.h

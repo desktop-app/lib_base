@@ -27,3 +27,4 @@
 #include "base/optional.h"
 #include "base/algorithm.h"
 #include "base/basic_types.h"
+#include "base/weak_qptr.h"
