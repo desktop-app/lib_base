@@ -11,6 +11,8 @@
 #include <atomic>
 #include <memory>
 
+class QObject;
+
 namespace base {
 
 class has_weak_ptr;
@@ -274,35 +276,40 @@ inline bool operator!=(std::nullptr_t, const weak_ptr<T> &pointer) noexcept {
 
 template <
 	typename T,
-	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>>>
+	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>
+		&& !std::is_base_of_v<QObject, T>>>
 weak_ptr<T> make_weak(T *value) {
 	return value;
 }
 
 template <
 	typename T,
-	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>>>
+	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>
+		&& !std::is_base_of_v<QObject, T>>>
 weak_ptr<T> make_weak(gsl::not_null<T*> value) {
 	return value;
 }
 
 template <
 	typename T,
-	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>>>
+	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>
+		&& !std::is_base_of_v<QObject, T>>>
 weak_ptr<T> make_weak(const std::unique_ptr<T> &value) {
 	return value;
 }
 
 template <
 	typename T,
-	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>>>
+	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>
+		&& !std::is_base_of_v<QObject, T>>>
 weak_ptr<T> make_weak(const std::shared_ptr<T> &value) {
 	return value;
 }
 
 template <
 	typename T,
-	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>>>
+	typename = std::enable_if_t<std::is_base_of_v<has_weak_ptr, T>
+		&& !std::is_base_of_v<QObject, T>>>
 weak_ptr<T> make_weak(const std::weak_ptr<T> &value) {
 	return value;
 }
