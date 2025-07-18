@@ -83,7 +83,7 @@ public:
 	}
 
 private:
-	template <typename Child>
+	template <typename U>
 	friend class weak_ptr;
 
 	details::alive_tracker *incrementAliveTracker() const noexcept {

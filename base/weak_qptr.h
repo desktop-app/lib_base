@@ -14,6 +14,9 @@
 #include <atomic>
 #include <memory>
 
+template <typename T>
+class object_ptr;
+
 namespace base {
 
 template <typename T>
@@ -22,89 +25,107 @@ public:
 	weak_qptr() = default;
 	weak_qptr(std::nullptr_t) noexcept {
 	}
-	weak_qptr(T *value) noexcept
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr(Other *value) noexcept
 	: _object(static_cast<const QObject*>(value)) {
-	}
-	weak_qptr(const QPointer<T> &value) noexcept
-	: weak_qptr(value.data()) {
-	}
-	weak_qptr(gsl::not_null<T*> value) noexcept
-	: weak_qptr(value.get()) {
-	}
-	weak_qptr(const std::unique_ptr<T> &value) noexcept
-	: weak_qptr(value.get()) {
-	}
-	weak_qptr(const std::shared_ptr<T> &value) noexcept
-	: weak_qptr(value.get()) {
-	}
-	weak_qptr(const std::weak_ptr<T> &value) noexcept
-	: weak_qptr(value.lock().get()) {
-	}
-	weak_qptr(const weak_qptr &other) noexcept
-	: _object(other._object) {
-	}
-	weak_qptr(weak_qptr &&other) noexcept
-	: _object(std::move(other._object)) {
 	}
 	template <
 		typename Other,
-		typename = std::enable_if_t<
-			std::is_base_of_v<T, Other> && !std::is_same_v<T, Other>>>
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr(const QPointer<Other> &value) noexcept
+	: weak_qptr(value.data()) {
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr(gsl::not_null<Other*> value) noexcept
+	: weak_qptr(value.get()) {
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr(const std::unique_ptr<Other> &value) noexcept
+	: weak_qptr(value.get()) {
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr(const std::shared_ptr<Other> &value) noexcept
+	: weak_qptr(value.get()) {
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr(const std::weak_ptr<Other> &value) noexcept
+	: weak_qptr(value.lock().get()) {
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
 	weak_qptr(const weak_qptr<Other> &other) noexcept
 	: _object(other._object) {
 	}
 	template <
 		typename Other,
-		typename = std::enable_if_t<
-			std::is_base_of_v<T, Other> && !std::is_same_v<T, Other>>>
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
 	weak_qptr(weak_qptr<Other> &&other) noexcept
 	: _object(std::move(other._object)) {
 	}
 
-	weak_qptr &operator=(T *value) noexcept {
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr &operator=(Other *value) noexcept {
 		reset(value);
-		return *this;
-	}
-	weak_qptr &operator=(const QPointer<T> &value) noexcept {
-		reset(value.data());
-		return *this;
-	}
-	weak_qptr &operator=(gsl::not_null<T*> value) noexcept {
-		reset(value.get());
-		return *this;
-	}
-	weak_qptr &operator=(const std::unique_ptr<T> &value) noexcept {
-		reset(value.get());
-		return *this;
-	}
-	weak_qptr &operator=(const std::shared_ptr<T> &value) noexcept {
-		reset(value.get());
-		return *this;
-	}
-	weak_qptr &operator=(const std::weak_ptr<T> &value) noexcept {
-		reset(value.lock().get());
-		return *this;
-	}
-	weak_qptr &operator=(const weak_qptr &other) noexcept {
-		_object = other._object;
-		return *this;
-	}
-	weak_qptr &operator=(weak_qptr &&other) noexcept {
-		_object = std::move(other._object);
 		return *this;
 	}
 	template <
 		typename Other,
-		typename = std::enable_if_t<
-			std::is_base_of_v<T, Other> && !std::is_same_v<T, Other>>>
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr &operator=(const QPointer<Other> &value) noexcept {
+		reset(value.data());
+		return *this;
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr &operator=(gsl::not_null<Other*> value) noexcept {
+		reset(value.get());
+		return *this;
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr &operator=(const std::unique_ptr<Other> &value) noexcept {
+		reset(value.get());
+		return *this;
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr &operator=(const std::shared_ptr<Other> &value) noexcept {
+		reset(value.get());
+		return *this;
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
+	weak_qptr &operator=(const std::weak_ptr<Other> &value) noexcept {
+		reset(value.lock().get());
+		return *this;
+	}
+	template <
+		typename Other,
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
 	weak_qptr &operator=(const weak_qptr<Other> &other) noexcept {
 		_object = other._object;
 		return *this;
 	}
 	template <
 		typename Other,
-		typename = std::enable_if_t<
-			std::is_base_of_v<T, Other> && !std::is_same_v<T, Other>>>
+		typename = std::enable_if_t<std::is_base_of_v<T, Other>>>
 	weak_qptr &operator=(weak_qptr<Other> &&other) noexcept {
 		_object = std::move(other._object);
 		return *this;
@@ -143,6 +164,9 @@ public:
 	}
 
 private:
+	template <typename U>
+	friend class weak_qptr;
+
 	QPointer<const QObject> _object;
 
 };
@@ -200,6 +224,11 @@ template <
 	typename = std::enable_if_t<std::is_base_of_v<QObject, T>>>
 weak_qptr<T> make_weak(const std::weak_ptr<T> &value) {
 	return value;
+}
+
+template <typename T>
+weak_qptr<T> make_weak(const object_ptr<T> &value) {
+	return value.data();
 }
 
 } // namespace base

@@ -6,7 +6,7 @@
 //
 #include "base/event_filter.h"
 
-#include <QtCore/QPointer>
+#include "base/weak_qptr.h"
 
 namespace base {
 namespace details {
@@ -51,11 +51,11 @@ void install_event_filter(
 	//	std::move(filter));
 
 	const auto raw = install_event_filter(object, std::move(filter));
-	lifetime.add([weak = QPointer<QObject>(raw.get())] {
-		if (const auto strong = weak.data()) {
+	lifetime.add([weak = make_weak(raw)] {
+		if (const auto strong = weak.get()) {
 			delete strong;
 		}
 	});
 }
 
-} // namespace Core
+} // namespace base
