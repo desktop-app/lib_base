@@ -63,23 +63,27 @@ public:
 		return *this;
 	}
 
-	// So we can pass this pointer to methods like connect().
-	Object *data() const noexcept {
+	Object *get() const noexcept {
 		return static_cast<Object*>(_object.data());
 	}
+
+	// So we can pass this pointer to methods like connect().
+	Object *data() const noexcept {
+		return get();
+	}
 	operator Object*() const noexcept {
-		return data();
+		return get();
 	}
 
 	explicit operator bool() const noexcept {
-		return _object != nullptr;
+		return _object.data() != nullptr;
 	}
 
 	Object *operator->() const noexcept {
-		return data();
+		return get();
 	}
 	Object &operator*() const noexcept {
-		return *data();
+		return *get();
 	}
 
 	// Use that instead "= new Object(parent, ...)"
@@ -89,14 +93,14 @@ public:
 		_object = new Object(
 			std::forward<Parent>(parent),
 			std::forward<Args>(args)...);
-		return data();
+		return get();
 	}
 	void destroy() noexcept {
 		delete base::take(_object);
 	}
 	void destroyDelayed() {
 		if (_object) {
-			if (auto widget = base::up_cast<QWidget*>(data())) {
+			if (auto widget = base::up_cast<QWidget*>(get())) {
 				widget->hide();
 			}
 			base::take(_object)->deleteLater();
