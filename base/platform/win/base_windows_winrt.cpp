@@ -62,60 +62,8 @@ namespace P = base::WinRT;
 
 extern "C" {
 
-int32_t __stdcall WINRT_CoIncrementMTAUsage(void** cookie) noexcept {
-	return P::CoIncrementMTAUsage(cookie);
-}
-
-int32_t __stdcall WINRT_RoInitialize(uint32_t type) noexcept {
-	return P::RoInitialize(type);
-}
-
-int32_t __stdcall WINRT_GetRestrictedErrorInfo(void** info) noexcept {
-	return P::GetRestrictedErrorInfo(info);
-}
-
-int32_t __stdcall WINRT_RoGetActivationFactory(void* classId, winrt::guid const& iid, void** factory) noexcept {
-	return P::RoGetActivationFactory(classId, iid, factory);
-}
-
-int32_t __stdcall WINRT_RoOriginateLanguageException(int32_t error, void* message, void* exception) noexcept {
+int32_t __stdcall WINRT_IMPL_RoOriginateLanguageException(int32_t error, void* message, void* exception) noexcept {
 	return P::RoOriginateLanguageException(error, message, exception);
-}
-
-int32_t __stdcall WINRT_SetRestrictedErrorInfo(void* info) noexcept {
-	return P::SetRestrictedErrorInfo(info);
-}
-
-int32_t __stdcall WINRT_WindowsCreateString(wchar_t const* sourceString, uint32_t length, void** string) noexcept {
-	return P::WindowsCreateString(sourceString, length, string);
-}
-
-int32_t __stdcall WINRT_WindowsCreateStringReference(wchar_t const* sourceString, uint32_t length, void* hstringHeader, void** string) noexcept {
-	return P::WindowsCreateStringReference(sourceString, length, hstringHeader, string);
-}
-
-int32_t __stdcall WINRT_WindowsDuplicateString(void* string, void** newString) noexcept {
-	return P::WindowsDuplicateString(string, newString);
-}
-
-int32_t __stdcall WINRT_WindowsDeleteString(void* string) noexcept {
-	return P::WindowsDeleteString(string);
-}
-
-int32_t __stdcall WINRT_WindowsPreallocateStringBuffer(uint32_t length, wchar_t** charBuffer, void** bufferHandle) noexcept {
-	return P::WindowsPreallocateStringBuffer(length, charBuffer, bufferHandle);
-}
-
-int32_t __stdcall WINRT_WindowsDeleteStringBuffer(void* bufferHandle) noexcept {
-	return P::WindowsDeleteStringBuffer(bufferHandle);
-}
-
-int32_t __stdcall WINRT_WindowsPromoteStringBuffer(void* bufferHandle, void** string) noexcept {
-	return P::WindowsPromoteStringBuffer(bufferHandle, string);
-}
-
-wchar_t const* __stdcall WINRT_WindowsGetStringRawBuffer(void* string, uint32_t* length) noexcept {
-	return P::WindowsGetStringRawBuffer(string, length);
 }
 
 } // extern "C"
