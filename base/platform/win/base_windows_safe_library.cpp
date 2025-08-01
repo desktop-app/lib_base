@@ -6,6 +6,12 @@
 //
 #include "base/platform/win/base_windows_safe_library.h"
 
+#ifdef QT_VERSION
+#include "base/debug_log.h"
+#else
+#define LOG(...) (void)0
+#endif
+
 #include <string>
 #include <array>
 
@@ -77,6 +83,49 @@ BOOL (__stdcall *SetDefaultDllDirectories)(_In_ DWORD DirectoryFlags);
 
 } // namespace
 
+namespace details {
+
+void *LoadMethodRaw(HINSTANCE library, LPCSTR name, WORD id) {
+	const auto result = GetProcAddress(library, name);
+	return result
+		? result
+		: id
+		? GetProcAddress(library, MAKEINTRESOURCEA(id))
+		: nullptr;
+}
+
+void ReportLoadFailure(HINSTANCE library, LPCSTR name, DWORD id) {
+	constexpr auto kMaxPathLong = 32767;
+	auto path = std::array<WCHAR, kMaxPathLong + 1>{ 0 };
+	const auto length = GetModuleFileName(
+		library,
+		path.data(),
+		kMaxPathLong);
+	if (length > 0 && length < kMaxPathLong) {
+		if (id) {
+			LOG(("DLL Error: Failed to load '%1' from '%2' (ID: %3)."
+				).arg(name
+				).arg(QString::fromWCharArray(path.data())
+				).arg(id));
+		} else {
+			LOG(("DLL Error: Failed to load '%1' from '%2'."
+				).arg(name
+				).arg(QString::fromWCharArray(path.data())));
+		}
+	} else {
+		if (id) {
+			LOG(("DLL Error: Failed to load '%1' from _unknown_ (ID: %2)."
+				).arg(name
+				).arg(id));
+		} else {
+			LOG(("DLL Error: Failed to load '%1' from _unknown_."
+				).arg(name));
+		}
+	}
+}
+
+} // namespace details
+
 void InitDynamicLibraries() {
 	static const auto Inited = [] {
 		const auto kernel = LoadLibrary(L"kernel32.dll");
@@ -98,6 +147,9 @@ HINSTANCE SafeLoadLibrary(LPCWSTR name, bool required) {
 		FatalError(L"Could not load required DLL '"
 			+ std::wstring(name)
 			+ L"'!");
+	} else {
+		LOG(("DLL Error: Could not load '%1'."
+			).arg(QString::fromWCharArray(name)));
 	}
 	return nullptr;
 }

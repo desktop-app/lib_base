@@ -11,21 +11,28 @@
 // We try to keep this module free of external dependencies.
 
 namespace base::Platform {
+namespace details {
+
+[[nodiscard]] void *LoadMethodRaw(HINSTANCE library, LPCSTR name, WORD id);
+void ReportLoadFailure(HINSTANCE library, LPCSTR name, DWORD id);
+
+} // namespace details
 
 void InitDynamicLibraries();
 
 HINSTANCE SafeLoadLibrary(LPCWSTR name, bool required = false);
 
 template <typename Function>
-bool LoadMethod(HINSTANCE library, LPCSTR name, Function &func, WORD id = 0) {
-	if (!library) return false;
-
-	auto result = GetProcAddress(library, name);
-	if (!result && id) {
-		result = GetProcAddress(library, MAKEINTRESOURCEA(id));
+bool LoadMethod(HINSTANCE library, LPCSTR name, Function &f, WORD id = 0) {
+	if (!library) {
+		return false;
+	} else if (const auto ptr = details::LoadMethodRaw(library, name, id)) {
+		f = reinterpret_cast<Function>(ptr);
+		return true;
 	}
-	func = reinterpret_cast<Function>(result);
-	return (func != nullptr);
+	f = nullptr;
+	details::ReportLoadFailure(library, name, id);
+	return false;
 }
 
 } // namespace base::Platform
