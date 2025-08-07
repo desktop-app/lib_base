@@ -242,6 +242,10 @@ bool IsMac11_0OrGreater() {
 	return IsMacThatOrGreater<11, 0>();
 }
 
+bool IsMac26_0OrGreater() {
+	return IsMacThatOrGreater<26, 0>();
+}
+
 void Start(QJsonObject settings) {
 	Expects(GlobalWakeUpObserver == nil);
 
