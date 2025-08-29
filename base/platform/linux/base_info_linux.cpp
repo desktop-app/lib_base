@@ -280,7 +280,7 @@ QString GetWindowManager() {
 		? QString::fromUtf8(
 			reinterpret_cast<const char*>(
 				xcb_get_property_value(reply.get())),
-			xcb_get_property_value_length(reply.get()))
+			xcb_get_property_value_length(reply.get())).trimmed()
 		: QString();
 #else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 	return QString();
