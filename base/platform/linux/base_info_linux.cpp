@@ -35,7 +35,10 @@ namespace Platform {
 namespace {
 
 [[nodiscard]] QStringList GetDesktopEnvironment() {
-	return qEnvironmentVariable("XDG_CURRENT_DESKTOP").trimmed().split(':');
+	const auto list = qEnvironmentVariable("XDG_CURRENT_DESKTOP").split(':');
+	return list | ranges::views::transform([](const auto &item) {
+		return item.simplified();
+	}) | ranges::to<QStringList>;
 }
 
 [[nodiscard]] QString ChassisTypeToString(uint type) {
@@ -280,7 +283,7 @@ QString GetWindowManager() {
 		? QString::fromUtf8(
 			reinterpret_cast<const char*>(
 				xcb_get_property_value(reply.get())),
-			xcb_get_property_value_length(reply.get())).trimmed()
+			xcb_get_property_value_length(reply.get())).simplified()
 		: QString();
 #else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 	return QString();
