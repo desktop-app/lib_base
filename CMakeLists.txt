@@ -121,6 +121,8 @@ PRIVATE
     base/platform/win/base_windows_wrl.h
     base/platform/win/wrl/wrl_implements_h.h
     base/platform/win/wrl/wrl_module_h.h
+    base/platform/base_accessibility.cpp
+    base/platform/base_accessibility.h
     base/platform/base_platform_custom_app_icon.h
     base/platform/base_platform_global_shortcuts.h
     base/platform/base_platform_haptic.h
