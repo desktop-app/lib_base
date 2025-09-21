@@ -5,13 +5,13 @@
 #include <QAccessible>
 #include <QCoreApplication>
 #include <QAccessibleEvent>
+#include <QLineEdit>
 
 namespace base::Platform::Accessibility {
 
     namespace {
 
         constexpr auto kRoleProperty = "_a11y_custom_role";
-        constexpr auto kNameProperty = "_a11y_custom_name";
 
         class CustomAccessibilityInterface final : public QAccessibleWidget {
         public:
@@ -26,20 +26,19 @@ namespace base::Platform::Accessibility {
             }
 
             QString text(QAccessible::Text t) const override {
-                if (t == QAccessible::Text::Name) {
-                    const auto property = widget()->property(kNameProperty);
-                    if (property.isValid()) {
-                        return property.toString();
+                if (t == QAccessible::Text::Value) {
+                    if (const auto lineEdit = qobject_cast<const QLineEdit*>(widget())) {
+                        return lineEdit->text();
                     }
                 }
                 return QAccessibleWidget::text(t);
             }
-        };
+		};
 
         QAccessibleInterface* Factory(const QString& classname, QObject* object) {
             if (object && object->isWidgetType()) {
                 const auto widget = static_cast<QWidget*>(object);
-                if (widget->property(kRoleProperty).isValid() || widget->property(kNameProperty).isValid()) {
+                if (widget->property(kRoleProperty).isValid()) {
                     return new CustomAccessibilityInterface(widget);
                 }
             }
@@ -54,15 +53,6 @@ namespace base::Platform::Accessibility {
 
     void SetRole(not_null<QWidget*> widget, QAccessible::Role role) {
         widget->setProperty(kRoleProperty, static_cast<int>(role));
-    }
-
-    void SetName(not_null<QWidget*> widget, const QString& name) {
-        widget->setProperty(kNameProperty, name);
-    }
-
-    void Announce(not_null<QWidget*> widget, QAccessible::Event event) {
-        QAccessibleEvent eventObject(widget.get(), event);
-        QAccessible::updateAccessibility(&eventObject);
     }
 
 } // namespace base::Platform::Accessibility
