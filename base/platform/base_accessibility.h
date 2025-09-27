@@ -31,6 +31,12 @@ namespace base {
 
 			private:
 				bool detectScreenReader();
+				bool detectForWindows();
+				bool isScreenReaderActiveViaApi();
+				bool isScreenReaderProcessRunning();
+
+				bool detectForMac();
+				bool detectForLinux();
 			};
 
 			class ScreenReaderState : public QObject {

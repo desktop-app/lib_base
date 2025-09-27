@@ -23,34 +23,61 @@ namespace base::Platform::Accessibility {
 		Q_EMIT resultReady(isActive);
 	}
 
-	bool ScreenReaderDetector::detectScreenReader() {
+	bool ScreenReaderDetector::isScreenReaderActiveViaApi() {
 #ifdef Q_OS_WIN
 		BOOL screenReaderRunning = FALSE;
-		if (SystemParametersInfoW(SPI_GETSCREENREADER, 0, &screenReaderRunning, 0) && screenReaderRunning) {
-			return true;
-		}
+		return (SystemParametersInfoW(SPI_GETSCREENREADER, 0, &screenReaderRunning, 0) && screenReaderRunning);
+#else
+		return false;
+#endif
+	}
+
+	bool ScreenReaderDetector::isScreenReaderProcessRunning() {
+#ifdef Q_OS_WIN
 		HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-		if (snapshot != INVALID_HANDLE_VALUE) {
-			PROCESSENTRY32W entry;
-			entry.dwSize = sizeof(PROCESSENTRY32W);
-			const WCHAR* screenReaders[] = {
-				L"nvda.exe", L"jaws.exe", L"jfw.exe",
-				L"windowseyes.exe", L"narrator.exe", L"dragon.exe"
-			};
-			if (Process32FirstW(snapshot, &entry)) {
-				do {
-					for (const auto& reader : screenReaders) {
-						if (_wcsicmp(entry.szExeFile, reader) == 0) {
-							CloseHandle(snapshot);
-							return true;
-						}
+		if (snapshot == INVALID_HANDLE_VALUE) {
+			return false;
+		}
+
+		struct HandleCloser {
+			HANDLE handle;
+			~HandleCloser() { CloseHandle(handle); }
+		} closer = { snapshot };
+
+		PROCESSENTRY32W entry;
+		entry.dwSize = sizeof(PROCESSENTRY32W);
+		const WCHAR* screenReaders[] = {
+			L"nvda.exe", L"jaws.exe", L"jfw.exe",
+			L"windowseyes.exe", L"narrator.exe", L"dragon.exe"
+		};
+
+		if (Process32FirstW(snapshot, &entry)) {
+			do {
+				for (const auto& reader : screenReaders) {
+					if (_wcsicmp(entry.szExeFile, reader) == 0) {
+						return true;
 					}
-				} while (Process32NextW(snapshot, &entry));
-			}
-			CloseHandle(snapshot);
+				}
+			} while (Process32NextW(snapshot, &entry));
 		}
 		return false;
-#elif defined(Q_OS_MAC)
+#else
+		return false;
+#endif
+	}
+
+	bool ScreenReaderDetector::detectForWindows() {
+		if (isScreenReaderActiveViaApi()) {
+			return true;
+		}
+		if (isScreenReaderProcessRunning()) {
+			return true;
+		}
+		return false;
+	}
+
+	bool ScreenReaderDetector::detectForMac() {
+#ifdef Q_OS_MAC
 		Boolean keyExists = false;
 		Boolean voiceOverEnabled = CFPreferencesGetAppBooleanValue(
 			CFSTR("voiceOverOnOffKey"),
@@ -58,7 +85,13 @@ namespace base::Platform::Accessibility {
 			&keyExists
 		);
 		return (keyExists && voiceOverEnabled);
-#elif defined(Q_OS_LINUX)
+#else
+		return false;
+#endif
+	}
+
+	bool ScreenReaderDetector::detectForLinux() {
+#ifdef Q_OS_LINUX
 		QStringList envVars = { "AT_SPI_BUS", "AT_SPI_IOR", "GNOME_ACCESSIBILITY" };
 		for (const auto& var : envVars) {
 			if (!qgetenv(var.toLocal8Bit().constData()).isEmpty()) {
@@ -74,6 +107,18 @@ namespace base::Platform::Accessibility {
 			}
 		}
 		return false;
+#else
+		return false;
+#endif
+	}
+
+	bool ScreenReaderDetector::detectScreenReader() {
+#ifdef Q_OS_WIN
+		return detectForWindows();
+#elif defined(Q_OS_MAC)
+		return detectForMac();
+#elif defined(Q_OS_LINUX)
+		return detectForLinux();
 #else
 		return QAccessible::isActive();
 #endif
