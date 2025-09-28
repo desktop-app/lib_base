@@ -6,13 +6,9 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 #include <tlhelp32.h>
-#endif
-
-#ifdef Q_OS_MAC
+#elif defined(Q_OS_MAC)
 #include <CoreFoundation/CoreFoundation.h>
-#endif
-
-#ifdef Q_OS_LINUX
+#else // For Linux, BSD, and other Unix-like systems
 #include <QProcess>
 #endif
 
@@ -117,10 +113,8 @@ namespace base::Platform::Accessibility {
 		return detectForWindows();
 #elif defined(Q_OS_MAC)
 		return detectForMac();
-#elif defined(Q_OS_LINUX)
-		return detectForLinux();
 #else
-		return QAccessible::isActive();
+		return detectForLinux();
 #endif
 	}
 
