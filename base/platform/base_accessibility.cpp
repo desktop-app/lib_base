@@ -87,7 +87,7 @@ namespace base::Platform::Accessibility {
 	}
 
 	bool ScreenReaderDetector::detectForLinux() {
-#ifdef Q_OS_LINUX
+#if !defined Q_OS_WIN && !defined Q_OS_MAC
 		QStringList envVars = { "AT_SPI_BUS", "AT_SPI_IOR", "GNOME_ACCESSIBILITY" };
 		for (const auto& var : envVars) {
 			if (!qgetenv(var.toLocal8Bit().constData()).isEmpty()) {
