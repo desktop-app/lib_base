@@ -16,6 +16,11 @@
 
 #include <gio/gio.hpp>
 #include <snapcraft/snapcraft.hpp>
+#if __has_include(<giounix/giounix.hpp>)
+#include <giounix/giounix.hpp>
+#else // __has_include(<giounix/giounix.hpp>)
+#define GioUnix Gio
+#endif // !__has_include(<giounix/giounix.hpp>)
 
 namespace base::Platform {
 namespace {
@@ -117,7 +122,7 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 
 	const auto appId = QGuiApplication::desktopFileName().toStdString();
 	if (!appId.empty()) {
-		Gio::AppInfo appInfo = Gio::DesktopAppInfo::new_(appId + ".desktop");
+		Gio::AppInfo appInfo = GioUnix::DesktopAppInfo::new_(appId + ".desktop");
 		if (appInfo) {
 			if (appInfo.get_commandline() == commandlineForCreator + " %u") {
 				appInfo.set_as_default_for_type(handlerType);
