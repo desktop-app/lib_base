@@ -15,10 +15,7 @@ namespace base {
 
 			void InstallFactory();
 			void SetRole(not_null<QWidget*> widget, QAccessible::Role role);
-
-			void ObserveScreenReaderState(
-				not_null<QWidget*> widget,
-				std::function<void(bool)> callback);
+			void SetName(not_null<QWidget*> widget, const QString& name);
 
 			class ScreenReaderDetector : public QObject {
 				Q_OBJECT

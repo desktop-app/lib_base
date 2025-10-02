@@ -63,13 +63,7 @@ namespace base::Platform::Accessibility {
 	}
 
 	bool ScreenReaderDetector::detectForWindows() {
-		if (isScreenReaderActiveViaApi()) {
-			return true;
-		}
-		if (isScreenReaderProcessRunning()) {
-			return true;
-		}
-		return false;
+		return isScreenReaderActiveViaApi() || isScreenReaderProcessRunning();
 	}
 
 	bool ScreenReaderDetector::detectForMac() {
@@ -120,10 +114,35 @@ namespace base::Platform::Accessibility {
 
 	namespace {
 		constexpr auto kRoleProperty = "_a11y_custom_role";
-		constexpr auto kCheckIntervalMs = 2000;
+		constexpr auto kNameProperty = "_a11y_custom_name";
+		constexpr auto kCheckIntervalMs = 1000;
 
-		bool IsScreenReaderActive() {
-			return ScreenReaderState::instance()->isActive();
+		void SetupFocusManagementIfNeeded(not_null<QWidget*> widget) {
+			const auto property = widget->property(kRoleProperty);
+			if (!property.isValid()) {
+				return;
+			}
+			const auto role = static_cast<QAccessible::Role>(property.toInt());
+
+			if (role != QAccessible::Role::PushButton
+				&& role != QAccessible::Role::Link
+				&& role != QAccessible::Role::CheckBox
+				&& role != QAccessible::Role::RadioButton) {
+				return;
+			}
+
+			const auto updatePolicy = [widget](bool screenReaderIsActive) {
+				widget->setFocusPolicy(screenReaderIsActive ? Qt::StrongFocus : Qt::NoFocus);
+				};
+
+			updatePolicy(ScreenReaderState::instance()->isActive());
+
+			QObject::connect(
+				ScreenReaderState::instance(),
+				&ScreenReaderState::stateChanged,
+				widget,
+				updatePolicy
+			);
 		}
 
 		class CustomAccessibilityInterface final : public QAccessibleWidget {
@@ -135,12 +154,27 @@ namespace base::Platform::Accessibility {
 					? static_cast<QAccessible::Role>(property.toInt())
 					: QAccessibleWidget::role();
 			}
+
+			QString text(QAccessible::Text t) const override {
+				if (t == QAccessible::Name) {
+					const auto property = widget()->property(kNameProperty);
+					if (property.isValid()) {
+						return property.toString();
+					}
+				}
+				return QAccessibleWidget::text(t);
+			}
+
+			QAccessible::State state() const override {
+				return QAccessibleWidget::state();
+			}
 		};
 
 		QAccessibleInterface* Factory(const QString&, QObject* object) {
 			if (object && object->isWidgetType()) {
 				const auto widget = static_cast<QWidget*>(object);
-				if (widget->property(kRoleProperty).isValid()) {
+				if (widget->property(kRoleProperty).isValid() || widget->property(kNameProperty).isValid()) {
+					SetupFocusManagementIfNeeded(widget);
 					return new CustomAccessibilityInterface(widget);
 				}
 			}
@@ -157,16 +191,8 @@ namespace base::Platform::Accessibility {
 		widget->setProperty(kRoleProperty, static_cast<int>(role));
 	}
 
-	void ObserveScreenReaderState(
-		not_null<QWidget*> widget,
-		std::function<void(bool)> callback) {
-		callback(IsScreenReaderActive());
-
-		auto* state = ScreenReaderState::instance();
-		QObject::connect(
-			state,
-			&ScreenReaderState::stateChanged,
-			widget, std::move(callback));
+	void SetName(not_null<QWidget*> widget, const QString& name) {
+		widget->setProperty(kNameProperty, name);
 	}
 
 	ScreenReaderState* ScreenReaderState::instance() {
