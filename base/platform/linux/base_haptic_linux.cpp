@@ -46,4 +46,8 @@ void Haptic() {
 		});
 }
 
+bool IsSwipeBackEnabled() {
+	return true;
+}
+
 } // namespace base::Platform

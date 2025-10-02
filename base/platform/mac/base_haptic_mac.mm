@@ -20,4 +20,14 @@ void Haptic() {
 	});
 }
 
+bool IsSwipeBackEnabled() {
+	static const auto cached = [] {
+		const auto defaults = [NSUserDefaults standardUserDefaults];
+		NSNumber *setting = [defaults
+			objectForKey:@"AppleEnableSwipeNavigateWithScrolls"];
+		return setting ? [setting boolValue] : true;
+	}();
+	return cached;
+}
+
 } // namespace base::Platform

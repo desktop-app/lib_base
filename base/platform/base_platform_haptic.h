@@ -9,5 +9,6 @@
 namespace base::Platform {
 
 void Haptic();
+[[nodiscard]] bool IsSwipeBackEnabled();
 
 } // namespace base::Platform
