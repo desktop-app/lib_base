@@ -164,10 +164,6 @@ namespace base::Platform::Accessibility {
 				}
 				return QAccessibleWidget::text(t);
 			}
-
-			QAccessible::State state() const override {
-				return QAccessibleWidget::state();
-			}
 		};
 
 		QAccessibleInterface* Factory(const QString&, QObject* object) {
