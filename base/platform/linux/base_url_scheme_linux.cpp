@@ -134,7 +134,8 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	auto newAppInfo = Gio::AppInfo::create_from_commandline(
 		commandlineForCreator,
 		descriptor.displayAppName.toStdString(),
-		Gio::AppInfoCreateFlags::SUPPORTS_URIS_,
+		Gio::AppInfoCreateFlags::SUPPORTS_URIS_
+			| Gio::AppInfoCreateFlags::SUPPORTS_STARTUP_NOTIFICATION_,
 		nullptr);
 
 	if (newAppInfo) {
