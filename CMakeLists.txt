@@ -121,8 +121,6 @@ PRIVATE
     base/platform/win/base_windows_wrl.h
     base/platform/win/wrl/wrl_implements_h.h
     base/platform/win/wrl/wrl_module_h.h
-    base/screen_reader_state.cpp
-    base/screen_reader_state.h
     base/platform/base_platform_custom_app_icon.h
     base/platform/base_platform_global_shortcuts.h
     base/platform/base_platform_haptic.h
@@ -208,6 +206,8 @@ PRIVATE
     base/required.h
     base/runtime_composer.cpp
     base/runtime_composer.h
+    base/screen_reader_state.cpp
+    base/screen_reader_state.h
     base/single_instance.cpp
     base/single_instance.h
     base/system_unlock.h
