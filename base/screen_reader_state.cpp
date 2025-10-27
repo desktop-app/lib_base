@@ -24,4 +24,8 @@ rpl::producer<bool> ScreenReaderState::activeValue() const {
 	return _isActive.value();
 }
 
+bool ScreenReaderState::isActive() const {
+	return _isActive.current();
+}
+
 } // namespace base
