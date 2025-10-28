@@ -12,7 +12,6 @@ public:
 
 	static ScreenReaderState* Instance();
 	rpl::producer<bool> activeValue() const;
-	[[nodiscard]] bool isActive() const;
 
 protected:
 	void accessibilityActiveChanged(bool active) override;
