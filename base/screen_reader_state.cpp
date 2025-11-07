@@ -20,6 +20,10 @@ void ScreenReaderState::accessibilityActiveChanged(bool active) {
 	_isActive = active;
 }
 
+bool ScreenReaderState::active() const {
+	return _isActive.current();
+}
+
 rpl::producer<bool> ScreenReaderState::activeValue() const {
 	return _isActive.value();
 }

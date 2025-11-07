@@ -6,19 +6,20 @@
 
 namespace base {
 
-class ScreenReaderState : public QAccessible::ActivationObserver {
+class ScreenReaderState final : public QAccessible::ActivationObserver {
 public:
 	~ScreenReaderState();
+	ScreenReaderState(const ScreenReaderState &) = delete;
+	ScreenReaderState &operator=(const ScreenReaderState &) = delete;
 
-	static ScreenReaderState* Instance();
-	rpl::producer<bool> activeValue() const;
-
-protected:
-	void accessibilityActiveChanged(bool active) override;
+	[[nodiscard]] static ScreenReaderState* Instance();
+	[[nodiscard]] bool active() const;
+	[[nodiscard]] rpl::producer<bool> activeValue() const;
 
 private:
 	ScreenReaderState();
-	Q_DISABLE_COPY(ScreenReaderState)
+
+	void accessibilityActiveChanged(bool active) override;
 
 	rpl::variable<bool> _isActive;
 
