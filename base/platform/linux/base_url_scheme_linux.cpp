@@ -86,7 +86,6 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		descriptor.executable,
 	} + KShell::splitArgs(descriptor.arguments) + QStringList{
 		"--",
-		"%u",
 	}).toStdString();
 
 	auto currentAppInfo = Gio::AppInfo::get_default_for_type(
@@ -94,7 +93,8 @@ bool CheckUrlScheme(const UrlSchemeDescriptor &descriptor) {
 		true);
 
 	if (currentAppInfo) {
-		return currentAppInfo.get_commandline() == neededCommandline;
+		return currentAppInfo.get_commandline() == neededCommandline + " %u"
+			|| currentAppInfo.get_commandline() == neededCommandline + " %U";
 	}
 
 	return false;
@@ -124,7 +124,8 @@ void RegisterUrlScheme(const UrlSchemeDescriptor &descriptor) {
 	if (!appId.empty()) {
 		Gio::AppInfo appInfo = GioUnix::DesktopAppInfo::new_(appId + ".desktop");
 		if (appInfo) {
-			if (appInfo.get_commandline() == commandlineForCreator + " %u") {
+			if (appInfo.get_commandline() == commandlineForCreator + " %u"
+					|| appInfo.get_commandline() == commandlineForCreator + " %U") {
 				appInfo.set_as_default_for_type(handlerType);
 				return;
 			}
