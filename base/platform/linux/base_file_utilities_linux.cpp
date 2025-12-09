@@ -47,7 +47,7 @@ void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 				return;
 			}
 
-			const auto fd = open(
+			const auto fd = g_open(
 				QFile::encodeName(filepath).constData(),
 				O_RDONLY | O_CLOEXEC);
 
