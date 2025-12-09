@@ -47,17 +47,17 @@ void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 				return;
 			}
 
-			const auto fd = g_open(
-				QFile::encodeName(filepath).constData(),
-				O_RDONLY | O_CLOEXEC);
-
-			if (fd == -1) {
-				fail();
-				return;
-			}
-
 			RunWithXdgActivationToken([=](
 					const QString &activationToken) mutable {
+				const auto fd = g_open(
+					QFile::encodeName(filepath).constData(),
+					O_RDONLY | O_CLOEXEC);
+
+				if (fd == -1) {
+					fail();
+					return;
+				}
+
 				interface.call_open_directory(
 					XDP::ParentWindowID(),
 					GLib::Variant::new_handle(0),
