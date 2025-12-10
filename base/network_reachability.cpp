@@ -49,7 +49,7 @@ NetworkReachability::NetworkReachability()
 : _private(std::make_unique<Private>()) {
 	if (_private->platformHelper) {
 		_private->platformHelper->availableValue(
-		) | rpl::start_with_next([=](bool available) {
+		) | rpl::on_next([=](bool available) {
 			_private->available = available;
 		}, _private->lifetime);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
@@ -60,7 +60,7 @@ NetworkReachability::NetworkReachability()
 		base::qt_signal_producer(
 			QNetworkInformation::instance(),
 			&QNetworkInformation::reachabilityChanged
-		) | rpl::start_with_next([=](
+		) | rpl::on_next([=](
 				QNetworkInformation::Reachability newReachability) {
 			_private->available = newReachability
 				== QNetworkInformation::Reachability::Online;

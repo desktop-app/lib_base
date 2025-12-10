@@ -47,7 +47,7 @@ void XCBPreventDisplaySleep(bool prevent) {
 		return connection;
 	}) | rpl::filter([](xcb_connection_t *connection) {
 		return connection && !xcb_connection_has_error(connection);
-	}) | rpl::start_with_next([](xcb_connection_t *connection) {
+	}) | rpl::on_next([](xcb_connection_t *connection) {
 		free(
 			xcb_request_check(
 				connection,
