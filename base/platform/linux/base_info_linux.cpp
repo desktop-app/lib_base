@@ -38,6 +38,8 @@ namespace {
 	const auto list = qEnvironmentVariable("XDG_CURRENT_DESKTOP").split(':');
 	return list | ranges::views::transform([](const auto &item) {
 		return item.simplified();
+	}) | ranges::views::filter([](const auto &item) {
+		return !item.isEmpty();
 	}) | ranges::to<QStringList>;
 }
 
