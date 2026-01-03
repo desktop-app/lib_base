@@ -48,7 +48,7 @@ inline details::TryResult<Method> TryNoCheck(Method &&method) noexcept {
 		Unexpected("Could not allocate in WinRT.");
 	} catch (const winrt::hresult_error &error) {
 		LOG(("WinRT Error: %1 (%2)"
-			).arg(error.code()
+			).arg(int64(error.code())
 			).arg(QString::fromWCharArray(error.message().c_str())));
 		return {};
 	} catch (...) {
