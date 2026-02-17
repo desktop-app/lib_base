@@ -66,9 +66,6 @@ private:
 				memcpy(buf, _data.constData() + _position, toRead);
 				_position += toRead;
 			}
-			if (toRead < size) {
-				_error = -1;
-			}
 		}
 		return toRead;
 	}
