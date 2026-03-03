@@ -49,7 +49,7 @@ std::vector<not_null<GlobalShortcutManagerGeneric*>> Managers;
 
 void ScheduleForAll(GlobalShortcutKeyGeneric descriptor, bool down) {
 	std::unique_lock lock{ GlobalMutex };
-	for (const auto manager : Managers) {
+	for (const auto &manager : Managers) {
 		manager->schedule(descriptor, down);
 	}
 }
