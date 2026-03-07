@@ -134,6 +134,8 @@ template <typename Type>
 }
 
 [[nodiscard]] bool changed();
+[[nodiscard]] QString serialize();
+[[nodiscard]] bool deserialize(const QString &json);
 void reset();
 void init(const QString &path);
 

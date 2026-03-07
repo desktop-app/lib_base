@@ -40,6 +40,26 @@ using MapType = base::flat_map<const char*, not_null<BasicOption*>, Compare>;
 	return result;
 }
 
+[[nodiscard]] QJsonObject Serialize() {
+	auto result = QJsonObject();
+	for (const auto &[name, option] : Map()) {
+		const auto &value = option->value();
+		if (value != option->defaultValue()) {
+			result.insert(name, v::match(value, [](const auto &current) {
+				using T = std::remove_cvref_t<decltype(current)>;
+				if constexpr (std::is_same_v<T, bool>
+					|| std::is_same_v<T, int>
+					|| std::is_same_v<T, QString>) {
+					return QJsonValue(current);
+				} else {
+					static_assert(unsupported_type(T()));
+				}
+			}));
+		}
+	}
+	return result;
+}
+
 void Read(const QString &path) {
 	auto file = QFile(path);
 	if (!file.exists()) {
@@ -103,22 +123,7 @@ void Write() {
 	}
 	WriteScheduled = false;
 
-	auto map = QJsonObject();
-	for (const auto &[name, option] : Map()) {
-		const auto &value = option->value();
-		if (value != option->defaultValue()) {
-			map.insert(name, v::match(value, [](const auto &current) {
-				using T = std::remove_cvref_t<decltype(current)>;
-				if constexpr (std::is_same_v<T, bool>
-					|| std::is_same_v<T, int>
-					|| std::is_same_v<T, QString>) {
-					return QJsonValue(current);
-				} else {
-					static_assert(unsupported_type(T()));
-				}
-			}));
-		}
-	}
+	const auto map = Serialize();
 	if (map.isEmpty()) {
 		QFile(path).remove();
 	} else if (auto file = QFile(path); file.open(QIODevice::WriteOnly)) {
@@ -219,6 +224,79 @@ bool changed() {
 		}
 	}
 	return false;
+}
+
+QString serialize() {
+	return QString::fromUtf8(
+		QJsonDocument(details::Serialize()).toJson(QJsonDocument::Compact));
+}
+
+bool deserialize(const QString &json) {
+	auto error = QJsonParseError();
+	const auto parsed = QJsonDocument::fromJson(json.toUtf8(), &error);
+	if (error.error != QJsonParseError::NoError) {
+		LOG(("Experimental: Error parsing import json: %1 (%2)"
+			).arg(error.error
+			).arg(error.errorString()));
+		return false;
+	} else if (!parsed.isObject()) {
+		LOG(("Experimental: Imported json is not an object."));
+		return false;
+	}
+
+	const auto values = parsed.object();
+	auto imported = std::vector<std::pair<
+		not_null<details::BasicOption*>,
+		details::ValueType>
+	>();
+	imported.reserve(values.size());
+	for (auto i = values.begin(); i != values.end(); ++i) {
+		const auto key = i.key().toLatin1() + char(0);
+		const auto j = details::Map().find(key.data());
+		if (j == end(details::Map())) {
+			LOG(("Experimental: Unknown option "
+				"'%1' in import.").arg(i.key()));
+			continue;
+		}
+		const auto &value = *i;
+		const auto parsed = v::match(
+			j->second->value(),
+			[&](const auto &current) -> std::optional<details::ValueType> {
+				using T = std::remove_cvref_t<decltype(current)>;
+				if constexpr (std::is_same_v<T, bool>) {
+					if (value.isBool()) {
+						return value.toBool();
+					}
+				} else if constexpr (std::is_same_v<T, int>) {
+					if (value.isDouble()) {
+						const auto asDouble = value.toDouble();
+						const auto asInt = value.toInt();
+						if (asDouble == asInt) {
+							return asInt;
+						}
+					}
+				} else if constexpr (std::is_same_v<T, QString>) {
+					if (value.isString()) {
+						return value.toString();
+					}
+				} else {
+					static_assert(unsupported_type(T()));
+				}
+				return std::nullopt;
+			});
+		if (!parsed.has_value()) {
+			LOG(("Experimental: Wrong option value "
+				"type for '%1' in import.").arg(i.key()));
+			return false;
+		}
+		imported.emplace_back(j->second, std::move(*parsed));
+	}
+
+	reset();
+	for (auto &entry : imported) {
+		entry.first->set(std::move(entry.second));
+	}
+	return true;
 }
 
 void reset() {
