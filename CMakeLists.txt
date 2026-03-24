@@ -80,6 +80,8 @@ PRIVATE
     base/platform/mac/base_power_save_blocker_mac.mm
     base/platform/mac/base_process_mac.h
     base/platform/mac/base_process_mac.mm
+    base/platform/mac/base_screen_reader_state_mac.h
+    base/platform/mac/base_screen_reader_state_mac.mm
     base/platform/mac/base_system_media_controls_mac.mm
     base/platform/mac/base_system_unlock_mac.h
     base/platform/mac/base_system_unlock_mac.mm

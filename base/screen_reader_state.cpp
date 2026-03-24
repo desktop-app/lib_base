@@ -1,31 +1,45 @@
 #include "base/screen_reader_state.h"
 
+#ifdef Q_OS_MAC
+#include "base/platform/mac/base_screen_reader_state_mac.h"
+#endif
+
 namespace base {
 
+ScreenReaderState::~ScreenReaderState() = default;
+
 ScreenReaderState *ScreenReaderState::Instance() {
-	static auto instance = ScreenReaderState();
+#ifdef Q_OS_MAC
+	static auto instance = Platform::MacScreenReaderState();
+#else
+	static auto instance = GeneralScreenReaderState();
+#endif
 	return &instance;
 }
 
-ScreenReaderState::ScreenReaderState()
+#ifndef Q_OS_MAC
+
+GeneralScreenReaderState::GeneralScreenReaderState()
 : _isActive(QAccessible::isActive()) {
 	QAccessible::installActivationObserver(this);
 }
 
-ScreenReaderState::~ScreenReaderState() {
+GeneralScreenReaderState::~GeneralScreenReaderState() {
 	QAccessible::removeActivationObserver(this);
 }
 
-void ScreenReaderState::accessibilityActiveChanged(bool active) {
+void GeneralScreenReaderState::accessibilityActiveChanged(bool active) {
 	_isActive = active;
 }
 
-bool ScreenReaderState::active() const {
+bool GeneralScreenReaderState::active() const {
 	return _isActive.current();
 }
 
-rpl::producer<bool> ScreenReaderState::activeValue() const {
+rpl::producer<bool> GeneralScreenReaderState::activeValue() const {
 	return _isActive.value();
 }
+
+#endif // !Q_OS_MAC
 
 } // namespace base
