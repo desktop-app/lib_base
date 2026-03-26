@@ -2,7 +2,7 @@
 
 #include "base/basic_types.h"
 
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN)
 #include <QAccessible>
 #endif
 
@@ -23,7 +23,7 @@ protected:
 
 };
 
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN)
 class GeneralScreenReaderState final
 	: public ScreenReaderState
 	, public QAccessible::ActivationObserver {

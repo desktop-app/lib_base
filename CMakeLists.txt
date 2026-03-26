@@ -108,6 +108,8 @@ PRIVATE
     base/platform/win/base_power_save_blocker_win.h
     base/platform/win/base_process_win.cpp
     base/platform/win/base_process_win.h
+    base/platform/win/base_screen_reader_state_win.cpp
+    base/platform/win/base_screen_reader_state_win.h
     base/platform/win/base_system_media_controls_win.cpp
     base/platform/win/base_system_unlock_win.cpp
     base/platform/win/base_system_unlock_win.h

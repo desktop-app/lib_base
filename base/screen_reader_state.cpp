@@ -2,7 +2,9 @@
 
 #ifdef Q_OS_MAC
 #include "base/platform/mac/base_screen_reader_state_mac.h"
-#endif
+#elif defined(Q_OS_WIN) // Q_OS_MAC
+#include "base/platform/win/base_screen_reader_state_win.h"
+#endif // Q_OS_MAC || Q_OS_WIN
 
 namespace base {
 
@@ -11,13 +13,15 @@ ScreenReaderState::~ScreenReaderState() = default;
 ScreenReaderState *ScreenReaderState::Instance() {
 #ifdef Q_OS_MAC
 	static auto instance = Platform::MacScreenReaderState();
-#else
+#elif defined(Q_OS_WIN) // Q_OS_MAC
+	static auto instance = Platform::WinScreenReaderState();
+#else // Q_OS_MAC || Q_OS_WIN
 	static auto instance = GeneralScreenReaderState();
-#endif
+#endif // Q_OS_MAC || Q_OS_WIN
 	return &instance;
 }
 
-#ifndef Q_OS_MAC
+#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN)
 
 GeneralScreenReaderState::GeneralScreenReaderState()
 : _isActive(QAccessible::isActive()) {
@@ -40,6 +44,6 @@ rpl::producer<bool> GeneralScreenReaderState::activeValue() const {
 	return _isActive.value();
 }
 
-#endif // !Q_OS_MAC
+#endif // !Q_OS_MAC && !Q_OS_WIN
 
 } // namespace base
