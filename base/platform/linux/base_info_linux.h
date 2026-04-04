@@ -36,5 +36,6 @@ inline bool IsMac10_14OrGreater() { return false; }
 inline bool IsMac10_15OrGreater() { return false; }
 inline bool IsMac11_0OrGreater() { return false; }
 inline bool IsMac26_0OrGreater() { return false; }
+inline bool MetalSupported() { return false; }
 
 } // namespace Platform

@@ -60,6 +60,7 @@ enum class OutdateReason {
 [[nodiscard]] bool IsMac10_15OrGreater();
 [[nodiscard]] bool IsMac11_0OrGreater();
 [[nodiscard]] bool IsMac26_0OrGreater();
+[[nodiscard]] bool MetalSupported();
 
 [[nodiscard]] constexpr bool IsLinux();
 [[nodiscard]] bool IsX11();

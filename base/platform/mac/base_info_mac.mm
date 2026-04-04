@@ -21,6 +21,7 @@
 #include <QtCore/QOperatingSystemVersion>
 #include <sys/sysctl.h>
 #include <Cocoa/Cocoa.h>
+#include <Metal/Metal.h>
 #import <IOKit/hidsystem/IOHIDLib.h>
 
 @interface WakeUpObserver : NSObject {
@@ -244,6 +245,18 @@ bool IsMac11_0OrGreater() {
 
 bool IsMac26_0OrGreater() {
 	return IsMacThatOrGreater<26, 0>();
+}
+
+bool MetalSupported() {
+	static const auto result = [] {
+		auto device = MTLCreateSystemDefaultDevice();
+		if (device) {
+			[device release];
+			return true;
+		}
+		return false;
+	}();
+	return result;
 }
 
 void Start(QJsonObject settings) {
