@@ -39,6 +39,8 @@ PRIVATE
     base/platform/linux/base_linux_dbus_utilities.h
     base/platform/linux/base_linux_library.cpp
     base/platform/linux/base_linux_library.h
+    base/platform/linux/base_screen_reader_state_linux.cpp
+    base/platform/linux/base_screen_reader_state_linux.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_linux_xdg_activation_token.cpp
