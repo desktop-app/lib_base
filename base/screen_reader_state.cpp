@@ -4,7 +4,9 @@
 #include "base/platform/mac/base_screen_reader_state_mac.h"
 #elif defined(Q_OS_WIN) // Q_OS_MAC
 #include "base/platform/win/base_screen_reader_state_win.h"
-#endif // Q_OS_MAC || Q_OS_WIN
+#elif defined(Q_OS_LINUX) // Q_OS_MAC || Q_OS_WIN
+#include "base/platform/linux/base_screen_reader_state_linux.h"
+#endif // Q_OS_MAC || Q_OS_WIN || Q_OS_LINUX
 
 namespace base {
 
@@ -15,9 +17,11 @@ ScreenReaderState *ScreenReaderState::Instance() {
 	static auto instance = Platform::MacScreenReaderState();
 #elif defined(Q_OS_WIN) // Q_OS_MAC
 	static auto instance = Platform::WinScreenReaderState();
-#else // Q_OS_MAC || Q_OS_WIN
+#elif defined(Q_OS_LINUX) // Q_OS_MAC || Q_OS_WIN
+	static auto instance = Platform::LinuxScreenReaderState();
+#else // Q_OS_MAC || Q_OS_WIN || Q_OS_LINUX
 	static auto instance = GeneralScreenReaderState();
-#endif // Q_OS_MAC || Q_OS_WIN
+#endif // Q_OS_MAC || Q_OS_WIN || Q_OS_LINUX
 	return &instance;
 }
 
