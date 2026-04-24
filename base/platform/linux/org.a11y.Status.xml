@@ -1,0 +1,12 @@
+<!DOCTYPE node PUBLIC
+'-//freedesktop//DTD D-BUS Object Introspection 1.0//EN'
+'http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd'>
+<node>
+  <interface name="org.a11y.Status">
+    <property name="ScreenReaderEnabled" type="b" access="read">
+      <annotation
+        name="org.freedesktop.DBus.Property.EmitsChangedSignal"
+        value="true"/>
+    </property>
+  </interface>
+</node>
