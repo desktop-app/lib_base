@@ -15,6 +15,7 @@ namespace qthelp {
 const QRegularExpression &RegExpDomain();
 const QRegularExpression &RegExpDomainExplicit();
 QRegularExpression RegExpProtocol();
+[[nodiscard]] bool IsGoodProtocol(const QString &protocol);
 
 inline QString url_encode(const QString &part) {
 	return QString::fromLatin1(QUrl::toPercentEncoding(part));

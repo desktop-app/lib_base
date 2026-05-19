@@ -32,17 +32,6 @@ QString ExpressionIpExplicit() {
 	return QString::fromUtf8("(?<![\\w\\$\\-\\_%=\\.])(?:([a-zA-Z]+)://)(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\\:\\d+)?)");
 }
 
-bool IsGoodProtocol(const QString &protocol) {
-	const auto equals = [&](QLatin1String string) {
-		return protocol.compare(string, Qt::CaseInsensitive) == 0;
-	};
-	return equals(qstr("http"))
-		|| equals(qstr("https"))
-		|| equals(qstr("tg"))
-		|| equals(qstr("ton"))
-		|| equals(qstr("tonsite"));
-}
-
 } // namespace
 
 const QRegularExpression &RegExpDomain() {
@@ -63,6 +52,17 @@ const QRegularExpression &RegExpIpExplicit() {
 QRegularExpression RegExpProtocol() {
 	static const auto result = CreateRegExp("^([a-zA-Z]+)://");
 	return result;
+}
+
+bool IsGoodProtocol(const QString &protocol) {
+	const auto equals = [&](QLatin1String string) {
+		return protocol.compare(string, Qt::CaseInsensitive) == 0;
+	};
+	return equals(qstr("http"))
+		|| equals(qstr("https"))
+		|| equals(qstr("tg"))
+		|| equals(qstr("ton"))
+		|| equals(qstr("tonsite"));
 }
 
 QMap<QString, QString> url_parse_params(
