@@ -6,6 +6,7 @@
 //
 #include "base/network_reachability.h"
 
+#include "base/platform/base_platform_info.h"
 #include "base/platform/base_platform_network_reachability.h"
 #include "base/qt_signal_producer.h"
 
@@ -53,8 +54,10 @@ NetworkReachability::NetworkReachability()
 			_private->available = available;
 		}, _private->lifetime);
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
-	} else if (QNetworkInformation::load(
-		QNetworkInformation::Feature::Reachability)) {
+	} else if (::Platform::IsWindows8OrGreater()
+		&& QNetworkInformation::load(
+			QNetworkInformation::Feature::Reachability)
+		&& QNetworkInformation::instance()) {
 		_private->available = QNetworkInformation::instance()->reachability()
 			== QNetworkInformation::Reachability::Online;
 		base::qt_signal_producer(

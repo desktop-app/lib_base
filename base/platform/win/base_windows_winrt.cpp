@@ -193,11 +193,25 @@ int32_t __stdcall WINRT_IMPL_RoGetAgileReference(uint32_t options, winrt::guid c
 }
 
 int32_t __stdcall WINRT_IMPL_SetThreadpoolTimerEx(winrt::impl::ptp_timer timer, void *time, uint32_t period, uint32_t window) noexcept {
-	return P::SetThreadpoolTimerEx(timer, time, period, window);
+	if (P::SetThreadpoolTimerEx) {
+		return P::SetThreadpoolTimerEx(timer, time, period, window);
+	}
+	// Win7 fallback: use SetThreadpoolTimer (without Ex)
+	if (P::SetThreadpoolTimer) {
+		P::SetThreadpoolTimer(timer, time, period, window);
+	}
+	return 0;
 }
 
 int32_t __stdcall WINRT_IMPL_SetThreadpoolWaitEx(winrt::impl::ptp_wait wait, void *handle, void *timeout, void *reserved) noexcept {
-	return P::SetThreadpoolWaitEx(wait, handle, timeout, reserved);
+	if (P::SetThreadpoolWaitEx) {
+		return P::SetThreadpoolWaitEx(wait, handle, timeout, reserved);
+	}
+	// Win7 fallback: use SetThreadpoolWait (without Ex)
+	if (P::SetThreadpoolWait) {
+		P::SetThreadpoolWait(wait, handle, timeout);
+	}
+	return 0;
 }
 
 int32_t __stdcall WINRT_IMPL_RoOriginateLanguageException(int32_t error, void* message, void* exception) noexcept {

@@ -101,8 +101,6 @@ bool SupportsWRL() {
 
 } // namespace base::Platform
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-
 namespace P = base::Platform;
 
 extern "C" {
@@ -234,5 +232,3 @@ RoOriginateError(
 }
 
 } // extern "C"
-
-#endif // Qt < 6.0.0
