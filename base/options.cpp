@@ -157,7 +157,11 @@ BasicOption::BasicOption(
 void BasicOption::set(ValueType value) {
 	Expects(value.index() == _value.index());
 
+	const auto changed = (_value != value);
 	_value = std::move(value);
+	if (changed) {
+		_changes.fire({});
+	}
 	if (!WriteScheduled && !LocalPath().isEmpty()) {
 		WriteScheduled = true;
 		call_delayed(kSaveDelay, [] { Write(); });
@@ -170,6 +174,10 @@ const ValueType &BasicOption::value() const {
 
 const ValueType &BasicOption::defaultValue() const {
 	return _defaultValue;
+}
+
+rpl::producer<> BasicOption::changes() const {
+	return _changes.events();
 }
 
 const QString &BasicOption::id() const {

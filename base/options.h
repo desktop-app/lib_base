@@ -10,6 +10,8 @@
 #include "base/variant.h"
 #include "base/required.h"
 
+#include <rpl/rpl.h>
+
 #ifdef linux // GCC, cmon..
 #undef linux
 #endif // linux
@@ -44,6 +46,7 @@ public:
 	void set(ValueType value);
 	[[nodiscard]] const ValueType &value() const;
 	[[nodiscard]] const ValueType &defaultValue() const;
+	[[nodiscard]] rpl::producer<> changes() const;
 
 	[[nodiscard]] const QString &id() const;
 	[[nodiscard]] const QString &name() const;
@@ -63,6 +66,7 @@ private:
 	QString _description;
 	Scope _scope;
 	bool _restartRequired = false;
+	rpl::event_stream<> _changes;
 
 };
 
@@ -103,6 +107,7 @@ public:
 	using BasicOption::relevant;
 	using BasicOption::scope;
 	using BasicOption::restartRequired;
+	using BasicOption::changes;
 
 	void set(Type value) {
 		BasicOption::set(std::move(value));
