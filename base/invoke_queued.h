@@ -6,41 +6,16 @@
 //
 #pragma once
 
-#include <QtCore/QEvent>
-#include <QtCore/QCoreApplication>
+#include <QtCore/QObject>
 
 #include "base/basic_types.h"
 
-namespace base {
-
-class InvokeQueuedEvent : public QEvent {
-public:
-	static auto Type() {
-		static const auto Result = QEvent::Type(QEvent::registerEventType());
-		return Result;
-	}
-
-	explicit InvokeQueuedEvent(FnMut<void()> &&method)
-	: QEvent(Type())
-	, _method(std::move(method)) {
-	}
-
-	void invoke() {
-		_method();
-	}
-
-private:
-	FnMut<void()> _method;
-
-};
-
-} // namespace base
-
 template <typename Lambda>
 inline void InvokeQueued(const QObject *context, Lambda &&lambda) {
-	QCoreApplication::postEvent(
+	QMetaObject::invokeMethod(
 		const_cast<QObject*>(context),
-		new base::InvokeQueuedEvent(std::forward<Lambda>(lambda)));
+		std::forward<Lambda>(lambda),
+		Qt::QueuedConnection);
 }
 
 class SingleQueuedInvokation : public QObject {
