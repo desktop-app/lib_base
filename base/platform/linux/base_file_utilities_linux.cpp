@@ -10,6 +10,7 @@
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 #include "base/platform/linux/base_linux_xdg_activation_token.h"
 #include "base/algorithm.h"
+#include "base/integration.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
@@ -159,8 +160,12 @@ QString CurrentExecutablePath(int argc, char *argv[]) {
 void RemoveQuarantine(const QString &path) {
 }
 
-QString BundledResourcesPath() {
-	Unexpected("BundledResourcesPath not implemented.");
+QStringList PackedResourcesPaths() {
+	return QStringList{
+#ifdef _DEBUG
+		Integration::Instance().executableDir(),
+#endif
+	} + QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
 }
 
 QString FileNameFromUserString(QString name) {
