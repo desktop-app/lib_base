@@ -250,6 +250,11 @@ void SystemMediaControls::setPlaybackStatus(
 		SystemMediaControls::PlaybackStatus status) {
 	[MPNowPlayingInfoCenter defaultCenter].playbackState =
 		ConvertPlaybackStatus(status);
+	const auto rate = (status == PlaybackStatus::Playing) ? 1. : 0.;
+	[_private->info
+		setObject:[NSNumber numberWithDouble:rate]
+		forKey:MPNowPlayingInfoPropertyPlaybackRate];
+	updateDisplay();
 }
 
 void SystemMediaControls::setLoopStatus(LoopStatus status) {
