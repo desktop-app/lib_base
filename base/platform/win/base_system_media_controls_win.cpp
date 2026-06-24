@@ -299,6 +299,9 @@ void SystemMediaControls::setDuration(int duration) {
 void SystemMediaControls::setPosition(int position) {
 }
 
+void SystemMediaControls::setPlaybackRate(float64 rate) {
+}
+
 void SystemMediaControls::setVolume(float64 volume) {
 }
 

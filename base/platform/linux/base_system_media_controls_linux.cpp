@@ -423,6 +423,9 @@ void SystemMediaControls::setPosition(int position) {
 	}
 }
 
+void SystemMediaControls::setPlaybackRate(float64 rate) {
+}
+
 void SystemMediaControls::setVolume(float64 volume) {
 	// prevent property update -> rpl event -> property update recursion
 	if (_private->player().get_volume() != volume) {

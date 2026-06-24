@@ -193,6 +193,7 @@ struct SystemMediaControls::Private {
 	const not_null<NSMutableDictionary*> info;
 	const not_null<CommandHandler*> commandHandler;
 	bool enabled = false;
+	float64 playbackRate = 1.;
 };
 
 SystemMediaControls::SystemMediaControls()
@@ -250,7 +251,9 @@ void SystemMediaControls::setPlaybackStatus(
 		SystemMediaControls::PlaybackStatus status) {
 	[MPNowPlayingInfoCenter defaultCenter].playbackState =
 		ConvertPlaybackStatus(status);
-	const auto rate = (status == PlaybackStatus::Playing) ? 1. : 0.;
+	const auto rate = (status == PlaybackStatus::Playing)
+		? _private->playbackRate
+		: 0.;
 	[_private->info
 		setObject:[NSNumber numberWithDouble:rate]
 		forKey:MPNowPlayingInfoPropertyPlaybackRate];
@@ -304,6 +307,17 @@ void SystemMediaControls::setPosition(int position) {
 	[_private->info
 		setObject:[NSNumber numberWithDouble:(position / 1000.)]
 		forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
+}
+
+void SystemMediaControls::setPlaybackRate(float64 rate) {
+	_private->playbackRate = rate;
+	const auto center = [MPNowPlayingInfoCenter defaultCenter];
+	if (center.playbackState == MPNowPlayingPlaybackStatePlaying) {
+		[_private->info
+			setObject:[NSNumber numberWithDouble:rate]
+			forKey:MPNowPlayingInfoPropertyPlaybackRate];
+		updateDisplay();
+	}
 }
 
 void SystemMediaControls::setVolume(float64 volume) {
