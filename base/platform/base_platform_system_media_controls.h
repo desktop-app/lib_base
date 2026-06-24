@@ -23,6 +23,8 @@ public:
 		LoopTrack,
 		LoopPlaylist,
 		Shuffle,
+		SkipBackward,
+		SkipForward,
 		None,
 	};
 

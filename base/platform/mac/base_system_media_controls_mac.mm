@@ -16,6 +16,8 @@
 
 namespace {
 
+constexpr auto kSkipSeconds = 15;
+
 using Command = base::Platform::SystemMediaControls::Command;
 
 using ::Platform::Q2NSString;
@@ -124,6 +126,17 @@ struct RemoteCommand {
 	[center.changePlaybackPositionCommand
 		addTarget:self
 		action:@selector(onSeek:)];
+
+	center.skipForwardCommand.preferredIntervals = @[ @(kSkipSeconds) ];
+	center.skipBackwardCommand.preferredIntervals = @[ @(kSkipSeconds) ];
+	center.skipForwardCommand.enabled = true;
+	center.skipBackwardCommand.enabled = true;
+	[center.skipForwardCommand
+		addTarget:self
+		action:@selector(onSkipForward:)];
+	[center.skipBackwardCommand
+		addTarget:self
+		action:@selector(onSkipBackward:)];
 }
 
 - (void)clearCommands {
@@ -141,6 +154,8 @@ struct RemoteCommand {
 	[center.nextTrackCommand removeTarget:self];
 	[center.previousTrackCommand removeTarget:self];
 	[center.changePlaybackPositionCommand removeTarget:self];
+	[center.skipForwardCommand removeTarget:self];
+	[center.skipBackwardCommand removeTarget:self];
 }
 
 - (rpl::producer<Command>)commandRequests {
@@ -163,6 +178,22 @@ struct RemoteCommand {
 		MPChangePlaybackPositionCommandEvent*)event {
 	base::Integration::Instance().enterFromEventLoop([&] {
 		self->_seekRequests.fire(event.positionTime * 1000);
+	});
+
+	return MPRemoteCommandHandlerStatusSuccess;
+}
+
+- (MPRemoteCommandHandlerStatus)onSkipForward:(MPRemoteCommandEvent*)event {
+	base::Integration::Instance().enterFromEventLoop([&] {
+		self->_commandRequests.fire_copy(Command::SkipForward);
+	});
+
+	return MPRemoteCommandHandlerStatusSuccess;
+}
+
+- (MPRemoteCommandHandlerStatus)onSkipBackward:(MPRemoteCommandEvent*)event {
+	base::Integration::Instance().enterFromEventLoop([&] {
+		self->_commandRequests.fire_copy(Command::SkipBackward);
 	});
 
 	return MPRemoteCommandHandlerStatusSuccess;
