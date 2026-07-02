@@ -9,23 +9,77 @@
 #include "base/const_string.h"
 #include "base/global_shortcuts_generic.h"
 #include "base/platform/base_platform_info.h" // IsX11
-#include "base/debug_log.h"
-
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+#include "base/platform/linux/base_linux_library.h"
 #include "base/platform/linux/base_linux_xcb_utilities.h" // CustomConnection, IsExtensionPresent
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+#include "base/debug_log.h"
 
 #include <QKeySequence>
 #include <QSocketNotifier>
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-#include <xcb/record.h>
-#include <xcb/xcb.h>
-#include <xcb/xcb_keysyms.h> // xcb_key_symbols_*
-#include <xcb/xcbext.h> // xcb_poll_for_reply
-
 #include <xkbcommon/xkbcommon-keysyms.h>
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+
+// Declarations from the xcb-record/xcb-keysyms headers (X11 license),
+// so that there is no build-time dependency on them.
+extern "C" {
+
+typedef uint32_t xcb_record_context_t;
+typedef uint8_t xcb_record_element_header_t;
+typedef uint32_t xcb_record_client_spec_t;
+
+typedef enum xcb_record_cs_t {
+    XCB_RECORD_CS_CURRENT_CLIENTS = 1,
+    XCB_RECORD_CS_FUTURE_CLIENTS = 2,
+    XCB_RECORD_CS_ALL_CLIENTS = 3
+} xcb_record_cs_t;
+
+typedef struct xcb_record_range_8_t {
+    uint8_t first;
+    uint8_t last;
+} xcb_record_range_8_t;
+
+typedef struct xcb_record_range_16_t {
+    uint16_t first;
+    uint16_t last;
+} xcb_record_range_16_t;
+
+typedef struct xcb_record_ext_range_t {
+    xcb_record_range_8_t  major;
+    xcb_record_range_16_t minor;
+} xcb_record_ext_range_t;
+
+typedef struct xcb_record_range_t {
+    xcb_record_range_8_t   core_requests;
+    xcb_record_range_8_t   core_replies;
+    xcb_record_ext_range_t ext_requests;
+    xcb_record_ext_range_t ext_replies;
+    xcb_record_range_8_t   delivered_events;
+    xcb_record_range_8_t   device_events;
+    xcb_record_range_8_t   errors;
+    uint8_t                client_started;
+    uint8_t                client_died;
+} xcb_record_range_t;
+
+typedef struct xcb_record_enable_context_cookie_t {
+    unsigned int sequence;
+} xcb_record_enable_context_cookie_t;
+
+typedef struct xcb_record_enable_context_reply_t {
+    uint8_t                     response_type;
+    uint8_t                     category;
+    uint16_t                    sequence;
+    uint32_t                    length;
+    xcb_record_element_header_t element_header;
+    uint8_t                     client_swapped;
+    uint8_t                     pad0[2];
+    uint32_t                    xid_base;
+    uint32_t                    server_time;
+    uint32_t                    rec_sequence_num;
+    uint8_t                     pad1[8];
+} xcb_record_enable_context_reply_t;
+
+typedef struct _XCBKeySymbols xcb_key_symbols_t;
+
+} // extern "C"
 
 class QKeyEvent;
 
@@ -36,7 +90,65 @@ constexpr auto kShiftMouseButton = std::numeric_limits<uint64>::max() - 100;
 
 Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> ProcessCallback;
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+using namespace XCB::Library;
+
+xcb_extension_t *xcb_record_id;
+xcb_void_cookie_t (*xcb_record_create_context_checked)(
+	xcb_connection_t *c,
+	xcb_record_context_t context,
+	xcb_record_element_header_t element_header,
+	uint32_t num_client_specs,
+	uint32_t num_ranges,
+	const xcb_record_client_spec_t *client_specs,
+	const xcb_record_range_t *ranges);
+xcb_record_enable_context_cookie_t (*xcb_record_enable_context)(
+	xcb_connection_t *c,
+	xcb_record_context_t context);
+xcb_void_cookie_t (*xcb_record_disable_context)(
+	xcb_connection_t *c,
+	xcb_record_context_t context);
+xcb_void_cookie_t (*xcb_record_free_context)(
+	xcb_connection_t *c,
+	xcb_record_context_t context);
+uint8_t *(*xcb_record_enable_context_data)(
+	const xcb_record_enable_context_reply_t *R);
+int (*xcb_record_enable_context_data_length)(
+	const xcb_record_enable_context_reply_t *R);
+
+xcb_key_symbols_t *(*xcb_key_symbols_alloc)(xcb_connection_t *c);
+void (*xcb_key_symbols_free)(xcb_key_symbols_t *syms);
+xcb_keysym_t (*xcb_key_symbols_get_keysym)(
+	xcb_key_symbols_t *syms,
+	xcb_keycode_t keycode,
+	int col);
+int (*xcb_is_keypad_key)(xcb_keysym_t keysym);
+int (*xcb_is_private_keypad_key)(xcb_keysym_t keysym);
+
+[[nodiscard]] bool Resolve() {
+	static const auto Result = [] {
+		const auto record = LoadLibrary("libxcb-record.so.0", RTLD_NODELETE);
+		const auto keysyms = LoadLibrary("libxcb-keysyms.so.1",
+			RTLD_NODELETE);
+		return record
+			&& keysyms
+			&& LOAD_LIBRARY_SYMBOL(record, xcb_record_id)
+			&& LOAD_LIBRARY_SYMBOL(record, xcb_record_create_context_checked)
+			&& LOAD_LIBRARY_SYMBOL(record, xcb_record_enable_context)
+			&& LOAD_LIBRARY_SYMBOL(record, xcb_record_disable_context)
+			&& LOAD_LIBRARY_SYMBOL(record, xcb_record_free_context)
+			&& LOAD_LIBRARY_SYMBOL(record, xcb_record_enable_context_data)
+			&& LOAD_LIBRARY_SYMBOL(
+				record,
+				xcb_record_enable_context_data_length)
+			&& LOAD_LIBRARY_SYMBOL(keysyms, xcb_key_symbols_alloc)
+			&& LOAD_LIBRARY_SYMBOL(keysyms, xcb_key_symbols_free)
+			&& LOAD_LIBRARY_SYMBOL(keysyms, xcb_key_symbols_get_keysym)
+			&& LOAD_LIBRARY_SYMBOL(keysyms, xcb_is_keypad_key)
+			&& LOAD_LIBRARY_SYMBOL(keysyms, xcb_is_private_keypad_key);
+	}();
+	return Result;
+}
+
 using XcbReply = xcb_record_enable_context_reply_t;
 
 bool IsKeypad(xcb_keysym_t keysym) {
@@ -62,7 +174,9 @@ private:
 	XCB::CustomConnection _connection;
 	std::unique_ptr<
 		xcb_key_symbols_t,
-		custom_delete<xcb_key_symbols_free>
+		custom_delete<[](xcb_key_symbols_t *syms) {
+			xcb_key_symbols_free(syms);
+		}>
 	> _keySymbols;
 	std::unique_ptr<QSocketNotifier> _notifier;
 	xcb_record_context_t _context = XCB_NONE;
@@ -70,8 +184,14 @@ private:
 
 };
 
-X11Manager::X11Manager()
-: _keySymbols(xcb_key_symbols_alloc(_connection)) {
+X11Manager::X11Manager() {
+	if (!Resolve()) {
+		LOG(("Global Shortcuts Manager: "
+			"Could not load xcb-record/xcb-keysyms!"));
+		return;
+	}
+
+	_keySymbols.reset(xcb_key_symbols_alloc(_connection));
 
 	if (xcb_connection_has_error(_connection)) {
 		LOG((
@@ -79,7 +199,7 @@ X11Manager::X11Manager()
 		return;
 	}
 
-	if (!XCB::IsExtensionPresent(_connection, &xcb_record_id)) {
+	if (!XCB::IsExtensionPresent(_connection, xcb_record_id)) {
 		LOG(("Global Shortcuts Manager: "
 			"RECORD extension not supported on this X server!"));
 		return;
@@ -162,7 +282,6 @@ X11Manager::X11Manager()
 	_notifier->setEnabled(true);
 }
 
-
 X11Manager::~X11Manager() {
 	if (_cookie.sequence) {
 		xcb_record_disable_context(_connection, _context);
@@ -236,17 +355,14 @@ void EnsureX11ShortcutManager() {
 		_x11Manager = std::make_unique<X11Manager>();
 	}
 }
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 } // namespace
 
 bool Available() {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	if (::Platform::IsX11()) {
 		EnsureX11ShortcutManager();
 		return _x11Manager->available();
 	}
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 	return false;
 }
@@ -258,20 +374,15 @@ bool Allowed() {
 void Start(Fn<void(GlobalShortcutKeyGeneric descriptor, bool down)> process) {
 	ProcessCallback = std::move(process);
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	EnsureX11ShortcutManager();
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 void Stop() {
 	ProcessCallback = nullptr;
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	_x11Manager = nullptr;
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 QString KeyName(GlobalShortcutKeyGeneric descriptor) {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	// Telegram/ThirdParty/fcitx-qt5/platforminputcontext/qtkey.cpp
 	static const auto KeyToString = flat_map<uint64, int>{
 		{ XKB_KEY_KP_Space, Qt::Key_Space },
@@ -660,7 +771,6 @@ QString KeyName(GlobalShortcutKeyGeneric descriptor) {
 	return (keyIt != end(KeyToString))
 		? prefix + fromSequence(keyIt->second)
 		: QString("\\x%1").arg(descriptor, 0, 16);
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 	return {};
 }

@@ -7,17 +7,15 @@
 #include "base/platform/linux/base_process_linux.h"
 
 #include "base/platform/base_platform_info.h"
-
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QtGui/QGuiApplication>
 
 namespace base::Platform {
 namespace {
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+using namespace XCB::Library;
+
 void XCBActivateWindow(WId window) {
 	const XCB::Connection connection;
 	if (!connection || xcb_connection_has_error(connection)) {
@@ -87,24 +85,19 @@ void XCBActivateWindow(WId window) {
 					| XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY,
 				reinterpret_cast<const char *>(&xev))));
 }
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 } // namespace
 
 void ActivateProcessWindow(int64 pid, WId windowId) {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	if (::Platform::IsX11()) {
 		XCBActivateWindow(windowId);
 	}
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 void ActivateThisProcessWindow(WId windowId) {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	if (::Platform::IsX11()) {
 		XCBActivateWindow(windowId);
 	}
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 } // namespace base::Platform

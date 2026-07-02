@@ -6,6 +6,7 @@
 //
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 
+#include "base/platform/linux/base_linux_library.h"
 #include "base/qt/qt_common_adapters.h"
 
 #include <QtCore/QAbstractEventDispatcher>
@@ -19,6 +20,8 @@
 
 namespace base::Platform::XCB {
 namespace {
+
+using namespace Library;
 
 class QtEventFilter : public QAbstractNativeEventFilter {
 public:
