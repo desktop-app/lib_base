@@ -7,14 +7,11 @@
 #include "base/platform/linux/base_power_save_blocker_linux.h"
 
 #include "base/platform/base_platform_info.h"
+#include "base/platform/linux/base_linux_xcb_utilities.h"
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 #include "base/timer_rpl.h"
 #include "base/weak_ptr.h"
 #include "base/random.h"
-
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
-#include "base/platform/linux/base_linux_xcb_utilities.h"
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QtGui/QWindow>
 
@@ -27,7 +24,8 @@ namespace {
 using namespace gi::repository;
 namespace GObject = gi::repository::GObject;
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+using namespace XCB::Library;
+
 constexpr auto kResetScreenSaverTimeout = 10 * crl::time(1000);
 
 // Use the basic reset API
@@ -56,7 +54,6 @@ void XCBPreventDisplaySleep(bool prevent) {
 					XCB_SCREEN_SAVER_RESET)));
 	}, lifetime);
 }
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 /* https://flatpak.github.io/xdg-desktop-portal/#gdbus-org.freedesktop.portal.Inhibit
  * 1: Logout
@@ -186,9 +183,7 @@ void BlockPowerSave(
 			PortalPreventAppSuspension(true, description);
 			break;
 		case PowerSaveBlockType::PreventDisplaySleep:
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 			XCBPreventDisplaySleep(true);
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 			PortalPreventDisplaySleep(true, description);
 			break;
 		}
@@ -202,9 +197,7 @@ void UnblockPowerSave(PowerSaveBlockType type, QPointer<QWindow> window) {
 			PortalPreventAppSuspension(false);
 			break;
 		case PowerSaveBlockType::PreventDisplaySleep:
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 			XCBPreventDisplaySleep(false);
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 			PortalPreventDisplaySleep(false);
 			break;
 		}

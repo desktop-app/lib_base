@@ -41,6 +41,8 @@ PRIVATE
     base/platform/linux/base_linux_library.h
     base/platform/linux/base_screen_reader_state_linux.cpp
     base/platform/linux/base_screen_reader_state_linux.h
+    base/platform/linux/base_linux_xcb_library.cpp
+    base/platform/linux/base_linux_xcb_library.h
     base/platform/linux/base_linux_xcb_utilities.cpp
     base/platform/linux/base_linux_xcb_utilities.h
     base/platform/linux/base_linux_xdg_activation_token.cpp
@@ -244,15 +246,6 @@ PRIVATE
     base/base_pch.h
 )
 
-if (DESKTOP_APP_DISABLE_X11_INTEGRATION)
-    remove_target_sources(lib_base ${src_loc}
-        base/platform/linux/base_linux_xcb_utilities.cpp
-        base/platform/linux/base_linux_xcb_utilities.h
-        base/platform/linux/base_linux_xsettings.cpp
-        base/platform/linux/base_linux_xsettings.h
-    )
-endif()
-
 target_include_directories(lib_base
 PUBLIC
     ${src_loc}
@@ -290,16 +283,6 @@ if (LINUX)
     generate_dbus(lib_base org.sigxcpu.Feedback. SigxcpuFeedback ${src_loc}/base/platform/linux/org.sigxcpu.Feedback.Haptic.xml)
     generate_dbus(lib_base org.mpris. Mpris ${src_loc}/base/platform/linux/mpris.xml)
     generate_dbus(lib_base io.snapcraft. Snapcraft ${src_loc}/base/platform/linux/io.snapcraft.Settings.xml)
-
-    if (NOT DESKTOP_APP_DISABLE_X11_INTEGRATION)
-        target_link_libraries(lib_base
-        PUBLIC
-            desktop-app::external_xcb_keysyms
-            desktop-app::external_xcb_record
-            desktop-app::external_xcb_screensaver
-            desktop-app::external_xcb
-        )
-    endif()
 endif()
 
 if (DESKTOP_APP_USE_ALLOCATION_TRACER)

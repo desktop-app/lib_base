@@ -8,19 +8,19 @@
 
 #include "base/custom_delete.h"
 
-#include <xcb/xcb.h>
+#include "base/platform/linux/base_linux_xcb_library.h"
 
 namespace base::Platform::XCB {
 
 using ConnectionPointer = std::unique_ptr<
 	xcb_connection_t,
-	custom_delete<xcb_disconnect>
+	custom_delete<Library::xcb_disconnect>
 >;
 
 class CustomConnection : public ConnectionPointer {
 public:
 	CustomConnection()
-	: ConnectionPointer(xcb_connect(nullptr, nullptr)) {
+	: ConnectionPointer(Library::xcb_connect(nullptr, nullptr)) {
 	}
 
 	[[nodiscard]] operator xcb_connection_t*() const {
@@ -129,7 +129,7 @@ class ObjectWithConnection
 	: public std::unique_ptr<Object, custom_delete<destructor>> {
 public:
 	ObjectWithConnection() {
-		if (_connection && !xcb_connection_has_error(_connection)) {
+		if (_connection && !Library::xcb_connection_has_error(_connection)) {
 			this->reset(constructor(_connection));
 		}
 	}

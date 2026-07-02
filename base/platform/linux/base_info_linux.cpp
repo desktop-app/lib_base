@@ -8,10 +8,7 @@
 
 #include "base/algorithm.h"
 #include "base/platform/linux/base_linux_library.h"
-
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 #include "base/platform/linux/base_linux_xcb_utilities.h"
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 #include <QtCore/QJsonObject>
 #include <QtCore/QLocale>
@@ -33,6 +30,8 @@ struct wl_display;
 
 namespace Platform {
 namespace {
+
+using namespace base::Platform::XCB::Library;
 
 [[nodiscard]] QStringList GetDesktopEnvironment() {
 	const auto list = qEnvironmentVariable("XDG_CURRENT_DESKTOP").split(':');
@@ -235,7 +234,6 @@ QString GetLibcVersion() {
 }
 
 QString GetWindowManager() {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	const base::Platform::XCB::Connection connection;
 	if (!connection || xcb_connection_has_error(connection)) {
 		return {};
@@ -287,20 +285,13 @@ QString GetWindowManager() {
 				xcb_get_property_value(reply.get())),
 			xcb_get_property_value_length(reply.get())).simplified()
 		: QString();
-#else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-	return QString();
-#endif // DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 bool IsX11() {
 	if (!qApp) {
 		static const auto result = []() -> bool {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 			const base::Platform::XCB::Connection connection;
 			return connection && !xcb_connection_has_error(connection);
-#else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-			return qEnvironmentVariableIsSet("DISPLAY");
-#endif // DESKTOP_APP_DISABLE_X11_INTEGRATION
 		}();
 		return result;
 	}
@@ -353,7 +344,6 @@ bool IsWayland() {
 }
 
 bool IsXwayland() {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	static const auto result = []() -> bool {
 		const base::Platform::XCB::Connection connection;
 		if (!connection || xcb_connection_has_error(connection)) {
@@ -374,9 +364,6 @@ bool IsXwayland() {
 		return reply->present;
 	}();
 	return result;
-#else // !DESKTOP_APP_DISABLE_X11_INTEGRATION
-	return IsX11() && qEnvironmentVariableIsSet("WAYLAND_DISPLAY");
-#endif // DESKTOP_APP_DISABLE_X11_INTEGRATION
 }
 
 void Start(QJsonObject options) {

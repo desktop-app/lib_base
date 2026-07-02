@@ -8,11 +8,31 @@
 
 #include "base/debug_log.h"
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+#include "base/platform/linux/base_linux_library.h"
 #include "base/platform/linux/base_linux_xcb_utilities.h"
 
-#include <xcb/screensaver.h>
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
+// Declarations from the xcb-screensaver headers (X11 license), so that
+// there is no build-time dependency on it.
+extern "C" {
+
+typedef struct xcb_screensaver_query_info_cookie_t {
+    unsigned int sequence;
+} xcb_screensaver_query_info_cookie_t;
+
+typedef struct xcb_screensaver_query_info_reply_t {
+    uint8_t      response_type;
+    uint8_t      state;
+    uint16_t     sequence;
+    uint32_t     length;
+    xcb_window_t saver_window;
+    uint32_t     ms_until_server;
+    uint32_t     ms_since_user_input;
+    uint32_t     event_mask;
+    uint8_t      kind;
+    uint8_t      pad0[7];
+} xcb_screensaver_query_info_reply_t;
+
+} // extern "C"
 
 #include <mutteridlemonitor/mutteridlemonitor.hpp>
 
@@ -21,14 +41,45 @@ namespace {
 
 using namespace gi::repository;
 
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
+using namespace XCB::Library;
+
+[[nodiscard]] void *LoadScreenSaverSymbol(const char *name) {
+	static const auto Library = LoadLibrary(
+		"libxcb-screensaver.so.0",
+		RTLD_NODELETE);
+	return Library ? LoadSymbolGeneric(Library, name) : nullptr;
+}
+
+template <typename Function>
+[[nodiscard]] Function *LoadScreenSaverSymbol(const char *name) {
+	return reinterpret_cast<Function*>(LoadScreenSaverSymbol(name));
+}
+
 std::optional<crl::time> XCBLastUserInputTime() {
+	static const auto xcb_screensaver_id = static_cast<xcb_extension_t*>(
+		LoadScreenSaverSymbol("xcb_screensaver_id"));
+	static const auto xcb_screensaver_query_info = LoadScreenSaverSymbol<
+		xcb_screensaver_query_info_cookie_t(
+			xcb_connection_t*,
+			xcb_drawable_t)>("xcb_screensaver_query_info");
+	static const auto xcb_screensaver_query_info_reply
+		= LoadScreenSaverSymbol<xcb_screensaver_query_info_reply_t*(
+			xcb_connection_t*,
+			xcb_screensaver_query_info_cookie_t,
+			xcb_generic_error_t**)>("xcb_screensaver_query_info_reply");
+
+	if (!xcb_screensaver_id
+		|| !xcb_screensaver_query_info
+		|| !xcb_screensaver_query_info_reply) {
+		return std::nullopt;
+	}
+
 	const XCB::Connection connection;
 	if (!connection || xcb_connection_has_error(connection)) {
 		return std::nullopt;
 	}
 
-	if (!XCB::IsExtensionPresent(connection, &xcb_screensaver_id)) {
+	if (!XCB::IsExtensionPresent(connection, xcb_screensaver_id)) {
 		return std::nullopt;
 	}
 
@@ -53,7 +104,6 @@ std::optional<crl::time> XCBLastUserInputTime() {
 
 	return (crl::now() - static_cast<crl::time>(reply->ms_since_user_input));
 }
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 std::optional<crl::time> MutterDBusLastUserInputTime() {
 	static auto NotSupported = false;
@@ -86,12 +136,10 @@ std::optional<crl::time> MutterDBusLastUserInputTime() {
 } // namespace
 
 std::optional<crl::time> LastUserInputTime() {
-#ifndef DESKTOP_APP_DISABLE_X11_INTEGRATION
 	const auto xcbResult = XCBLastUserInputTime();
 	if (xcbResult.has_value()) {
 		return xcbResult;
 	}
-#endif // !DESKTOP_APP_DISABLE_X11_INTEGRATION
 
 	const auto mutterResult = MutterDBusLastUserInputTime();
 	if (mutterResult.has_value()) {

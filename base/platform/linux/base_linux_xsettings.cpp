@@ -16,6 +16,8 @@
 namespace base::Platform::XCB {
 /* Implementation of http://standards.freedesktop.org/xsettings-spec/xsettings-0.5.html */
 
+using namespace Library;
+
 class XSettings::PropertyValue {
 public:
 	PropertyValue() {
