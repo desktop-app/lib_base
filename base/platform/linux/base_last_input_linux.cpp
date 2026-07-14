@@ -7,17 +7,20 @@
 #include "base/platform/linux/base_last_input_linux.h"
 
 #include "base/debug_log.h"
-
-#include "base/platform/linux/base_linux_library.h"
 #include "base/platform/linux/base_linux_xcb_utilities.h"
+
+#include <sys/uio.h>
 
 // Declarations from the xcb-screensaver headers (X11 license), so that
 // there is no build-time dependency on it.
 extern "C" {
 
-typedef struct xcb_screensaver_query_info_cookie_t {
-    unsigned int sequence;
-} xcb_screensaver_query_info_cookie_t;
+typedef struct xcb_screensaver_query_info_request_t {
+    uint8_t        major_opcode;
+    uint8_t        minor_opcode;
+    uint16_t       length;
+    xcb_drawable_t drawable;
+} xcb_screensaver_query_info_request_t;
 
 typedef struct xcb_screensaver_query_info_reply_t {
     uint8_t      response_type;
@@ -43,43 +46,17 @@ using namespace gi::repository;
 
 using namespace XCB::Library;
 
-[[nodiscard]] void *LoadScreenSaverSymbol(const char *name) {
-	static const auto Library = LoadLibrary(
-		"libxcb-screensaver.so.0",
-		RTLD_NODELETE);
-	return Library ? LoadSymbolGeneric(Library, name) : nullptr;
-}
-
-template <typename Function>
-[[nodiscard]] Function *LoadScreenSaverSymbol(const char *name) {
-	return reinterpret_cast<Function*>(LoadScreenSaverSymbol(name));
-}
-
 std::optional<crl::time> XCBLastUserInputTime() {
-	static const auto xcb_screensaver_id = static_cast<xcb_extension_t*>(
-		LoadScreenSaverSymbol("xcb_screensaver_id"));
-	static const auto xcb_screensaver_query_info = LoadScreenSaverSymbol<
-		xcb_screensaver_query_info_cookie_t(
-			xcb_connection_t*,
-			xcb_drawable_t)>("xcb_screensaver_query_info");
-	static const auto xcb_screensaver_query_info_reply
-		= LoadScreenSaverSymbol<xcb_screensaver_query_info_reply_t*(
-			xcb_connection_t*,
-			xcb_screensaver_query_info_cookie_t,
-			xcb_generic_error_t**)>("xcb_screensaver_query_info_reply");
-
-	if (!xcb_screensaver_id
-		|| !xcb_screensaver_query_info
-		|| !xcb_screensaver_query_info_reply) {
-		return std::nullopt;
-	}
-
 	const XCB::Connection connection;
 	if (!connection || xcb_connection_has_error(connection)) {
 		return std::nullopt;
 	}
 
-	if (!XCB::IsExtensionPresent(connection, xcb_screensaver_id)) {
+	// The object must persist: libxcb lazily assigns a global id into it
+	// and keys the per-connection extension cache by that id.
+	static xcb_extension_t xcb_screensaver_id = { "MIT-SCREEN-SAVER", 0 };
+
+	if (!XCB::IsExtensionPresent(connection, &xcb_screensaver_id)) {
 		return std::nullopt;
 	}
 
@@ -88,15 +65,32 @@ std::optional<crl::time> XCBLastUserInputTime() {
 		return std::nullopt;
 	}
 
-	const auto cookie = xcb_screensaver_query_info(
-		connection,
-		root);
+	static const xcb_protocol_request_t request = {
+		.count = 2,
+		.ext = &xcb_screensaver_id,
+		.opcode = 1, // XCB_SCREENSAVER_QUERY_INFO
+		.isvoid = 0,
+	};
+
+	xcb_screensaver_query_info_request_t body;
+	body.drawable = root;
+
+	struct iovec parts[4];
+	parts[2].iov_base = &body;
+	parts[2].iov_len = sizeof(body);
+	parts[3].iov_base = nullptr;
+	parts[3].iov_len = -parts[2].iov_len & 3;
 
 	const auto reply = XCB::MakeReplyPointer(
-		xcb_screensaver_query_info_reply(
-			connection,
-			cookie,
-			nullptr));
+		reinterpret_cast<xcb_screensaver_query_info_reply_t*>(
+			xcb_wait_for_reply(
+				connection,
+				xcb_send_request(
+					connection,
+					XCB_REQUEST_CHECKED,
+					parts + 2,
+					&request),
+				nullptr)));
 
 	if (!reply) {
 		return std::nullopt;
