@@ -6,6 +6,7 @@
 //
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 // Declarations from the xcb headers (X11 license), so that there is
@@ -14,8 +15,28 @@
 // cannot be included in one translation unit with the real headers.
 extern "C" {
 
+struct iovec;
+
 typedef struct xcb_connection_t xcb_connection_t;
-typedef struct xcb_extension_t xcb_extension_t;
+
+typedef struct xcb_extension_t {
+	const char *name;
+	int global_id;
+} xcb_extension_t;
+
+typedef struct {
+	size_t count;
+	xcb_extension_t *ext;
+	uint8_t opcode;
+	uint8_t isvoid;
+} xcb_protocol_request_t;
+
+enum xcb_send_request_flags_t {
+	XCB_REQUEST_CHECKED = 1 << 0,
+	XCB_REQUEST_RAW = 1 << 1,
+	XCB_REQUEST_DISCARD_REPLY = 1 << 2,
+	XCB_REQUEST_REPLY_FDS = 1 << 3
+};
 
 typedef uint32_t xcb_window_t;
 typedef uint32_t xcb_colormap_t;
@@ -572,6 +593,15 @@ int xcb_poll_for_reply(
 		unsigned int request,
 		void **reply,
 		xcb_generic_error_t **error);
+unsigned int xcb_send_request(
+		xcb_connection_t *c,
+		int flags,
+		struct iovec *vector,
+		const xcb_protocol_request_t *request);
+void *xcb_wait_for_reply(
+		xcb_connection_t *c,
+		unsigned int request,
+		xcb_generic_error_t **e);
 xcb_generic_error_t* xcb_request_check(
 		xcb_connection_t *c,
 		xcb_void_cookie_t cookie);

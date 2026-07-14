@@ -85,6 +85,30 @@ int xcb_poll_for_reply(
 	return real(c, request, reply, error);
 }
 
+unsigned int xcb_send_request(
+		xcb_connection_t *c,
+		int flags,
+		struct iovec *vector,
+		const xcb_protocol_request_t *request) {
+	static const auto real = LoadSymbol<unsigned int(
+		xcb_connection_t*,
+		int,
+		struct iovec*,
+		const xcb_protocol_request_t*)>("xcb_send_request");
+	return real(c, flags, vector, request);
+}
+
+void *xcb_wait_for_reply(
+		xcb_connection_t *c,
+		unsigned int request,
+		xcb_generic_error_t **e) {
+	static const auto real = LoadSymbol<void*(
+		xcb_connection_t*,
+		unsigned int,
+		xcb_generic_error_t**)>("xcb_wait_for_reply");
+	return real(c, request, e);
+}
+
 xcb_generic_error_t* xcb_request_check(
 		xcb_connection_t *c,
 		xcb_void_cookie_t cookie) {
