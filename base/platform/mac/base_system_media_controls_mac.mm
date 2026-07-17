@@ -384,9 +384,7 @@ void SystemMediaControls::clearMetadata() {
 void SystemMediaControls::updateDisplay() {
 	[[MPNowPlayingInfoCenter defaultCenter]
 		performSelectorOnMainThread:@selector(setNowPlayingInfo:)
-		withObject:((_private->enabled && _private->duration())
-			? _private->info
-			: nil)
+		withObject:(_private->enabled ? _private->info : nil)
 		waitUntilDone:false];
 }
 
