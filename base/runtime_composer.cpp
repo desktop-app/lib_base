@@ -7,25 +7,26 @@
 #include "base/runtime_composer.h"
 
 struct RuntimeComposerMetadatasMap {
-	std::map<uint64, std::unique_ptr<RuntimeComposerMetadata>> data;
+	std::map<
+		std::pair<uint64, const RuntimeComponentWrapStruct*>,
+		std::unique_ptr<RuntimeComposerMetadata>> data;
 	QMutex mutex;
 };
 
-const RuntimeComposerMetadata *GetRuntimeComposerMetadata(uint64 mask) {
+const RuntimeComposerMetadata *GetRuntimeComposerMetadata(
+		uint64 mask,
+		const RuntimeComponentWrapStruct *wraps) {
 	static RuntimeComposerMetadatasMap RuntimeComposerMetadatas;
 
 	QMutexLocker lock(&RuntimeComposerMetadatas.mutex);
-	auto i = RuntimeComposerMetadatas.data.find(mask);
+	const auto key = std::make_pair(mask, wraps);
+	auto i = RuntimeComposerMetadatas.data.find(key);
 	if (i == end(RuntimeComposerMetadatas.data)) {
 		i = RuntimeComposerMetadatas.data.emplace(
-			mask,
-			std::make_unique<RuntimeComposerMetadata>(mask)).first;
+			key,
+			std::make_unique<RuntimeComposerMetadata>(mask, wraps)).first;
 	}
 	return i->second.get();
 }
 
-const RuntimeComposerMetadata *RuntimeComposerBase::ZeroRuntimeComposerMetadata = GetRuntimeComposerMetadata(0);
-
-RuntimeComponentWrapStruct RuntimeComponentWraps[64];
-
-QAtomicInt RuntimeComponentIndexLast;
+const RuntimeComposerMetadata *RuntimeComposerBase::ZeroRuntimeComposerMetadata = GetRuntimeComposerMetadata(0, nullptr);

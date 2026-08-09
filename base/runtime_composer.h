@@ -37,8 +37,13 @@ struct CeilDivideMinimumOne {
 	static constexpr int Result = ((Value / Denominator) + ((!Value || (Value % Denominator)) ? 1 : 0));
 };
 
-extern RuntimeComponentWrapStruct RuntimeComponentWraps[64];
-extern QAtomicInt RuntimeComponentIndexLast;
+// Components are registered in per-Base tables, so each
+// RuntimeComposer<Base> hierarchy has its own limit of 64 components.
+template <typename Base>
+RuntimeComponentWrapStruct RuntimeComponentWraps[64];
+
+template <typename Base>
+QAtomicInt RuntimeComponentIndexLast;
 
 template <typename Type, typename Base>
 struct RuntimeComponent {
@@ -59,11 +64,11 @@ struct RuntimeComponent {
 			return index - 1;
 		}
 		while (true) {
-			auto last = RuntimeComponentIndexLast.loadAcquire();
-			if (RuntimeComponentIndexLast.testAndSetOrdered(last, last + 1)) {
+			auto last = RuntimeComponentIndexLast<Base>.loadAcquire();
+			if (RuntimeComponentIndexLast<Base>.testAndSetOrdered(last, last + 1)) {
 				Assert(last < 64);
 				if (MyIndex.testAndSetOrdered(0, last + 1)) {
-					RuntimeComponentWraps[last] = RuntimeComponentWrapStruct(
+					RuntimeComponentWraps<Base>[last] = RuntimeComponentWrapStruct(
 						sizeof(Type),
 						alignof(Type),
 						Type::RuntimeComponentConstruct,
@@ -94,13 +99,17 @@ protected:
 
 class RuntimeComposerMetadata {
 public:
-	RuntimeComposerMetadata(uint64 mask) : _mask(mask) {
+	RuntimeComposerMetadata(
+		uint64 mask,
+		const RuntimeComponentWrapStruct *wraps)
+	: wraps(wraps)
+	, _mask(mask) {
 		for (int i = 0; i != 64; ++i) {
 			auto componentBit = (1ULL << i);
 			if (_mask & componentBit) {
-				auto componentSize = RuntimeComponentWraps[i].Size;
+				auto componentSize = wraps[i].Size;
 				if (componentSize) {
-					auto componentAlign = RuntimeComponentWraps[i].Align;
+					auto componentAlign = wraps[i].Align;
 					if (auto badAlign = (size % componentAlign)) {
 						size += (componentAlign - badAlign);
 					}
@@ -114,6 +123,9 @@ public:
 			}
 		}
 	}
+
+	// The per-Base components registry this metadata was built from.
+	const RuntimeComponentWrapStruct *wraps = nullptr;
 
 	// Meta pointer in the start.
 	std::size_t size = sizeof(const RuntimeComposerMetadata*);
@@ -136,14 +148,15 @@ private:
 
 };
 
-const RuntimeComposerMetadata *GetRuntimeComposerMetadata(uint64 mask);
+const RuntimeComposerMetadata *GetRuntimeComposerMetadata(
+	uint64 mask,
+	const RuntimeComponentWrapStruct *wraps);
 
 class RuntimeComposerBase {
 public:
-	RuntimeComposerBase(uint64 mask = 0) : _data(zerodata()) {
-		if (mask) {
-			auto meta = GetRuntimeComposerMetadata(mask);
-
+	explicit RuntimeComposerBase(const RuntimeComposerMetadata *meta = nullptr)
+	: _data(zerodata()) {
+		if (meta) {
 			auto data = operator new(meta->size);
 			Assert(data != nullptr);
 
@@ -154,17 +167,16 @@ public:
 				if (offset >= sizeof(_meta())) {
 					try {
 						auto constructAt = _dataptrunsafe(offset);
-						auto space = RuntimeComponentWraps[i].Size;
+						auto space = meta->wraps[i].Size;
 						auto alignedAt = constructAt;
-						std::align(RuntimeComponentWraps[i].Align, space, alignedAt, space);
+						std::align(meta->wraps[i].Align, space, alignedAt, space);
 						Assert(alignedAt == constructAt);
-						RuntimeComponentWraps[i].Construct(constructAt, this);
+						meta->wraps[i].Construct(constructAt, this);
 					} catch (...) {
 						while (i > 0) {
-							--i;
 							offset = meta->offsets[--i];
 							if (offset >= sizeof(_meta())) {
-								RuntimeComponentWraps[i].Destruct(_dataptrunsafe(offset));
+								meta->wraps[i].Destruct(_dataptrunsafe(offset));
 							}
 						}
 						throw;
@@ -181,7 +193,7 @@ public:
 			for (int i = 0; i < meta->last; ++i) {
 				auto offset = meta->offsets[i];
 				if (offset >= sizeof(_meta())) {
-					RuntimeComponentWraps[i].Destruct(_dataptrunsafe(offset));
+					meta->wraps[i].Destruct(_dataptrunsafe(offset));
 				}
 			}
 			operator delete(_data);
@@ -189,33 +201,27 @@ public:
 	}
 
 protected:
-	bool UpdateComponents(uint64 mask = 0) {
+	bool UpdateComponents(const RuntimeComposerMetadata *meta, uint64 mask) {
 		if (_meta()->equals(mask)) {
 			return false;
 		}
-		RuntimeComposerBase result(mask);
+		RuntimeComposerBase result(meta);
 		result.swap(*this);
 		if (_data != zerodata() && result._data != zerodata()) {
-			const auto meta = _meta();
+			const auto nowmeta = _meta();
 			const auto wasmeta = result._meta();
-			for (auto i = 0; i != meta->last; ++i) {
-				const auto offset = meta->offsets[i];
+			for (auto i = 0; i != nowmeta->last; ++i) {
+				const auto offset = nowmeta->offsets[i];
 				const auto wasoffset = wasmeta->offsets[i];
 				if (offset >= sizeof(_meta())
 					&& wasoffset >= sizeof(_meta())) {
-					RuntimeComponentWraps[i].Move(
+					nowmeta->wraps[i].Move(
 						_dataptrunsafe(offset),
 						result._dataptrunsafe(wasoffset));
 				}
 			}
 		}
 		return true;
-	}
-	bool AddComponents(uint64 mask = 0) {
-		return UpdateComponents(_meta()->maskadd(mask));
-	}
-	bool RemoveComponents(uint64 mask = 0) {
-		return UpdateComponents(_meta()->maskremove(mask));
 	}
 
 private:
@@ -247,7 +253,9 @@ private:
 template <typename Base>
 class RuntimeComposer : public RuntimeComposerBase {
 public:
-	using RuntimeComposerBase::RuntimeComposerBase;
+	RuntimeComposer(uint64 mask = 0)
+	: RuntimeComposerBase(MetadataFor(mask)) {
+	}
 
 	template <
 		typename Type,
@@ -273,6 +281,27 @@ public:
 			Base>>>
 	const Type *Get() const {
 		return static_cast<const Type*>(_dataptr(_meta()->offsets[Type::Index()]));
+	}
+
+protected:
+	bool UpdateComponents(uint64 mask = 0) {
+		if (_meta()->equals(mask)) {
+			return false;
+		}
+		return RuntimeComposerBase::UpdateComponents(MetadataFor(mask), mask);
+	}
+	bool AddComponents(uint64 mask = 0) {
+		return UpdateComponents(_meta()->maskadd(mask));
+	}
+	bool RemoveComponents(uint64 mask = 0) {
+		return UpdateComponents(_meta()->maskremove(mask));
+	}
+
+private:
+	static const RuntimeComposerMetadata *MetadataFor(uint64 mask) {
+		return mask
+			? GetRuntimeComposerMetadata(mask, RuntimeComponentWraps<Base>)
+			: nullptr;
 	}
 
 };
