@@ -9,6 +9,8 @@
 #include <minizip/zip.h>
 #include <minizip/unzip.h>
 
+#include <algorithm>
+
 #include "logs.h"
 
 #ifdef small
@@ -62,8 +64,11 @@ private:
 	uLong read(voidpf stream, void* buf, uLong size) {
 		uLong toRead = 0;
 		if (!_error) {
-			if (_data.size() > int(_position)) {
-				toRead = qMin(size, uLong(_data.size() - _position));
+			const auto dataSize = quint64(_data.size());
+			if (dataSize > _position) {
+				toRead = uLong(std::min<quint64>(
+					size,
+					dataSize - _position));
 				memcpy(buf, _data.constData() + _position, toRead);
 				_position += toRead;
 			}
@@ -102,7 +107,7 @@ private:
 			case ZLIB_FILEFUNC_SEEK_CUR: _position += offset; break;
 			case ZLIB_FILEFUNC_SEEK_END: _position = _data.size() + offset; break;
 			}
-			if (int(_position) > _data.size()) {
+			if (quint64(_position) > quint64(_data.size())) {
 				_error = -1;
 			}
 		}
