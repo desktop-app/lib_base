@@ -19,10 +19,9 @@
 #include <systemmediatransportcontrolsinterop.h>
 
 #include <QtCore/QBuffer>
-#include <QtCore/QAbstractNativeEventFilter>
 #include <QtGui/QImage>
-#include <QtGui/QWindow>
-#include <QtWidgets/QWidget>
+
+#include <windows.h>
 
 namespace winrt {
 namespace Streams {
@@ -34,8 +33,88 @@ namespace Media {
 } // namespace winrt
 
 namespace base::Platform {
+namespace {
 
-struct SystemMediaControls::Private : QAbstractNativeEventFilter {
+constexpr auto kWindowClassName = L"DesktopAppSystemMediaControls";
+
+struct ControlsWindow {
+	~ControlsWindow();
+
+	HWND hwnd = nullptr;
+	Fn<void()> activated;
+};
+
+ControlsWindow::~ControlsWindow() {
+	if (hwnd) {
+		DestroyWindow(hwnd);
+	}
+}
+
+LRESULT CALLBACK ControlsWndProc(
+		HWND hwnd,
+		UINT message,
+		WPARAM wParam,
+		LPARAM lParam) {
+	if (message == WM_NCCREATE) {
+		const auto create = reinterpret_cast<CREATESTRUCTW*>(lParam);
+		SetWindowLongPtrW(
+			hwnd,
+			GWLP_USERDATA,
+			reinterpret_cast<LONG_PTR>(create->lpCreateParams));
+	} else if (message == WM_NCACTIVATE && wParam) {
+		const auto that = reinterpret_cast<ControlsWindow*>(
+			GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+		if (that && that->activated) {
+			that->activated();
+		}
+	}
+	return DefWindowProcW(hwnd, message, wParam, lParam);
+}
+
+[[nodiscard]] bool RegisterWindowClass() {
+	static const auto result = [] {
+		auto descriptor = WNDCLASSEXW();
+		descriptor.cbSize = sizeof(descriptor);
+		descriptor.lpfnWndProc = ControlsWndProc;
+		descriptor.hInstance = GetModuleHandleW(nullptr);
+		descriptor.lpszClassName = kWindowClassName;
+		return RegisterClassExW(&descriptor)
+			|| (GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
+	}();
+	return result;
+}
+
+// The controls are attached to this window by GetForWindow and the system
+// activates it when the user clicks the media flyout, which arrives here
+// as WM_NCACTIVATE - so it has to be a real top-level window and can't be
+// a message-only one. It is created without WS_VISIBLE and is never shown,
+// so the compositor never gets a visual for it.
+//
+// A hidden top-level QWidget was used here before. Even though it was
+// never shown either, it could still end up composited on screen as an
+// unpaintable white rectangle while Windows considered it hidden.
+[[nodiscard]] HWND CreateControlsWindow(ControlsWindow *data) {
+	if (!RegisterWindowClass()) {
+		return nullptr;
+	}
+	return CreateWindowExW(
+		WS_EX_TOOLWINDOW,
+		kWindowClassName,
+		nullptr,
+		WS_POPUP,
+		0,
+		0,
+		0,
+		0,
+		nullptr,
+		nullptr,
+		GetModuleHandleW(nullptr),
+		data);
+}
+
+} // namespace
+
+struct SystemMediaControls::Private {
 	using IReferenceStatics
 		= winrt::Streams::IRandomAccessStreamReferenceStatics;
 	Private()
@@ -45,13 +124,7 @@ struct SystemMediaControls::Private : QAbstractNativeEventFilter {
 		IReferenceStatics>()) {
 	}
 
-	bool nativeEventFilter(
-		const QByteArray &eventType,
-		void *message,
-		native_event_filter_result *result) override;
-
-	QWidget parent;
-	HWND hwnd = nullptr;
+	ControlsWindow window;
 	winrt::Media::SystemMediaTransportControls controls;
 	winrt::Media::ISystemMediaTransportControlsDisplayUpdater displayUpdater;
 	winrt::Media::IMusicDisplayProperties displayProperties;
@@ -62,23 +135,6 @@ struct SystemMediaControls::Private : QAbstractNativeEventFilter {
 
 	rpl::event_stream<SystemMediaControls::Command> commandRequests;
 };
-
-bool SystemMediaControls::Private::nativeEventFilter(
-		const QByteArray &eventType,
-		void *message,
-		native_event_filter_result *result) {
-	Expects(hwnd != nullptr);
-
-	const auto msg = static_cast<MSG*>(message);
-	if (msg->hwnd == hwnd
-		&& msg->message == WM_NCACTIVATE
-		&& msg->wParam) {
-		base::Integration::Instance().enterFromEventLoop([&] {
-			commandRequests.fire(Command::Raise);
-		});
-	}
-	return false;
-}
 
 namespace {
 
@@ -139,18 +195,13 @@ bool SystemMediaControls::init() {
 	if (_private->initialized) {
 		return _private->initialized;
 	}
-	_private->parent.hide();
-	_private->parent.createWinId();
-	const auto window = _private->parent.windowHandle();
-	if (!window) {
-		return false;
-	}
-
-	// Should be moved to separated file.
-	const auto hwnd = reinterpret_cast<HWND>(window->winId());
+	const auto hwnd = _private->window.hwnd
+		? _private->window.hwnd
+		: CreateControlsWindow(&_private->window);
 	if (!hwnd) {
 		return false;
 	}
+	_private->window.hwnd = hwnd;
 
 	const auto interop = WinRT::Try([&] {
 		return winrt::get_activation_factory<
@@ -201,8 +252,12 @@ bool SystemMediaControls::init() {
 
 	_private->initialized = result;
 	if (result) {
-		_private->hwnd = hwnd;
-		qApp->installNativeEventFilter(_private.get());
+		const auto raw = _private.get();
+		_private->window.activated = [=] {
+			base::Integration::Instance().enterFromEventLoop([&] {
+				raw->commandRequests.fire(Command::Raise);
+			});
+		};
 	}
 	return result;
 }
