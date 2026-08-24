@@ -36,21 +36,6 @@ public:
 			(*callback)(connection, name, value);
 	}
 
-	rpl::lifetime addCallback(PropertyChangeFunc func) {
-		const auto handle = Instance();
-		callback_links.push_back(std::make_unique<PropertyChangeFunc>(func));
-		const auto ptr = callback_links.back().get();
-		return rpl::lifetime([=] {
-			(void)handle;
-			callback_links.erase(
-				ranges::remove(
-					callback_links,
-					ptr,
-					&decltype(callback_links)::value_type::get),
-				callback_links.end());
-		});
-	}
-
 	QVariant value;
 	int last_change_serial = -1;
 	std::vector<std::unique_ptr<PropertyChangeFunc>> callback_links;
@@ -324,7 +309,20 @@ bool XSettings::initialized() const {
 rpl::lifetime XSettings::registerCallbackForProperty(
 		const QByteArray &property,
 		PropertyChangeFunc func) {
-	return _private->settings[property].addCallback(func);
+	const auto handle = Instance();
+	auto &value = _private->settings[property];
+	value.callback_links.push_back(
+		std::make_unique<PropertyChangeFunc>(std::move(func)));
+	const auto ptr = value.callback_links.back().get();
+	return rpl::lifetime([=] {
+		auto &links = handle->_private->settings[property].callback_links;
+		links.erase(
+			ranges::remove(
+				links,
+				ptr,
+				&std::unique_ptr<PropertyChangeFunc>::get),
+			links.end());
+	});
 }
 
 QVariant XSettings::setting(const QByteArray &property) const {
