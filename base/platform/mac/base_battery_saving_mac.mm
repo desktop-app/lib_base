@@ -7,7 +7,9 @@
 #include "base/platform/mac/base_battery_saving_mac.h"
 
 #include "base/battery_saving.h"
-#include "base/integration.h"
+#include "base/weak_ptr.h"
+
+#include <crl/crl_on_main.h>
 
 #include <Cocoa/Cocoa.h>
 #include <IOKit/ps/IOPSKeys.h>
@@ -41,7 +43,9 @@
 namespace base::Platform {
 namespace {
 
-class BatterySaving final : public AbstractBatterySaving {
+class BatterySaving final
+	: public AbstractBatterySaving
+	, public base::has_weak_ptr {
 public:
 	BatterySaving(Fn<void()> changedCallback);
 	~BatterySaving();
@@ -132,8 +136,15 @@ BatterySaving::BatterySaving(Fn<void()> changedCallback) {
 	if (!DetectBatteryState().has) {
 		return;
 	}
-	auto wrapped = [copy = std::move(changedCallback)] {
-		Integration::Instance().enterFromEventLoop(copy);
+	// NSProcessInfo power state / thermal state notifications arrive
+	// on a background dispatch queue, while the event nesting level
+	// bookkeeping inside enterFromEventLoop is main thread only, so
+	// hop to the main thread before entering from the event loop.
+	auto wrapped = [
+		weak = base::make_weak(this),
+		copy = std::move(changedCallback)
+	] {
+		crl::on_main(weak, copy);
 	};
 	_observer = [[LowPowerModeObserver alloc] initWithCallback:std::move(wrapped)];
 
