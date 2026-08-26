@@ -45,7 +45,12 @@ inline details::TryResult<Method> TryNoCheck(Method &&method) noexcept {
 			return method();
 		}
 	} catch (const std::bad_alloc &) {
-		Unexpected("Could not allocate in WinRT.");
+		// C++/WinRT maps *any* E_OUTOFMEMORY HRESULT to std::bad_alloc,
+		// including one coming back from an out-of-process COM server or
+		// from the RPC layer. That is not our own allocation failure, so
+		// report "no result" like every other failed WinRT call.
+		LOG(("WinRT Error: Could not allocate (E_OUTOFMEMORY)."));
+		return {};
 	} catch (const winrt::hresult_error &error) {
 		LOG(("WinRT Error: %1 (%2)"
 			).arg(int64(error.code())
