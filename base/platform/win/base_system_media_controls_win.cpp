@@ -345,6 +345,13 @@ void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 				return;
 			}
 
+			if (!_private->referenceStatics) {
+				// The activation factory failed in the constructor. Calling
+				// through a null projected interface reads a vtable pointer
+				// out of nullptr, which is an access violation Try() cannot
+				// catch - so the artwork is simply skipped.
+				return;
+			}
 			WinRT::Try([&] {
 				_private->displayUpdater.Thumbnail(
 					_private->referenceStatics.CreateFromStream(thumbStream));
