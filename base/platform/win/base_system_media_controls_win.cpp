@@ -119,9 +119,15 @@ struct SystemMediaControls::Private {
 		= winrt::Streams::IRandomAccessStreamReferenceStatics;
 	Private()
 	: controls(nullptr)
-	, referenceStatics(winrt::get_activation_factory
-		<winrt::Streams::RandomAccessStreamReference,
-		IReferenceStatics>()) {
+	// Unwrapped, this threw straight out of the constructor: WinRT maps an
+	// E_OUTOFMEMORY from the out-of-process server to std::bad_alloc, which
+	// nothing here catches. The only use of referenceStatics is already
+	// inside a Try(), so a null one degrades instead of aborting.
+	, referenceStatics(WinRT::Try([] {
+		return winrt::get_activation_factory<
+			winrt::Streams::RandomAccessStreamReference,
+			IReferenceStatics>();
+	}).value_or(IReferenceStatics(nullptr))) {
 	}
 
 	ControlsWindow window;
