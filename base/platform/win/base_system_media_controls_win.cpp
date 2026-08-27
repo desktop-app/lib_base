@@ -382,7 +382,13 @@ void SystemMediaControls::clearThumbnail() {
 
 void SystemMediaControls::clearMetadata() {
 	WinRT::Try([&] {
-		_private->displayUpdater.ClearAll();
+		if (_private->displayUpdater) {
+			// A failed init() can leave this null with the button handler
+			// already registered, and the destructor calls us in that case.
+			// Calling through a null projected interface reads a vtable
+			// pointer out of nullptr - an access violation Try() can't catch.
+			_private->displayUpdater.ClearAll();
+		}
 		_private->controls.IsEnabled(false);
 	});
 }
