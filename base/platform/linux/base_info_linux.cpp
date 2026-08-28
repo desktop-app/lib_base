@@ -206,7 +206,7 @@ int AutoUpdateVersion() {
 	if (IsGlibcLess228()) {
 		return 2;
 	}
-	return 4;
+	return 6;
 }
 
 QString AutoUpdateKey() {
