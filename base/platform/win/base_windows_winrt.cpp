@@ -178,6 +178,9 @@ void(__stdcall *CloseThreadpool)(winrt::impl::ptp_pool pool);
 	return Result;
 }
 
+// Entry points below assume resolved pointers, so resolve before main.
+[[maybe_unused]] const auto ResolvedOnStartup = Supported();
+
 } // namespace base::WinRT
 
 namespace P = base::WinRT;
@@ -185,19 +188,41 @@ namespace P = base::WinRT;
 extern "C" {
 
 int32_t __stdcall WINRT_IMPL_RoGetActivationFactory(void* classId, winrt::guid const& iid, void** factory) noexcept {
-	return P::RoGetActivationFactory(classId, iid, factory);
+	// Windows 7 has no combase.dll, so nothing resolved these.
+	return P::RoGetActivationFactory
+		? P::RoGetActivationFactory(classId, iid, factory)
+		: CO_E_DLLNOTFOUND;
 }
 
 int32_t __stdcall WINRT_IMPL_RoGetAgileReference(uint32_t options, winrt::guid const& iid, void* object, void** reference) noexcept {
-	return P::RoGetAgileReference(options, iid, object, reference);
+	return P::RoGetAgileReference
+		? P::RoGetAgileReference(options, iid, object, reference)
+		: CO_E_DLLNOTFOUND;
 }
 
 int32_t __stdcall WINRT_IMPL_SetThreadpoolTimerEx(winrt::impl::ptp_timer timer, void *time, uint32_t period, uint32_t window) noexcept {
-	return P::SetThreadpoolTimerEx(timer, time, period, window);
+	if (P::SetThreadpoolTimerEx) {
+		return P::SetThreadpoolTimerEx(timer, time, period, window);
+	} else if (!P::SetThreadpoolTimer) {
+		return FALSE;
+	}
+	// Windows 7 has SetThreadpoolTimer without Ex only, Ex reports pending timer.
+	const auto pending = ::IsThreadpoolTimerSet(
+		reinterpret_cast<PTP_TIMER>(timer));
+	P::SetThreadpoolTimer(timer, time, period, window);
+	return pending;
 }
 
 int32_t __stdcall WINRT_IMPL_SetThreadpoolWaitEx(winrt::impl::ptp_wait wait, void *handle, void *timeout, void *reserved) noexcept {
-	return P::SetThreadpoolWaitEx(wait, handle, timeout, reserved);
+	if (P::SetThreadpoolWaitEx) {
+		return P::SetThreadpoolWaitEx(wait, handle, timeout, reserved);
+	}
+	// Windows 7 has SetThreadpoolWait without Ex only, it can't tell if callback
+	// is pending, so cancel (null handle) is skipped to avoid double resume.
+	if (P::SetThreadpoolWait && handle) {
+		P::SetThreadpoolWait(wait, handle, timeout);
+	}
+	return FALSE;
 }
 
 int32_t __stdcall WINRT_IMPL_RoOriginateLanguageException(int32_t error, void* message, void* exception) noexcept {
@@ -207,15 +232,22 @@ int32_t __stdcall WINRT_IMPL_RoOriginateLanguageException(int32_t error, void* m
 }
 
 int32_t __stdcall WINRT_IMPL_RoCaptureErrorContext(int32_t error) noexcept {
-	return P::RoCaptureErrorContext(error);
+	return P::RoCaptureErrorContext
+		? P::RoCaptureErrorContext(error)
+		: S_OK;
 }
 
 void __stdcall WINRT_IMPL_RoFailFastWithErrorContext(int32_t error) noexcept {
-	return P::RoFailFastWithErrorContext(error);
+	// Caller aborts right after, so Windows 7 still gets crash report.
+	if (P::RoFailFastWithErrorContext) {
+		P::RoFailFastWithErrorContext(error);
+	}
 }
 
 int32_t __stdcall WINRT_IMPL_RoTransformError(int32_t error, int32_t transform, void *context) noexcept {
-	return P::RoTransformError(error, transform, context);
+	return P::RoTransformError
+		? P::RoTransformError(error, transform, context)
+		: FALSE;
 }
 
 void* __stdcall WINRT_IMPL_LoadLibraryExW(wchar_t const* name, void* unused, uint32_t flags) noexcept {
