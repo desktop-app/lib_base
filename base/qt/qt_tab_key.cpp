@@ -22,7 +22,14 @@ bool FocusNextPrevChildBlocked(not_null<QWidget*> widget, bool next) {
 	const auto start = focused ? focused : widget.get();
 	auto w = skip(start);
 	while (w && w != start) {
-		if ((w->focusPolicy() & Qt::TabFocus) && widget->isAncestorOf(w)) {
+		// Like the default traversal: a widget that is hidden or disabled
+		// is passed over, or Tab lands on something that is not there -
+		// the field of a collapsed section, or a button shown only while
+		// its field is focused.
+		if ((w->focusPolicy() & Qt::TabFocus)
+			&& w->isVisible()
+			&& w->isEnabled()
+			&& widget->isAncestorOf(w)) {
 			break;
 		}
 		w = skip(w);
