@@ -7,10 +7,25 @@
 #include "base/platform/base_platform_network_reachability.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 2, 0)
+#include "base/platform/base_platform_info.h"
+
 namespace base::Platform {
+namespace {
+
+class NetworkReachabilityImpl : public NetworkReachability {
+public:
+	rpl::producer<bool> availableValue() const override {
+		return rpl::single(true);
+	}
+
+};
+
+} // namespace
 
 std::unique_ptr<NetworkReachability> NetworkReachability::Create() {
-	return nullptr;
+	return !::Platform::IsWindows8OrGreater()
+		? std::make_unique<NetworkReachabilityImpl>()
+		: nullptr;
 }
 
 } // namespace base::Platform
