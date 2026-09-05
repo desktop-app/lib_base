@@ -9,6 +9,7 @@
 #include "base/platform/win/base_windows_safe_library.h"
 #include "base/platform/win/base_windows_shlobj_h.h"
 #include "base/algorithm.h"
+#include "base/integration.h"
 
 #include <QtCore/QString>
 #include <QtCore/QDir>
@@ -142,8 +143,9 @@ bool DeleteDirectory(QString path) {
 void RemoveQuarantine(const QString &path) {
 }
 
-QString BundledResourcesPath() {
-	Unexpected("BundledResourcesPath not implemented.");
+QStringList PackedResourcesPaths() {
+	// Is verification of loaded resources really needed?
+	return { Integration::Instance().executableDir() };
 }
 
 QString CurrentExecutablePath(int argc, char *argv[]) {
