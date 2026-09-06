@@ -396,7 +396,9 @@ auto SystemMediaControls::commandRequests() const
 rpl::producer<float64> SystemMediaControls::seekRequests() const {
 	return (
 		[_private->commandHandler seekRequests]
-	) | rpl::map([=](int position) {
+	) | rpl::filter([=] {
+		return (_private->duration() > 0.);
+	}) | rpl::map([=](int position) {
 		return float64(position) / (_private->duration() * 1000);
 	});
 }
