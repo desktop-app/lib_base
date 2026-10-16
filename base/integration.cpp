@@ -49,6 +49,12 @@ Integration::Integration(int argc, char *argv[]) {
 	_executableName = info.fileName();
 }
 
+Integration::~Integration() {
+	if (IntegrationInstance == this) {
+		IntegrationInstance = nullptr;
+	}
+}
+
 void Integration::logAssertionViolation(const QString &info) {
 	logMessage("Assertion Failed! " + info);
 }

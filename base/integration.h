@@ -32,7 +32,7 @@ public:
 	[[nodiscard]] QString executableName() const;
 	[[nodiscard]] QString executablePath() const;
 
-	virtual ~Integration() = default;
+	virtual ~Integration();
 
 private:
 	QString _executableDir;
