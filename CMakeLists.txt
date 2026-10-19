@@ -239,6 +239,8 @@ PRIVATE
     base/qt/qt_common_adapters.h
     base/qt/qt_compare.h
     base/qt/qt_key_modifiers.h
+    base/qt/qt_possible_keys.cpp
+    base/qt/qt_possible_keys.h
     base/qt/qt_string_view.h
     base/qt/qt_tab_key.cpp
     base/qt/qt_tab_key.h
@@ -266,9 +268,13 @@ PRIVATE
 )
 
 if (LINUX)
+    find_package(KF6WindowSystem 6.28 QUIET)
+
     target_link_libraries(lib_base
     PUBLIC
         desktop-app::external_kcoreaddons
+    PRIVATE
+        $<TARGET_NAME_IF_EXISTS:KF6::WindowSystem>
     )
 
     include(${cmake_helpers_loc}/external/glib/generate_dbus.cmake)

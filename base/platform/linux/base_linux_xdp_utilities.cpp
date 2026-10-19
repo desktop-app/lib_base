@@ -10,10 +10,12 @@
 
 #include <xdpsettings/xdpsettings.hpp>
 
+#include <QtCore/QEventLoop>
+#include <QtCore/QFutureWatcher>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0) && !defined DESKTOP_APP_DISABLE_PRIVATE_QT_API
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
 #if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
@@ -21,7 +23,9 @@
 #else // Qt >= 6.9.0
 #include <private/qgenericunixservices_p.h>
 #endif // Qt < 6.9.0
-#endif // Qt >= 6.5.0
+#elif __has_include(<KWaylandExtras>) // Qt >= 6.5.0 && !DESKTOP_APP_DISABLE_PRIVATE_QT_API
+#include <KWaylandExtras>
+#endif // (Qt < 6.5.0 || DESKTOP_APP_DISABLE_PRIVATE_QT_API) && __has_include(<KWaylandExtras>)
 
 #include <sstream>
 
@@ -30,6 +34,40 @@ namespace {
 
 using namespace gi::repository;
 namespace GObject = gi::repository::GObject;
+
+#if (QT_VERSION < QT_VERSION_CHECK(6, 5, 0) || defined DESKTOP_APP_DISABLE_PRIVATE_QT_API) && __has_include(<KWaylandExtras>)
+constexpr auto kUnexportOnHideProperty = "_td_unexport_on_hide";
+
+[[nodiscard]] std::string WaylandParentWindowID(not_null<QWindow*> window) {
+	// Export anew after hide like Qt does: the old xdg_toplevel is gone.
+	if (!window->property(kUnexportOnHideProperty).toBool()) {
+		window->setProperty(kUnexportOnHideProperty, true);
+		QObject::connect(window, &QWindow::visibleChanged, window, [=](
+				bool visible) {
+			if (!visible) {
+				KWaylandExtras::unexportToplevel(window);
+			}
+		});
+	}
+
+	auto future = KWaylandExtras::exportToplevel(window);
+	if (!future.isFinished()) {
+		QEventLoop loop;
+		QFutureWatcher<QString> watcher;
+		QObject::connect(
+			&watcher,
+			&QFutureWatcherBase::finished,
+			&loop,
+			&QEventLoop::quit);
+		watcher.setFuture(future);
+		loop.exec();
+	}
+
+	return future.resultCount()
+		? ("wayland:" + future.result()).toStdString()
+		: std::string();
+}
+#endif // (Qt < 6.5.0 || DESKTOP_APP_DISABLE_PRIVATE_QT_API) && __has_include(<KWaylandExtras>)
 
 } // namespace
 
@@ -42,7 +80,7 @@ std::string ParentWindowID(QWindow *window) {
 		return {};
 	}
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0) && !defined DESKTOP_APP_DISABLE_PRIVATE_QT_API
 #if QT_VERSION < QT_VERSION_CHECK(6, 9, 0)
 	using QDesktopUnixServices = QGenericUnixServices;
 #endif // Qt < 6.9.0
@@ -50,7 +88,11 @@ std::string ParentWindowID(QWindow *window) {
 			QGuiApplicationPrivate::platformIntegration()->services())) {
 		return services->portalWindowIdentifier(window).toStdString();
 	}
-#endif // Qt >= 6.5.0
+#elif __has_include(<KWaylandExtras>) // Qt >= 6.5.0 && !DESKTOP_APP_DISABLE_PRIVATE_QT_API
+	if (::Platform::IsWayland()) {
+		return WaylandParentWindowID(window);
+	}
+#endif // (Qt < 6.5.0 || DESKTOP_APP_DISABLE_PRIVATE_QT_API) && __has_include(<KWaylandExtras>)
 
 	if (::Platform::IsX11()) {
 		std::stringstream result;

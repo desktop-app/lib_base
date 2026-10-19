@@ -10,12 +10,16 @@
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QWindow>
+
+#ifndef DESKTOP_APP_DISABLE_PRIVATE_QT_API
 #include <qpa/qplatformwindow_p.h>
+#elif __has_include(<KWaylandExtras>) // !DESKTOP_APP_DISABLE_PRIVATE_QT_API
+#include <KWaylandExtras>
+#endif // DESKTOP_APP_DISABLE_PRIVATE_QT_API && __has_include(<KWaylandExtras>)
 
 namespace base::Platform {
 
 void RunWithXdgActivationToken(Fn<void(QString)> callback) {
-#if defined QT_FEATURE_wayland && QT_CONFIG(wayland)
 	const auto window = QGuiApplication::focusWindow();
 	if (!window) {
 		callback({});
@@ -27,6 +31,7 @@ void RunWithXdgActivationToken(Fn<void(QString)> callback) {
 		return;
 	}
 
+#if !defined DESKTOP_APP_DISABLE_PRIVATE_QT_API && defined QT_FEATURE_wayland && QT_CONFIG(wayland)
 	using namespace QNativeInterface;
 	using namespace QNativeInterface::Private;
 	const auto native = qApp->nativeInterface<QWaylandApplication>();
@@ -44,9 +49,18 @@ void RunWithXdgActivationToken(Fn<void(QString)> callback) {
 		Qt::SingleShotConnection);
 
 	nativeWindow->requestXdgActivationToken(native->lastInputSerial());
-#else // wayland
+#elif __has_include(<KWaylandExtras>) // !DESKTOP_APP_DISABLE_PRIVATE_QT_API && wayland
+	KWaylandExtras::xdgActivationToken(
+		window,
+		QString()
+	).then(qApp, [=](const QString &token) {
+		callback(token);
+	}).onCanceled(qApp, [=] {
+		callback({});
+	});
+#else // (DESKTOP_APP_DISABLE_PRIVATE_QT_API || !wayland) && __has_include(<KWaylandExtras>)
 	callback({});
-#endif // !wayland
+#endif // (DESKTOP_APP_DISABLE_PRIVATE_QT_API || !wayland) && !__has_include(<KWaylandExtras>)
 }
 
 QString XdgActivationToken() {
