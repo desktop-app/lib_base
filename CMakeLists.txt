@@ -268,13 +268,13 @@ PRIVATE
 )
 
 if (LINUX)
-    find_package(KF6WindowSystem 6.28 QUIET)
+    find_package(KF${QT_VERSION_MAJOR}WindowSystem 6.28 QUIET)
 
     target_link_libraries(lib_base
     PUBLIC
         desktop-app::external_kcoreaddons
     PRIVATE
-        $<TARGET_NAME_IF_EXISTS:KF6::WindowSystem>
+        $<TARGET_NAME_IF_EXISTS:KF${QT_VERSION_MAJOR}::WindowSystem>
     )
 
     include(${cmake_helpers_loc}/external/glib/generate_dbus.cmake)
