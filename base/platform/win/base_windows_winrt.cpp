@@ -173,6 +173,21 @@ void(__stdcall *CloseThreadpool)(winrt::impl::ptp_pool pool);
 
 } // namespace
 
+void details::LogError(
+		HRESULT code,
+		const QString &message,
+		const std::source_location &location) {
+	const auto file = std::string_view(location.file_name());
+	const auto name = assertion::extract_basename(file.data(), file.size());
+	LOG(("WinRT Error: 0x%1 (%2), %3, at %4:%5 in %6"
+		).arg(qulonglong(uint32_t(code)), 8, 16, QChar('0')
+		).arg(qlonglong(code)
+		).arg(message
+		).arg(QString::fromUtf8(name)
+		).arg(location.line()
+		).arg(QString::fromUtf8(location.function_name())));
+}
+
 [[nodiscard]] bool Supported() {
 	static const auto Result = Resolve();
 	return Result;
