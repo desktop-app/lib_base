@@ -393,7 +393,7 @@ void SystemMediaControls::setThumbnail(const QImage &thumbnail) {
 }
 
 void SystemMediaControls::setDuration(int duration) {
-	_private->playerData().duration = duration * 1000;
+	_private->playerData().duration = duration * 1000LL;
 	auto metadata = GLib::VariantDict::new_(
 		_private->player().get_metadata());
 	metadata.insert_value(
@@ -414,7 +414,7 @@ void SystemMediaControls::setPosition(int position) {
 	// like other functions do with properties.
 	auto prop = _private->player().property_position();
 	const auto was = prop.get();
-	prop.set(position * 1000);
+	prop.set(position * 1000LL);
 	const auto playerPosition = prop.get();
 
 	const auto positionDifference = was - playerPosition;
