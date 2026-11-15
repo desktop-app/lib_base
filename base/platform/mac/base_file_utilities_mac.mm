@@ -8,7 +8,8 @@
 
 #include "base/platform/mac/base_utilities_mac.h"
 
-#include <QtCore/QFileInfo>
+#include <QtCore/QFile>
+#include <QtCore/QStringList>
 #include <sys/xattr.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -17,13 +18,13 @@ namespace base::Platform {
 
 using namespace ::Platform;
 
-void ShowInFolder(const QString &filepath) {
-	const auto folder = QFileInfo(filepath).absolutePath();
-
+void ShowInFolder(const QStringList &filepaths) {
 	@autoreleasepool {
-
-	[[NSWorkspace sharedWorkspace] selectFile:Q2NSString(filepath) inFileViewerRootedAtPath:Q2NSString(folder)];
-
+		auto urls = [NSMutableArray<NSURL *> array];
+		for (const auto &filepath : filepaths) {
+			[urls addObject:[NSURL fileURLWithPath:Q2NSString(filepath)]];
+		}
+		[[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:urls];
 	}
 }
 
