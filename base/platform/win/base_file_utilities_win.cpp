@@ -9,9 +9,13 @@
 #include "base/platform/win/base_windows_safe_library.h"
 #include "base/platform/win/base_windows_shlobj_h.h"
 #include "base/algorithm.h"
+#include "base/custom_delete.h"
+#include "base/flat_map.h"
 
-#include <QtCore/QString>
 #include <QtCore/QDir>
+#include <QtCore/QFileInfo>
+#include <QtCore/QStringList>
+#include <QtGui/QDesktopServices>
 
 #include <array>
 #include <string>
@@ -54,23 +58,57 @@ DWORD(__stdcall *RmEndSession)(
 
 } // namespace
 
-void ShowInFolder(const QString &filepath) {
-	auto nativePath = QDir::toNativeSeparators(filepath);
-	const auto path = nativePath.toStdWString();
-	if (const auto pidl = ILCreateFromPathW(path.c_str())) {
-		SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);
-		ILFree(pidl);
-		return;
+void ShowInFolder(const QStringList &filepaths) {
+	auto folders = base::flat_map<QString, QStringList>();
+	for (const auto &filepath : filepaths) {
+		folders[QFileInfo(filepath).absolutePath()].push_back(filepath);
 	}
-	const auto pathEscaped = nativePath.replace('"', QString("\"\""));
-	const auto command = ("/select," + pathEscaped).toStdWString();
-	ShellExecute(
-		0,
-		0,
-		L"explorer",
-		command.c_str(),
-		0,
-		SW_SHOWNORMAL);
+
+	const auto initialized = SUCCEEDED(CoInitializeEx(
+		nullptr,
+		COINIT_APARTMENTTHREADED));
+	const auto uninitialize = gsl::finally([=] {
+		if (initialized) {
+			CoUninitialize();
+		}
+	});
+	using ShellId = std::unique_ptr<
+		ITEMIDLIST_ABSOLUTE,
+		base::custom_delete<ILFree>>;
+	const auto shellId = [](const QString &path) {
+		const auto native = QDir::toNativeSeparators(path).toStdWString();
+		return ShellId(ILCreateFromPathW(native.c_str()));
+	};
+	for (const auto &[folderPath, paths] : folders) {
+		const auto folder = shellId(folderPath);
+		auto items = std::vector<ShellId>();
+		auto children = std::vector<PCUITEMID_CHILD>();
+		for (const auto &path : paths) {
+			if (auto id = shellId(path)) {
+				children.push_back(ILFindLastID(id.get()));
+				items.push_back(std::move(id));
+			}
+		}
+		if (folder && !children.empty()) {
+			SHOpenFolderAndSelectItems(
+				folder.get(),
+				UINT(children.size()),
+				children.data(),
+				0);
+		} else if (paths.size() == 1) {
+			const auto native = QDir::toNativeSeparators(paths.front());
+			const auto command = (u"/select,\""_q + native + '"').toStdWString();
+			ShellExecute(
+				nullptr,
+				nullptr,
+				L"explorer",
+				command.c_str(),
+				nullptr,
+				SW_SHOWNORMAL);
+		} else {
+			QDesktopServices::openUrl(QUrl::fromLocalFile(folderPath));
+		}
+	}
 }
 
 QString FileNameFromUserString(QString name) {
