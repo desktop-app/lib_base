@@ -73,7 +73,7 @@ void SuggestSystemUnlock(
 				const auto code = int(error.code);
 				if (success) {
 					done(SystemUnlockResult::Success);
-				} else if (error.code == LAErrorTouchIDLockout) {
+				} else if (error.code == LAErrorBiometryLockout) {
 					done(SystemUnlockResult::FloodError);
 				} else {
 					done(SystemUnlockResult::Cancelled);
