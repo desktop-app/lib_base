@@ -10,14 +10,14 @@ class QString;
 
 namespace base::Platform {
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 
 std::optional<uint64> SetCustomAppIcon(QImage image);
 std::optional<uint64> SetCustomAppIcon(const QString &path);
 std::optional<uint64> CurrentCustomAppIconDigest();
 bool ClearCustomAppIcon();
 
-#else // Q_OS_MAC
+#else // Q_OS_MACOS
 
 inline std::optional<uint64> SetCustomAppIcon(QImage image) {
 	return std::nullopt;
@@ -35,6 +35,6 @@ inline bool ClearCustomAppIcon() {
 	return false;
 }
 
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
 } // namespace base::Platform

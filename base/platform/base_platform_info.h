@@ -78,8 +78,8 @@ void Finish();
 
 #ifdef Q_OS_WIN
 #include "base/platform/win/base_info_win.h"
-#elif defined Q_OS_MAC // Q_OS_WIN
+#elif defined Q_OS_MACOS // Q_OS_WIN
 #include "base/platform/mac/base_info_mac.h"
-#else // Q_OS_WIN || Q_OS_MAC
+#else // Q_OS_WIN || Q_OS_MACOS
 #include "base/platform/linux/base_info_linux.h"
-#endif // else for Q_OS_WIN || Q_OS_MAC
+#endif // else for Q_OS_WIN || Q_OS_MACOS

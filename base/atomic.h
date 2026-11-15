@@ -14,7 +14,7 @@ namespace base {
 
 // Helper for macOS < 11.0 and GCC < 11 that don't have wait/notify.
 
-#if defined __cpp_lib_atomic_wait && !defined Q_OS_MAC
+#if defined __cpp_lib_atomic_wait && !defined Q_OS_MACOS
 
 using std::atomic;
 using std::atomic_notify_all;

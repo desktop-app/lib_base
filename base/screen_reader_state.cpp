@@ -1,29 +1,29 @@
 #include "base/screen_reader_state.h"
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 #include "base/platform/mac/base_screen_reader_state_mac.h"
-#elif defined(Q_OS_WIN) // Q_OS_MAC
+#elif defined(Q_OS_WIN) // Q_OS_MACOS
 #include "base/platform/win/base_screen_reader_state_win.h"
 #else
 #include "base/platform/linux/base_screen_reader_state_linux.h"
-#endif // Q_OS_MAC || Q_OS_WIN
+#endif // Q_OS_MACOS || Q_OS_WIN
 
 namespace base {
 
 ScreenReaderState::~ScreenReaderState() = default;
 
 ScreenReaderState *ScreenReaderState::Instance() {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 	static auto instance = Platform::MacScreenReaderState();
-#elif defined(Q_OS_WIN) // Q_OS_MAC
+#elif defined(Q_OS_WIN) // Q_OS_MACOS
 	static auto instance = Platform::WinScreenReaderState();
-#else // Q_OS_MAC || Q_OS_WIN
+#else // Q_OS_MACOS || Q_OS_WIN
 	static auto instance = Platform::LinuxScreenReaderState();
-#endif // Q_OS_MAC || Q_OS_WIN
+#endif // Q_OS_MACOS || Q_OS_WIN
 	return &instance;
 }
 
-#if !defined(Q_OS_MAC) && !defined(Q_OS_WIN)
+#if !defined(Q_OS_MACOS) && !defined(Q_OS_WIN)
 
 GeneralScreenReaderState::GeneralScreenReaderState()
 : _isActive(QAccessible::isActive()) {
@@ -46,6 +46,6 @@ rpl::producer<bool> GeneralScreenReaderState::activeValue() const {
 	return _isActive.value();
 }
 
-#endif // !Q_OS_MAC && !Q_OS_WIN
+#endif // !Q_OS_MACOS && !Q_OS_WIN
 
 } // namespace base

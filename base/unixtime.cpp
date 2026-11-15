@@ -11,7 +11,7 @@
 
 #ifdef Q_OS_WIN
 #include <windows.h>
-#elif defined Q_OS_MAC
+#elif defined Q_OS_MACOS
 #include <mach/mach_time.h>
 #else
 #include <time.h>
@@ -57,14 +57,14 @@ MsgIdManager GlobalMsgIdManager;
 	LARGE_INTEGER li;
 	QueryPerformanceFrequency(&li);
 	return float64(0xFFFF0000L) / float64(li.QuadPart);
-#elif defined Q_OS_MAC // Q_OS_WIN
+#elif defined Q_OS_MACOS // Q_OS_WIN
 	mach_timebase_info_data_t tb = { 0, 0 };
 	mach_timebase_info(&tb);
 	const auto frequency = (float64(tb.numer) / tb.denom) / 1000000.;
 	return frequency * (float64(0xFFFF0000L) / 1000.);
-#else // Q_OS_MAC || Q_OS_WIN
+#else // Q_OS_MACOS || Q_OS_WIN
 	return float64(0xFFFF0000L) / 1000000000.;
-#endif // Q_OS_MAC || Q_OS_WIN
+#endif // Q_OS_MACOS || Q_OS_WIN
 }
 
 [[nodiscard]] uint64 GetCounter() {
@@ -72,13 +72,13 @@ MsgIdManager GlobalMsgIdManager;
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
 	return li.QuadPart;
-#elif defined Q_OS_MAC // Q_OS_WIN
+#elif defined Q_OS_MACOS // Q_OS_WIN
 	return mach_absolute_time();
-#else // Q_OS_MAC || Q_OS_WIN
+#else // Q_OS_MACOS || Q_OS_WIN
 	timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return 1000000000 * uint64(ts.tv_sec) + uint64(ts.tv_nsec);
-#endif // Q_OS_MAC || Q_OS_WIN
+#endif // Q_OS_MACOS || Q_OS_WIN
 }
 
 [[nodiscard]] uint32 PrepareRandomPart() {

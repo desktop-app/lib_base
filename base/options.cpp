@@ -201,11 +201,11 @@ bool BasicOption::relevant() const {
 	const auto scopeFlags = v::get<ScopeFlags>(_scope);
 #ifdef Q_OS_WIN
 	return scopeFlags & windows;
-#elif defined Q_OS_MAC // Q_OS_WIN
+#elif defined Q_OS_MACOS // Q_OS_WIN
 	return scopeFlags & macos;
-#else // Q_OS_MAC || Q_OS_WIN
+#else // Q_OS_MACOS || Q_OS_WIN
 	return scopeFlags & linux;
-#endif // Q_OS_MAC || Q_OS_WIN
+#endif // Q_OS_MACOS || Q_OS_WIN
 }
 
 bool BasicOption::restartRequired() const {

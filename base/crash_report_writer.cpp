@@ -18,9 +18,9 @@
 #include <new>
 #include <mutex>
 
-#if !defined Q_OS_MAC || defined MAC_USE_BREAKPAD
+#if !defined Q_OS_MACOS || defined MAC_USE_BREAKPAD
 #define USE_BREAKPAD
-#endif // !Q_OS_MAC || MAC_USE_BREAKPAD
+#endif // !Q_OS_MACOS || MAC_USE_BREAKPAD
 
 // see https://blog.inventic.eu/2012/08/qt-and-google-breakpad/
 #ifdef Q_OS_WIN
@@ -33,7 +33,7 @@
 #include <client/windows/handler/exception_handler.h>
 #pragma warning(pop)
 
-#elif defined Q_OS_MAC // Q_OS_WIN
+#elif defined Q_OS_MACOS // Q_OS_WIN
 
 #include <execinfo.h>
 #include <signal.h>
@@ -49,7 +49,7 @@
 #include <client/crashpad_client.h>
 #endif // USE_BREAKPAD
 
-#else // Q_OS_MAC
+#else // Q_OS_MACOS
 
 #include <execinfo.h>
 #include <signal.h>
@@ -58,7 +58,7 @@
 
 #include <client/linux/handler/exception_handler.h>
 
-#endif // else for Q_OS_WIN || Q_OS_MAC
+#endif // else for Q_OS_WIN || Q_OS_MACOS
 
 namespace base::Platform {
 using namespace ::Platform;
@@ -251,11 +251,11 @@ google_breakpad::ExceptionHandler* BreakpadExceptionHandler = 0;
 
 #ifdef Q_OS_WIN
 bool DumpCallback(const wchar_t* _dump_dir, const wchar_t* _minidump_id, void* context, EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion, bool success)
-#elif defined Q_OS_MAC // Q_OS_WIN
+#elif defined Q_OS_MACOS // Q_OS_WIN
 bool DumpCallback(const char* _dump_dir, const char* _minidump_id, void *context, bool success)
-#else // Q_OS_MAC
+#else // Q_OS_MACOS
 bool DumpCallback(const google_breakpad::MinidumpDescriptor &md, void *context, bool success)
-#endif // else for Q_OS_WIN || Q_OS_MAC
+#endif // else for Q_OS_WIN || Q_OS_MACOS
 {
 	if (CrashLogged) return success;
 	CrashLogged = true;
@@ -265,9 +265,9 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor &md, void *context, 
 	SignalHandler(-1);
 #else // Q_OS_WIN
 
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
 	BreakpadDumpId = _minidump_id;
-#else // Q_OS_MAC
+#else // Q_OS_MACOS
 	BreakpadDumpId = md.path();
 	auto afterLastSlash = BreakpadDumpId;
 	for (auto ch = afterLastSlash; *ch != 0; ++ch) {
@@ -278,7 +278,7 @@ bool DumpCallback(const google_breakpad::MinidumpDescriptor &md, void *context, 
 	if (*afterLastSlash) {
 		BreakpadDumpId = afterLastSlash;
 	}
-#endif // else for Q_OS_MAC
+#endif // else for Q_OS_MACOS
 	SignalHandler(-1, 0, 0);
 
 #endif // else for Q_OS_WIN
@@ -397,7 +397,7 @@ void CrashReportWriter::startCatching() {
 		(const wchar_t*)nullptr, // pipe_name
 		(const google_breakpad::CustomClientInfo*)nullptr
 	);
-#elif defined Q_OS_MAC // Q_OS_WIN
+#elif defined Q_OS_MACOS // Q_OS_WIN
 
 #ifdef USE_BREAKPAD
 #ifndef _DEBUG
@@ -434,7 +434,7 @@ void CrashReportWriter::startCatching() {
 		true,
 		-1
 	);
-#endif // else for Q_OS_WIN || Q_OS_MAC
+#endif // else for Q_OS_WIN || Q_OS_MACOS
 }
 
 void CrashReportWriter::finishCatching() {
