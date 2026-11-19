@@ -7,13 +7,16 @@
 #include "base/platform/linux/base_file_utilities_linux.h"
 
 #include "base/platform/base_platform_file_utilities.h"
+#include "base/platform/linux/base_linux_app_launch_context.h"
 #include "base/platform/linux/base_linux_xdp_utilities.h"
 #include "base/platform/linux/base_linux_xdg_activation_token.h"
 #include "base/algorithm.h"
+#include "base/flat_set.h"
 
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QStandardPaths>
+#include <QtCore/QStringList>
 #include <QtGui/QDesktopServices>
 
 #include <xdpopenuri/xdpopenuri.hpp>
@@ -79,7 +82,7 @@ void PortalShowInFolder(const QString &filepath, Fn<void()> fail) {
 		});
 }
 
-void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
+void DBusShowInFolder(const QStringList &filepaths, Fn<void()> fail) {
 	XdgFileManager1::FileManager1Proxy::new_for_bus(
 		Gio::BusType::SESSION_,
 		Gio::DBusProxyFlags::NONE_,
@@ -97,6 +100,17 @@ void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
 			}
 
 			RunWithXdgActivationToken([=](const QString &startupId) mutable {
+				std::vector<gi::cstring> uris;
+				ranges::transform(
+					filepaths,
+					ranges::back_inserter(uris),
+					[](const auto &filepath) {
+						return GLib::filename_to_uri(
+							filepath.toStdString(),
+							nullptr);
+					});
+				uris.push_back({});
+
 				const auto callbackWrap = gi::unwrap(
 					Gio::AsyncReadyCallback(
 						[=](GObject::Object, Gio::AsyncResult res) mutable {
@@ -109,13 +123,9 @@ void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
 
 				xdg_file_manager1_file_manager1_call_show_items(
 					interface.gobj_(),
-					(std::array<const char*, 2>{
-						GLib::filename_to_uri(
-							filepath.toStdString(),
-							nullptr
-						).c_str(),
-						nullptr,
-					}).data(),
+					(uris
+						| ranges::views::transform(&gi::cstring::c_str)
+						| ranges::to_vector).data(),
 					startupId.toStdString().c_str(),
 					nullptr,
 					&callbackWrap->wrapper,
@@ -126,12 +136,37 @@ void DBusShowInFolder(const QString &filepath, Fn<void()> fail) {
 
 } // namespace
 
-void ShowInFolder(const QString &filepath) {
-	DBusShowInFolder(filepath, [=] {
-		PortalShowInFolder(filepath, [=] {
-			QDesktopServices::openUrl(
-				QUrl::fromLocalFile(QFileInfo(filepath).absolutePath()));
-		});
+void ShowInFolder(const QStringList &filepaths) {
+	DBusShowInFolder(filepaths, [=] {
+		if (filepaths.size() == 1) {
+			const auto &filepath = filepaths.front();
+			PortalShowInFolder(filepath, [=] {
+				const auto folder = QFileInfo(filepath).absolutePath();
+				QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+			});
+			return;
+		}
+		if (auto appInfo = Gio::AppInfo::get_default_for_type(
+				"inode/directory",
+				false)) {
+			const auto uris = ranges::views::all(
+				filepaths
+			) | ranges::views::transform([](const auto &filepath) {
+				return GLib::filename_to_uri(
+					GLib::path_get_dirname(filepath.toStdString()),
+					nullptr);
+			}) | ranges::to_vector;
+			if (appInfo.launch_uris(uris, AppLaunchContext(), nullptr)) {
+				return;
+			}
+		}
+		base::flat_set<QString> folders;
+		for (const auto &filepath : filepaths) {
+			const auto folder = QFileInfo(filepath).absolutePath();
+			if (folders.insert(folder).second) {
+				QDesktopServices::openUrl(QUrl::fromLocalFile(folder));
+			}
+		}
 	});
 }
 

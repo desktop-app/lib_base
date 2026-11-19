@@ -6,12 +6,13 @@
 //
 #pragma once
 
-class QString;
+#include <QtCore/qcontainerfwd.h>
+
 class QFile;
 
 namespace base::Platform {
 
-void ShowInFolder(const QString &filepath);
+void ShowInFolder(const QStringList &filepaths);
 [[nodiscard]] QString FileNameFromUserString(QString name);
 
 bool DeleteDirectory(QString path);
