@@ -31,6 +31,7 @@ public:
 	[[nodiscard]] QString executableDir() const;
 	[[nodiscard]] QString executableName() const;
 	[[nodiscard]] QString executablePath() const;
+	[[nodiscard]] virtual std::string instanceHash() const;
 
 	virtual ~Integration();
 

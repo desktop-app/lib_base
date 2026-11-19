@@ -292,6 +292,7 @@ void SystemMediaControls::Private::init() {
 	if (!_dbus.connection || _dbus.ownId) {
 		return;
 	}
+	const auto instanceHash = Integration::Instance().instanceHash();
 	auto object = Mpris::ObjectSkeleton::new_("/org/mpris/MediaPlayer2");
 	object.set_media_player2(*this);
 	object.set_media_player2_player(player());
@@ -300,11 +301,13 @@ void SystemMediaControls::Private::init() {
 	_dbus.objectManager.set_connection(_dbus.connection);
 	_dbus.ownId = Gio::bus_own_name_on_connection(
 		_dbus.connection,
-		"org.mpris.MediaPlayer2." + (KSandbox::isFlatpak()
-			? qEnvironmentVariable("FLATPAK_ID").toStdString()
-			: KSandbox::isSnap()
-			? qEnvironmentVariable("SNAP_INSTANCE_NAME").toStdString()
-			: QCoreApplication::applicationName().toStdString()),
+		std::format("org.mpris.MediaPlayer2.{}{}",
+			KSandbox::isFlatpak()
+				? qEnvironmentVariable("FLATPAK_ID").toStdString()
+				: KSandbox::isSnap()
+				? qEnvironmentVariable("SNAP_INSTANCE_NAME").toStdString()
+				: QCoreApplication::applicationName().toStdString(),
+			instanceHash.empty() ? "" : std::format("._{}", instanceHash)),
 		Gio::BusNameOwnerFlags::NONE_);
 }
 

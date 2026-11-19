@@ -76,4 +76,8 @@ QString Integration::executablePath() const {
 	return _executableDir + _executableName;
 }
 
+std::string Integration::instanceHash() const {
+	return {};
+}
+
 } // namespace base
