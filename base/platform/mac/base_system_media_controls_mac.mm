@@ -225,6 +225,7 @@ struct SystemMediaControls::Private {
 	const not_null<CommandHandler*> commandHandler;
 	bool enabled = false;
 	float64 playbackRate = 1.;
+	rpl::event_stream<> updatePositionRequests;
 };
 
 SystemMediaControls::SystemMediaControls()
@@ -382,6 +383,8 @@ void SystemMediaControls::clearMetadata() {
 }
 
 void SystemMediaControls::updateDisplay() {
+	// elapsed time is extrapolated from the moment info is published
+	_private->updatePositionRequests.fire({});
 	[[MPNowPlayingInfoCenter defaultCenter]
 		performSelectorOnMainThread:@selector(setNowPlayingInfo:)
 		withObject:(_private->enabled ? _private->info : nil)
@@ -408,7 +411,7 @@ rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {
 }
 
 rpl::producer<> SystemMediaControls::updatePositionRequests() const {
-	return rpl::never<>();
+	return _private->updatePositionRequests.events();
 }
 
 bool SystemMediaControls::seekingSupported() const {
