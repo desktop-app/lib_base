@@ -373,6 +373,11 @@ void SystemMediaControls::setPosition(int position) {
 void SystemMediaControls::setPlaybackRate(float64 rate) {
 }
 
+void SystemMediaControls::setPlaybackRateRange(
+		float64 minimum,
+		float64 maximum) {
+}
+
 void SystemMediaControls::setVolume(float64 volume) {
 }
 

@@ -65,6 +65,7 @@ public:
 	void setDuration(int duration);
 	void setPosition(int position);
 	void setPlaybackRate(float64 rate);
+	void setPlaybackRateRange(float64 minimum, float64 maximum);
 	void setVolume(float64 volume);
 	void clearThumbnail();
 	void clearMetadata();
