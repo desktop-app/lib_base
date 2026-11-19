@@ -32,7 +32,7 @@
     </method>
     <property name="PlaybackStatus" type="s" access="read"/>
     <property name="LoopStatus" type="s" access="readwrite"/>
-    <property name="Rate" type="d" access="read"/>
+    <property name="Rate" type="d" access="readwrite"/>
     <property name="Shuffle" type="b" access="readwrite"/>
     <property name="Metadata" type="a{sv}" access="read"/>
     <property name="Volume" type="d" access="readwrite"/>

@@ -117,6 +117,10 @@ public:
 		return _seekRequests.events();
 	}
 
+	[[nodiscard]] rpl::producer<float64> playbackRateChangeRequests() const {
+		return _playbackRateChangeRequests.events();
+	}
+
 	[[nodiscard]] rpl::producer<float64> volumeChangeRequests() const {
 		return _volumeChangeRequests.events();
 	}
@@ -184,6 +188,7 @@ private:
 
 	rpl::event_stream<Command> _commandRequests;
 	rpl::event_stream<int64> _seekRequests;
+	rpl::event_stream<float64> _playbackRateChangeRequests;
 	rpl::event_stream<float64> _volumeChangeRequests;
 	rpl::event_stream<> _updatePositionRequests;
 };
@@ -260,6 +265,18 @@ SystemMediaControls::Private::Private()
 		}
 		base::Integration::Instance().enterFromEventLoop([&] {
 			_commandRequests.fire_copy(Command::Shuffle);
+		});
+	});
+	player().property_rate().signal_notify().connect([=](
+			GObject::Object,
+			GObject::ParamSpec) {
+		base::Integration::Instance().enterFromEventLoop([&] {
+			const auto rate = player().get_rate();
+			// the spec asks to pause on rate 0
+			if (rate == 0.) {
+				_commandRequests.fire_copy(Command::Pause);
+			}
+			_playbackRateChangeRequests.fire_copy(rate);
 		});
 	});
 	player().property_volume().signal_notify().connect([=](
@@ -461,6 +478,11 @@ rpl::producer<float64> SystemMediaControls::seekRequests() const {
 	) | rpl::map([=](int64 position) {
 		return float64(position) / _private->playerData().duration;
 	});
+}
+
+auto SystemMediaControls::playbackRateChangeRequests() const
+-> rpl::producer<float64> {
+	return _private->playbackRateChangeRequests();
 }
 
 rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {

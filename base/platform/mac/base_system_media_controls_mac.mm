@@ -414,6 +414,11 @@ rpl::producer<float64> SystemMediaControls::seekRequests() const {
 	});
 }
 
+auto SystemMediaControls::playbackRateChangeRequests() const
+-> rpl::producer<float64> {
+	return rpl::never<float64>();
+}
+
 rpl::producer<float64> SystemMediaControls::volumeChangeRequests() const {
 	return rpl::never<float64>();
 }
