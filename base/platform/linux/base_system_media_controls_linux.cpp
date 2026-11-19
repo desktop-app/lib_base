@@ -89,6 +89,7 @@ public:
 	struct PlayerData {
 		int64 duration = 0;
 		bool inSetShuffle = false;
+		bool updatingPosition = false;
 	};
 
 	Private();
@@ -157,18 +158,17 @@ private:
 
 		protected:
 			void get_property(GValue *value) override {
-				// prevent recursion via SystemMediaControls::setPosition
-				if (!_updating) {
-					_updating = true;
+				auto &data = _parent->_parent->_playerData;
+				if (!data.updatingPosition) {
+					data.updatingPosition = true;
 					_parent->_parent->_updatePositionRequests.fire({});
-					_updating = false;
+					data.updatingPosition = false;
 				}
 				gi::property<int64>::get_property(value);
 			}
 
 		private:
 			const not_null<Player*> _parent;
-			bool _updating = false;
 		} _position;
 	};
 
@@ -403,23 +403,10 @@ void SystemMediaControls::setDuration(int duration) {
 }
 
 void SystemMediaControls::setPosition(int position) {
-	// get_position reads the value directly from variable
-	// in the generated C code and doesn't account for the
-	// property override. It's possible to override get_position
-	// but the C++ bindings don't let do this due to
-	// https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/183
-	//
-	// Once this is fixed, Player should be able to override get_position
-	// and it will be possible to use (get|set)_position here
-	// like other functions do with properties.
-	auto prop = _private->player().property_position();
-	const auto was = prop.get();
-	prop.set(position * 1000LL);
-	const auto playerPosition = prop.get();
-
-	const auto positionDifference = was - playerPosition;
-	if (positionDifference > 1000000 || positionDifference < -1000000) {
-		_private->player().emit_seeked(playerPosition);
+	_private->player().set_position(position * 1000LL);
+	// a reply to updatePositionRequests is not a seek
+	if (!_private->playerData().updatingPosition) {
+		_private->player().emit_seeked(position * 1000LL);
 	}
 }
 
