@@ -279,6 +279,9 @@ void SystemMediaControls::setIsStopEnabled(bool value) {
 	CommandCenter().stopCommand.enabled = value;
 }
 
+void SystemMediaControls::setIsSeekEnabled(bool value) {
+}
+
 void SystemMediaControls::setPlaybackStatus(
 		SystemMediaControls::PlaybackStatus status) {
 	[MPNowPlayingInfoCenter defaultCenter].playbackState =

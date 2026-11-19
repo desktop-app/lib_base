@@ -199,7 +199,6 @@ SystemMediaControls::Private::Private()
 	set_desktop_entry(QGuiApplication::desktopFileName().toStdString());
 	set_identity(QGuiApplication::desktopFileName().toStdString());
 	player().set_can_control(true);
-	player().set_can_seek(true);
 	player().set_maximum_rate(1.0);
 	player().set_minimum_rate(1.0);
 	player().set_playback_status("Stopped");
@@ -340,6 +339,10 @@ void SystemMediaControls::setIsPlayPauseEnabled(bool value) {
 }
 
 void SystemMediaControls::setIsStopEnabled(bool value) {
+}
+
+void SystemMediaControls::setIsSeekEnabled(bool value) {
+	_private->player().set_can_seek(value);
 }
 
 void SystemMediaControls::setPlaybackStatus(PlaybackStatus status) {

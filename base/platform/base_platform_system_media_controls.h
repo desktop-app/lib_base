@@ -55,6 +55,7 @@ public:
 	void setIsPreviousEnabled(bool value);
 	void setIsPlayPauseEnabled(bool value);
 	void setIsStopEnabled(bool value);
+	void setIsSeekEnabled(bool value);
 	void setPlaybackStatus(PlaybackStatus status);
 	void setLoopStatus(LoopStatus status);
 	void setShuffle(bool value);
