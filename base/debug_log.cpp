@@ -22,7 +22,7 @@ void LogWriteDebug(const QString &message, const char *file, int line) {
 	Integration::Instance().logMessageDebug(QString("%1 (%2 : %3)").arg(
 		message,
 		QString::fromUtf8(file),
-		QString::number(__LINE__)));
+		QString::number(line)));
 }
 
 bool LogSkipDebug() {
