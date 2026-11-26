@@ -8,6 +8,8 @@
 
 #include "base/basic_types.h"
 
+#include <rpl/lifetime.h>
+
 #include <QtCore/QObject>
 
 namespace base {
